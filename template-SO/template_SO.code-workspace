@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"cunit.h": "c",
+			"socket.h": "c",
+			"list.h": "c",
+			"types.h": "c",
+			"operaciones.h": "c"
+		}
+	}
+}

@@ -1,0 +1,103 @@
+#include "memoria.h"
+
+int cantidad_paginas_proceso;
+char* path_recibido = NULL;
+int socket_fs;
+size_t tamanio_contenido;
+int pid_fs;
+pthread_mutex_t mutex_path;
+pthread_mutex_t mutex_instrucciones;
+pthread_mutex_t mutex_lista_instrucciones;
+
+
+// ATENDER CLIENTES CON HILOS//
+int atender_clientes_memoria(int socket_servidor){
+
+	   int* cliente_fd = malloc(sizeof(int));
+        *cliente_fd = esperar_cliente(socket_servidor);
+
+	if(cliente_fd != -1){
+		pthread_t hilo_cliente;
+		pthread_create(&hilo_cliente, NULL, (void*) manejo_conexiones, cliente_fd);
+		pthread_detach(hilo_cliente);
+		return 1;
+	}else {
+		log_error(memoria_logger, "Error al escuchar clientes... Finalizando servidor \n"); 
+	}
+	return 0;
+}
+
+// ATENDER DISPATCH //
+void manejo_conexiones(void* conexion)
+{
+	int cliente = *(int*)conexion;
+	int posicion_pedida = 0;
+	int pid_proceso = 0;
+	int pid_proceso_escribir = 0;
+	int pid_proceso_leer = 0;
+	int* valor_registro = 0;
+	uint32_t direccion_fisica = 0;
+	uint32_t direccion_logica = 0;
+	char* path_asignado = NULL;
+	uint32_t numero_pagina;
+	uint32_t tam_contenido;
+	uint32_t puntero_de_archivo;
+	char* nombre_archivo;
+	void* contenido = NULL;
+
+	while(1){
+	t_paquete* paquete = recibir_paquete(cliente);
+    void* stream = paquete->buffer->stream;
+
+	switch(paquete->codigo_operacion){		
+	case HANDSHAKE:
+		//Mandamos por Handshake el tam_pagina
+		int entero = sacar_entero_de_paquete(&stream);
+		enviar_paquete_handshake(cliente);
+		break;
+
+	case MANDAR_INSTRUCCIONES:
+
+		//la cpu nos manda el program counter y el pid del proceso que recibio para ejecutar
+		posicion_pedida = sacar_entero_de_paquete(&stream);
+		pid_proceso = sacar_entero_de_paquete(&stream);
+
+		usleep(config_valores_memoria.retardo_respuesta * 1000);  
+
+		//aca vamos a buscar el proceso con el pid que recibimos y obtener el path_asignado
+        
+		pthread_mutex_lock(&mutex_path);
+		path_asignado = buscar_path_proceso(pid_proceso); 
+        pthread_mutex_unlock(&mutex_path);
+
+		//mandamos directamente el path del proceso porque ahi ya voy a tener las instrucciones leidas y cargadas
+		enviar_paquete_instrucciones(cliente, path_asignado, posicion_pedida);
+		break;
+
+	case CREACION_ESTRUCTURAS_MEMORIA:
+		pid_proceso = sacar_entero_de_paquete(&stream);
+		
+		//crear_estructuras_memoria(pid_proceso);
+		
+		int ok_creacion = 1;
+        send(cliente, &ok_creacion, sizeof(int), 0);
+		log_info(memoria_logger,"Estructuras creadas en memoria exitosamente\n");
+		break;
+
+	case FINALIZAR_EN_MEMORIA:
+		int pid = sacar_entero_de_paquete(&stream);
+		log_info(memoria_logger,"Recibi pedido de eliminacion de estructuras en memoria\n");
+		//finalizar_en_memoria(pid);
+
+	    int ok_finalizacion = 1;
+        send(cliente, &ok_finalizacion, sizeof(int), 0);
+		log_info(memoria_logger,"Estructuras eliminadas en memoria exitosamente\n");
+		break;
+
+	default:
+		break;
+	}
+	eliminar_paquete(paquete);
+	}
+}
+
