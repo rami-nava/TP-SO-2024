@@ -26,7 +26,7 @@ int main(void)
     socket_cliente_interrupt = esperar_cliente(socket_servidor_interrupt);
 
     //pthread_create(&hilo_interrupt, NULL, (void *)atender_interrupt, &socket_cliente_interrupt);
-    // pthread_detach(hilo_interrupt);
+    //pthread_detach(hilo_interrupt);
 
     pthread_create(&cpu, NULL, (void* ) atender_dispatch, NULL);
     pthread_join(cpu, NULL);

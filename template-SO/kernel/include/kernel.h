@@ -77,7 +77,7 @@ extern arch_config_kernel config_valores_kernel;
 //============================================= Inicializacion =====================================================================
 void cargar_configuracion(char *);
 void manejar_conexion(int);
-void iniciar_proceso(char *, int, int);
+void iniciar_proceso(char* path);
 void inicializar_diccionarios();
 void inicializar_colas();
 void inicializar_planificador();

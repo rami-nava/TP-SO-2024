@@ -11,13 +11,16 @@
 #include <commons/memory.h>
 #include <pthread.h>
 #include "socket.h"
-#include "logconfig.h"
+#include "contexto.h"
 #include "operaciones.h"
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
+extern t_list* procesos_en_filesystem;
+void crear_archivo_de_bloque();
+void atender_clientes_filesystem(void* ); 
 
 
 extern t_config *config;
@@ -25,7 +28,6 @@ extern t_log *filesystem_logger;
 extern int socket_memoria;
 extern int server_fd;
 extern t_list *bloques_reservados;
-extern t_list* procesos_en_filesystem;
 extern t_list* lista_bloques_swap;
 extern int tamanio_swap;
 extern int tamanio_fat;
@@ -100,10 +102,8 @@ extern FILE* archivo_tabla_fat;
 void inicializar_bitarray();
 void cargar_configuracion(char*);
 void*conexion_inicial_memoria();
-void atender_clientes_filesystem(void* ); 
 FILE* levantar_archivo_bloque();
 FILE* levantar_tabla_FAT();
-void crear_fat();
 fcb* levantar_fcb (char * path);
 void crear_archivo (char *nombre_archivo, int socket_kernel);
 void abrir_archivo (char *nombre_archivo, int socket_kernel);
@@ -132,7 +132,7 @@ void reducir_tamanio_archivo(int tamanio_nuevo, int tamanio_actual_archivo, uint
 
 void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 
-t_archivo* buscar_archivo_en_carpeta_fcbs(char* nombre);
+//t_archivo* buscar_archivo_en_carpeta_fcbs(char* nombre);
 
 void actualizar_fcb(fcb* nuevo_fcb);
 
@@ -152,22 +152,14 @@ void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direc
 void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido);
 void escribir_contenido_en_archivo(uint32_t bloque_a_escribir, uint32_t bloque_inicial, void* contenido, uint32_t puntero, char* nombre_archivo);
 void solicitar_informacion_memoria(uint32_t direccion_fisica, int tam_bloque, char* nombre_archivo, uint32_t puntero_archivo);
-void crear_archivo_de_bloque();
 void cerrar_archivo(char* nombre_archivo);
 void mapear_archivo_de_bloques();
 
-//..................................FUNCIONES SWAP.....................................................................
+//..................................FUNCIONES BLOQUES .....................................................................
 t_list* reservar_bloques(int pid, int cantidad_bloques);
 void liberar_bloques(t_list* lista_bloques_swap, t_proceso_en_filesystem* proceso);
 void enviar_bloques_reservados(t_list* bloques_reservados, int pid);
-bloque_swap* buscar_bloque_swap(int nro_pagina, int pid);
-void bloque_libre_swap (int i);
-bloque_swap* asignar_bloque_swap(int tam_bloque, int index, int pid);
-void crear_filesystem_swap();
 void ocupar_bloque(int i);
-void swap_out(int pid, int nro_pagina);
-void swap_in(int pid, int nro_pag_pf, int posicion_swap);
-void inicializar_swap();
 t_proceso_en_filesystem* buscar_proceso_en_filesystem(int pid);
 
 #endif

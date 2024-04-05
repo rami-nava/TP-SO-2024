@@ -17,6 +17,8 @@ char* path_archivo_bloques;
 sem_t escritura_completada;
 sem_t lectura_completada;
 
+t_list* procesos_en_filesystem;
+
 
 //============================================================================================================
 
@@ -33,7 +35,7 @@ int main(void)
     int server_fd = iniciar_servidor(config_valores_filesystem.ip_filesystem,config_valores_filesystem.puerto_escucha);
 
     tamanio_fat = (config_valores_filesystem.cant_bloques_total - config_valores_filesystem.cant_bloques_swap) * sizeof(uint32_t);
-    tam_bloque = config_valores_filesystem.tam_bloque;
+    //tam_bloque = config_valores_filesystem.tam_bloque;
     tamanio_swap = config_valores_filesystem.cant_bloques_swap * config_valores_filesystem.tam_bloque;
     tamanio_archivo_bloques = config_valores_filesystem.cant_bloques_total * config_valores_filesystem.tam_bloque;
     espacio_de_FAT = tamanio_archivo_bloques - tamanio_swap;
@@ -47,10 +49,7 @@ int main(void)
     sem_init(&(escritura_completada), 0 ,0);
     sem_init(&(lectura_completada), 0 ,0);
 
-    crear_fat();
-    crear_archivo_de_bloque();
-    inicializar_swap();
-    
+    //crear_archivo_de_bloque();
 
     while(1) 
     {

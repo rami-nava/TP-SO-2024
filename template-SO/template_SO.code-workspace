@@ -10,7 +10,8 @@
 			"socket.h": "c",
 			"list.h": "c",
 			"types.h": "c",
-			"operaciones.h": "c"
+			"operaciones.h": "c",
+			"kernel.h": "c"
 		}
 	}
 }

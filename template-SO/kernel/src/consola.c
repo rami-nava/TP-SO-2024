@@ -12,15 +12,26 @@ void inicializar_consola_interactiva() {
   }
 }
 
+void parse_ejecutar_script(char *linea) {
+  char **linea_espaciada = string_split(linea, " ");  // Divide la línea en tokens
+  
+  if (linea_espaciada && linea_espaciada[1]) {
+    int valor;
+    if (sscanf(linea_espaciada[1], "%d", &valor) == 1) {
+      ejecutar_script(valor);
+    }
+    string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token
+    free(linea_espaciada);  // Libera la memoria asignada al array
+  }
+}
+
 void parse_iniciar_proceso(char *linea) {
   char path[256]; 
   char **linea_espaciada = string_split(linea," ");  // Divide la línea en tokens
   
   if (linea_espaciada && linea_espaciada[1] && linea_espaciada[2]) {
     if (sscanf(linea_espaciada[1], "\"%255[^\"]\"", path) == 1 ) {
-      // Extrae la ruta, el tamaño y la prioridad, y los asigna a las variables
-      printf("Proceso iniciandose, path %s\n", path);
-      crear_pcb(path);
+      iniciar_proceso(path);
     }
     string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token
     free(linea_espaciada);  // Libera la memoria asignada al array
@@ -33,8 +44,7 @@ void parse_finalizar_proceso(char *linea) {
   if (linea_espaciada && linea_espaciada[1]) {
     int pid;
     if (sscanf(linea_espaciada[1], "%d", &pid) == 1) {
-      // Extrae el PID y lo asigna a la variable
-      //consola_finalizar_proceso(pid);
+      finalizar_proceso(pid);
     }
     string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token
     free(linea_espaciada);  // Libera la memoria asignada al array
@@ -45,7 +55,7 @@ void parse_detener_planificacion (char* linea) {
   char **linea_espaciada = string_split(linea," ");  // Divide la línea en tokens
 
   if (linea_espaciada) {
-     //consola_detener_planificacion();
+     detener_planificacion();
   }
    string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token
    free(linea_espaciada);  // Libera la memoria asignada al array
@@ -55,32 +65,16 @@ void parse_iniciar_planificacion (char* linea) {
   char **linea_espaciada = string_split(linea, " ");  // Divide la línea en tokens
 
   if (linea_espaciada) {
-     //consola_iniciar_planificacion();
+     iniciar_planificacion();
   }
    string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token
    free(linea_espaciada);  // Libera la memoria asignada al array
 }
 
-void parse_multiprogramacion(char *linea) {
-  char **linea_espaciada = string_split(linea, " ");  // Divide la línea en tokens
-  
-  if (linea_espaciada && linea_espaciada[1]) {
-    int valor;
-    if (sscanf(linea_espaciada[1], "%d", &valor) == 1) {
-      // Extrae el valor y lo asigna a la variable
-      consola_modificar_multiprogramacion(valor);
-    }
-    string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token
-    free(linea_espaciada);  // Libera la memoria asignada al array
-  }
-}
-
-
 void parse_proceso_estado (char* linea) {
   char **linea_espaciada = string_split(linea, " ");  // Divide la línea en tokens
 
   if (linea_espaciada) {
-     printf("Listamos los estados de los procesos\n");
      consola_proceso_estado();
   }
    string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token

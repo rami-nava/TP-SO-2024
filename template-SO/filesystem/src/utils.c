@@ -35,6 +35,10 @@ void cargar_configuracion(char* path) {
 }
 
 void atender_clientes_filesystem(void* conexion) {
+	//TODO
+}
+/*
+void atender_clientes_filesystem(void* conexion) {
     int cliente_fd = *(int*)conexion;
     char* nombre_archivo = NULL;
     int nuevo_tamanio_archivo = -1;
@@ -166,4 +170,4 @@ void atender_clientes_filesystem(void* conexion) {
 		eliminar_paquete(paquete);
 	}
 }
-
+*/
