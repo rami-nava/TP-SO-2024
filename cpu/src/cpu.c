@@ -12,12 +12,12 @@ t_log *cpu_logger;
 
 int main(void)
 {
-    cpu_logger = log_create("/home/utnso/tp-2023-2c-KernelTitans/cpu/cfg/cpu.log", "cpu.log", 1, LOG_LEVEL_INFO);
+    cpu_logger = log_create("/home/utnso/tp-2024-1c-SegmenFault/cpu/cfg/cpu.log", "cpu.log", 1, LOG_LEVEL_INFO);
 
-    cargar_configuracion("/home/utnso/tp-2023-2c-KernelTitans/cpu/cfg/cpu.config");
+    cargar_configuracion("/home/utnso/tp-2024-1c-SegmenFault/cpu/cfg/cpu.config");
 
     socket_cliente_memoria = crear_conexion(config_valores_cpu.ip_memoria, config_valores_cpu.puerto_memoria);
-    realizar_handshake(socket_cliente_memoria);
+    //realizar_handshake(socket_cliente_memoria);
 
     socket_servidor_dispatch = iniciar_servidor(config_valores_cpu.ip_cpu, config_valores_cpu.puerto_escucha_dispatch);
     socket_servidor_interrupt = iniciar_servidor(config_valores_cpu.ip_cpu, config_valores_cpu.puerto_escucha_interrupt);

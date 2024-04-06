@@ -21,6 +21,8 @@ typedef struct
    char* puerto_memoria;
    char* puerto_escucha_dispatch;
    char* puerto_escucha_interrupt;
+   int cantidad_entradas_tlb;
+   char* algoritmo_tlb;
 } arch_config;
 
 extern arch_config config_valores_cpu;

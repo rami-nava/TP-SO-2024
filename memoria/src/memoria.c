@@ -7,8 +7,7 @@ int socket_memoria;
 int server_fd;
 arch_config config_valores_memoria;
 sem_t solucionado_pf;
-
-
+t_list* procesos_en_memoria;
 
 int main(void) {
 	
@@ -17,7 +16,7 @@ int main(void) {
     ///CARGAR LA CONFIGURACION
     cargar_configuracion("/home/utnso/tp-2024-1c-SegmenFault/memoria/cfg/memoria.config");
 
-    creacion_espacio_usuario();
+    //creacion_espacio_usuario();
 
     procesos_en_memoria = list_create();
 

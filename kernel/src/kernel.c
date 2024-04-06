@@ -15,9 +15,9 @@ pthread_t corto_plazo;
 //========================================================================================================================================
 int main(void)
 {
-	kernel_logger = log_create("/home/utnso/tp-2024-1c-NoMasRecursadas/kernel/cfg/kernel.log", "kernel.log", 1, LOG_LEVEL_INFO);
+	kernel_logger = log_create("/home/utnso/tp-2024-1c-SegmenFault/kernel/cfg/kernel.log", "kernel.log", 1, LOG_LEVEL_INFO);
 
-	cargar_configuracion("/home/utnso/tp-2024-1c-NoMasRecursadas/kernel/cfg/kernel.config");
+	cargar_configuracion("/home/utnso/tp-2024-1c-SegmenFault/kernel/cfg/kernel.config");
 
     //CPU
     socket_cpu_dispatch = crear_conexion(config_valores_kernel.ip_cpu, config_valores_kernel.puerto_cpu_dispatch);
@@ -27,7 +27,7 @@ int main(void)
     socket_memoria = crear_conexion(config_valores_kernel.ip_memoria, config_valores_kernel.puerto_memoria);
 
     //FILESYSTEM
-    socket_filesystem = crear_conexion(config_valores_kernel.ip_filesystem, config_valores_kernel.puerto_filesystem);
+    //socket_filesystem = crear_conexion(config_valores_kernel.ip_filesystem, config_valores_kernel.puerto_filesystem);
 
     inicializar_planificador();
     

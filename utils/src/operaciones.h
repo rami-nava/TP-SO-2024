@@ -32,7 +32,7 @@ typedef enum{
 
 typedef enum{
 	FIFO,
-	PRIORIDADES,
+	VRR,
 	RR
 } algoritmo;
 

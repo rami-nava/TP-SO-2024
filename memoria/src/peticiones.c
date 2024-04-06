@@ -54,11 +54,10 @@ void manejo_conexiones(void* conexion)
 	case HANDSHAKE:
 		//Mandamos por Handshake el tam_pagina
 		int entero = sacar_entero_de_paquete(&stream);
-		enviar_paquete_handshake(cliente);
+		//enviar_handshake(cliente);
 		break;
 
 	case MANDAR_INSTRUCCION:
-
 		//la cpu nos manda el program counter y el pid del proceso que recibio para ejecutar
 		posicion_pedida = sacar_entero_de_paquete(&stream);
 		pid_proceso = sacar_entero_de_paquete(&stream);

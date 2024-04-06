@@ -4,7 +4,7 @@ int indice_pid = 0;
 sem_t mutex_pid;
 //==================================================== FUNCIONES ESTATICAS ====================================================================================
 static int incrementar_pid();
-static int enviar_creacion_estructuras_memoria(t_pcb* pcb);
+static void enviar_creacion_estructuras_memoria(t_pcb* pcb);
 
 //==================================================== CREAR_PCB ====================================================================================
 t_pcb* crear_pcb(char* path) 
@@ -41,6 +41,21 @@ t_pcb* crear_pcb(char* path)
     return nuevo_pcb;
 }
 
+static void enviar_creacion_estructuras_memoria(t_pcb* pcb){
+    t_paquete* paquete = crear_paquete(CREACION_ESTRUCTURAS_MEMORIA);
+    agregar_entero_a_paquete(paquete,pcb-> pid);
+    agregar_cadena_a_paquete(paquete,pcb->path_proceso);
+    enviar_paquete(paquete, socket_memoria);
+    eliminar_paquete(paquete);
+
+    int respuesta = 0;
+    recv(socket_memoria, &respuesta,sizeof(int),0);
+
+    if (respuesta != 1){
+        log_error(kernel_logger, "No se pudieron crear estructuras en memoria");
+    }
+}
+
 static int incrementar_pid() {
     sem_wait(&(mutex_pid));
     indice_pid ++;
@@ -65,22 +80,6 @@ t_contexto* enviar_a_cpu(t_pcb* proceso) {
 
     return contexto_ejecucion;
  
-}
-
-static void enviar_creacion_estructuras(t_pcb* pcb) {
-    t_paquete* paquete = crear_paquete(CREACION_ESTRUCTURAS_MEMORIA);
-    agregar_entero_a_paquete(paquete,pcb-> pid);
-    agregar_cadena_a_paquete(paquete,pcb->path_proceso);
-    enviar_paquete(paquete, socket_memoria);
-    eliminar_paquete(paquete);
-
-    int respuesta = 0;
-    recv(socket_memoria, &respuesta,sizeof(int),0);
-
-    if (respuesta != 1)
-    {
-        log_error(kernel_logger, "No se pudieron crear estructuras en memoria");
-    }
 }
 
 void actualizar_PCB(t_pcb* proceso){
