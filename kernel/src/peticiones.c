@@ -7,7 +7,6 @@ static void a_mimir(t_pcb * proceso);
 static void exit_c(t_pcb* proceso, char **parametros);
 
 static void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo);
-static void loggear_finalizacion_proceso(t_pcb* proceso, char* motivo);
 static void volver_a_CPU(t_pcb* proceso);
 
 
@@ -74,6 +73,6 @@ static void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo) {
     log_info(kernel_logger,"PID: %d - Bloqueado por: %s", proceso->pid, motivo); 
 }
 
-static void loggear_finalizacion_proceso(t_pcb* proceso, char* motivo) {
+void loggear_finalizacion_proceso(t_pcb* proceso, char* motivo) {
     log_info(kernel_logger,"Finaliza el proceso %d - Motivo: %s", proceso->pid, motivo); 
 }

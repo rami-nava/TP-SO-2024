@@ -26,9 +26,6 @@ int main(void)
     //MEMORIA
     socket_memoria = crear_conexion(config_valores_kernel.ip_memoria, config_valores_kernel.puerto_memoria);
 
-    //FILESYSTEM
-    //socket_filesystem = crear_conexion(config_valores_kernel.ip_filesystem, config_valores_kernel.puerto_filesystem);
-
     inicializar_planificador();
     
     pthread_create(&largo_plazo, NULL, (void* ) planificador_largo_plazo, NULL);

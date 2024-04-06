@@ -25,11 +25,11 @@
 extern t_log *kernel_logger;
 extern t_config *config;
 extern char* pids;
+extern int corriendo;
 
 extern int socket_cpu_dispatch;
 extern int socket_cpu_interrupt;
 extern int socket_memoria;
-extern int socket_filesystem;
 
 extern sem_t mutex_pid;
 extern sem_t hay_procesos_nuevos;
@@ -44,6 +44,8 @@ extern pthread_mutex_t mutex_exit;
 extern pthread_mutex_t mutex_blocked;
 extern pthread_mutex_t mutex_recursos;
 extern pthread_mutex_t mutex_colas;
+extern pthread_mutex_t mutex_corriendo;
+extern pthread_cond_t cond_corriendo;
 
 
 extern t_list *cola_NEW;
@@ -109,6 +111,7 @@ void asignar_PBC_a_contexto(t_pcb* proceso);
 void liberar_PCB(t_pcb* proceso);
 void destruir_PCB(t_pcb* proceso);
 void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion);
+void loggear_finalizacion_proceso(t_pcb* proceso, char* motivo);
 
 //================================================ Recursos =====================================================================================================================
 int indice_recurso (char* );
@@ -126,16 +129,17 @@ void parse_iniciar_proceso(char *linea);
 void parse_finalizar_proceso(char *linea);
 void parse_detener_planificacion (char* linea);
 void parse_iniciar_planificacion (char* linea);
-void parse_multiprogramacion(char *linea);
+void parse_ejecutar_script(char *linea);
 void parse_proceso_estado (char* linea);
 void consola_parsear_instruccion(char *leer_linea);
-void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad);
 void consola_finalizar_proceso(int pid);
 void consola_detener_planificacion();
 void consola_iniciar_planificacion();
-void consola_modificar_multiprogramacion(int);
 void consola_proceso_estado();
-void detener_planificacion ();
+void detener_planificacion();
+void consola_ejecutar_script(char *path);
+void consola_iniciar_proceso(char *path);
+
 
 
 ////======================================== File System ===========================================================================================================
