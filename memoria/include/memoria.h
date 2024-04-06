@@ -74,7 +74,7 @@ typedef struct
 {
 	int pid;
 	t_list* paginas_en_memoria;
-	char* path_proceso;
+	t_list* instrucciones;              
 	t_list* bloques_reservados;
 	int cantidad_entradas;                 
 } t_proceso_en_memoria;
@@ -89,9 +89,9 @@ void inicializar_semaforos();
 
 /// @brief CPU + INSTRUCCIONES ///
 void enviar_paquete_handshake(int );
-void enviar_paquete_instrucciones(int , char* , int );
-char* leer_archivo_instrucciones(char* );
-char* buscar_path_proceso(int );
+t_proceso_en_memoria* crear_estructuras_memoria(int pid, FILE* archivo);
+char* buscar_instruccion_proceso(int program_counter, int pid);
+t_proceso_en_memoria *buscar_proceso(t_list *lista, int pid_buscado);
 void desocupar_marco(int nro_marco);
 void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid);
 

@@ -25,6 +25,8 @@ int cantidad_parametros;
 
 // ------- Definiciones del ciclo ------- //
 static void fetch();
+static void pedir_instruccion();
+static void recibir_instruccion();
 static void decode();
 static int buscar_comando(char *elemento, char **lista_de_comandos);
 static void execute();
@@ -46,12 +48,34 @@ void ciclo_de_instruccion(){
 
 // ------- Funciones del ciclo ------- //
 static void fetch() { 
-    int proxima_inst_a_ejecutar = contexto_ejecucion->program_counter;
+    log_info(cpu_logger,"PID: <%d> - FETCH - Program Counter: <%d>",contexto_ejecucion->pid, contexto_ejecucion->program_counter);
 
-    //pedir a la memoria la proxima instruccion
+    //le mando el program pointer a la memoria para que me pase la instruccion a la que apunta
+    pedir_instruccion();
+    recibir_instruccion();
+    contexto_ejecucion->program_counter +=1;
+}
 
-    instruccion_a_ejecutar = list_get(contexto_ejecucion->instrucciones,proxima_inst_a_ejecutar); 
-    contexto_ejecucion->program_counter += 1;
+static void pedir_instruccion(){
+    t_paquete *paquete = crear_paquete(MANDAR_INSTRUCCION);
+    agregar_entero_a_paquete(paquete,contexto_ejecucion->program_counter);
+    agregar_entero_a_paquete(paquete,contexto_ejecucion->pid);
+    enviar_paquete(paquete, socket_cliente_memoria);
+    eliminar_paquete(paquete);
+}
+
+static void recibir_instruccion()
+{
+    t_paquete *paquete = recibir_paquete(socket_cliente_memoria);
+    void *stream = paquete->buffer->stream;
+
+    if (paquete->codigo_operacion == INSTRUCCION_SOLICITADA){
+        instruccion_a_ejecutar = sacar_cadena_de_paquete(&stream);
+    }else{
+        log_error(cpu_logger,"Falla al recibir las instrucciones\n");
+        abort();
+    }
+    eliminar_paquete(paquete);
 }
 
 static void decode(){

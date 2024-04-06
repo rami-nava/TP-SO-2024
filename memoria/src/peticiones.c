@@ -57,7 +57,7 @@ void manejo_conexiones(void* conexion)
 		enviar_paquete_handshake(cliente);
 		break;
 
-	case MANDAR_INSTRUCCIONES:
+	case MANDAR_INSTRUCCION:
 
 		//la cpu nos manda el program counter y el pid del proceso que recibio para ejecutar
 		posicion_pedida = sacar_entero_de_paquete(&stream);
@@ -65,22 +65,30 @@ void manejo_conexiones(void* conexion)
 
 		usleep(config_valores_memoria.retardo_respuesta * 1000);  
 
-		//aca vamos a buscar el proceso con el pid que recibimos y obtener el path_asignado
+		//buscamos la instruccion dentro de la lista de instruciones del pid que recibimos 
+		char* instruccion_pedida = buscar_instruccion_proceso(posicion_pedida, pid_proceso);
         
-		pthread_mutex_lock(&mutex_path);
-		path_asignado = buscar_path_proceso(pid_proceso); 
-        pthread_mutex_unlock(&mutex_path);
-
-		//mandamos directamente el path del proceso porque ahi ya voy a tener las instrucciones leidas y cargadas
-		enviar_paquete_instrucciones(cliente, path_asignado, posicion_pedida);
+		t_paquete* paquete = crear_paquete(INSTRUCCION_SOLICITADA); 
+		agregar_cadena_a_paquete(paquete, instruccion_pedida); 
+		enviar_paquete(paquete, cliente);
+		eliminar_paquete(paquete);
 		break;
 
 	case CREACION_ESTRUCTURAS_MEMORIA:
 		pid_proceso = sacar_entero_de_paquete(&stream);
 		path_proceso = sacar_cadena_de_paquete(&stream);
 
-		crear_estructuras_memoria(pid_proceso);
-		
+		//abrimos el archivo de instrucciones del proceso 1 sola vez a penas los creamos
+		FILE *f;
+		if (!(f = fopen(path_proceso, "r"))) {
+			log_error(memoria_logger, "No se encontro el archivo de instrucciones");
+			return -1;
+		}
+		free(path_proceso);
+
+		//guardo las instrucciones leidas en una lista dentro del proceso
+		t_proceso_en_memoria* proceso_nuevo = crear_estructuras_memoria(pid_proceso, f);
+
 		int ok_creacion = 1;
         send(cliente, &ok_creacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras creadas en memoria exitosamente\n");
