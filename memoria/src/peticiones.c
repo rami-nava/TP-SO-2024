@@ -86,7 +86,7 @@ void manejo_conexiones(void* conexion)
 		free(path_proceso);
 
 		//guardo las instrucciones leidas en una lista dentro del proceso
-		t_proceso_en_memoria* proceso_nuevo = crear_estructuras_memoria(pid_proceso, f);
+		t_proceso_en_memoria* proceso_nuevo = crear_estructuras_memoria(pid_proceso, archivo_instrucciones);
 
 		int ok_creacion = 1;
         send(cliente, &ok_creacion, sizeof(int), 0);
