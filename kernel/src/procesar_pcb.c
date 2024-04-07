@@ -35,9 +35,10 @@ t_pcb* crear_pcb(char* path)
     nuevo_pcb->DI = 0;
     nuevo_pcb->quantum = config_valores_kernel.quantum;
 
+    ingresar_a_NEW(nuevo_pcb);
     enviar_creacion_estructuras_memoria(nuevo_pcb);
 
-    //semaforo para avisar proceso nuevo?
+    sem_post(&hay_procesos_nuevos);
     return nuevo_pcb;
 }
 
@@ -46,7 +47,6 @@ static void enviar_creacion_estructuras_memoria(t_pcb* pcb){
     agregar_entero_a_paquete(paquete,pcb-> pid);
     agregar_cadena_a_paquete(paquete,pcb->path_proceso);
     enviar_paquete(paquete, socket_memoria);
-    eliminar_paquete(paquete);
 
     int respuesta = 0;
     recv(socket_memoria, &respuesta,sizeof(int),0);
@@ -83,27 +83,37 @@ t_contexto* enviar_a_cpu(t_pcb* proceso) {
 }
 
 void actualizar_PCB(t_pcb* proceso){
-    
 	//list_destroy_and_destroy_elements(proceso->instrucciones, free);
     proceso->pid = contexto_ejecucion->pid;
     proceso->program_counter = contexto_ejecucion->program_counter;
+    proceso->PC = contexto_ejecucion->PC;
     proceso->AX = contexto_ejecucion->AX;
     proceso->BX = contexto_ejecucion->BX;
     proceso->CX = contexto_ejecucion->CX;
     proceso->DX = contexto_ejecucion->DX;
+    proceso->EAX = contexto_ejecucion->EAX;
+    proceso->EBX = contexto_ejecucion->EBX;
+    proceso->ECX = contexto_ejecucion->ECX;
+    proceso->EDX = contexto_ejecucion->EDX;
+    proceso->SI = contexto_ejecucion->SI;
+    proceso->DI = contexto_ejecucion->DI;
 }
 
 void asignar_PBC_a_contexto(t_pcb* proceso){
 
-    //list_destroy_and_destroy_elements(contexto_ejecucion->instrucciones, free);
-    //contexto_ejecucion->instrucciones = list_duplicate(proceso->instrucciones);
-    contexto_ejecucion->cantidad_instrucciones = list_size(contexto_ejecucion->instrucciones);
     contexto_ejecucion->pid = proceso->pid;
     contexto_ejecucion->program_counter = proceso->program_counter;
+    contexto_ejecucion->PC = proceso->PC;
     contexto_ejecucion->AX = proceso->AX;
     contexto_ejecucion->BX = proceso->BX;
     contexto_ejecucion->CX = proceso->CX;
     contexto_ejecucion->DX = proceso->DX;
+    contexto_ejecucion->EAX = proceso->EAX;
+    contexto_ejecucion->EBX = proceso->EBX;
+    contexto_ejecucion->ECX = proceso->ECX;
+    contexto_ejecucion->EDX = proceso->EDX;
+    contexto_ejecucion->SI = proceso->SI;
+    contexto_ejecucion->DI = proceso->DI;
 }
 
 //==================================================== ELIMINAR_PCB ====================================================================================
