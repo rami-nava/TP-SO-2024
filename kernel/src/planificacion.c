@@ -15,7 +15,6 @@ char *estados_procesos[5] = {"NEW", "READY", "EXEC", "BLOCK", "SALIDA"};
 
 static t_pcb *siguiente_proceso_a_ready();
 static void log_ingreso_a_ready();
-static void recibir_estructura_memoria(t_pcb *pcb);
 //========================================================================================================================================
 
 void planificador_largo_plazo(){
@@ -27,8 +26,6 @@ void planificador_largo_plazo(){
         sem_wait(&grado_multiprogramacion);
 
         t_pcb *pcb = siguiente_proceso_a_ready();
-
-        recibir_estructura_memoria(pcb); 
 
         cambio_de_estado(pcb, READY);
         
@@ -112,14 +109,3 @@ static void log_ingreso_a_ready()
     free(pids);
 }
 
-void recibir_estructura_memoria(t_pcb *pcb)
-{
-    //TODO
-    t_paquete* paquete = crear_paquete(CREACION_ESTRUCTURAS_MEMORIA);
-    agregar_entero_a_paquete(paquete, pcb->pid);
-    enviar_paquete(paquete, socket_memoria);
-
-    int ok_creacion = 1;
-    recv(socket_memoria, &ok_creacion, sizeof(int), 0);
-    log_info(kernel_logger,"Estructuras creadas en memoria exitosamente\n");
-}

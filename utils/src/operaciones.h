@@ -19,7 +19,8 @@
 
 //==================================================== Estructuras =========================================================================================================
 typedef enum{
-	CREACION_ESTRUCTURAS_MEMORIA
+	CREACION_ESTRUCTURAS_MEMORIA,
+	CONTEXTO_ACTUALIZADO
 } op_code;
 
 typedef enum{
@@ -51,7 +52,6 @@ typedef enum {
 	INSTRUCCION_SOLICITADA,
 	FINALIZAR_EN_MEMORIA,
 	FINALIZAR_PROCESO,
-	CONTEXTO_ACTUALIZADO,
 	WRITE,
 	WAIT,
 	SIGNAL,

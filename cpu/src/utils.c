@@ -33,11 +33,11 @@ void atender_dispatch()
         int instruccion_actual = -1;
 
         t_paquete *paquete = recibir_paquete(socket_cliente_dispatch);
-        //void *stream = paquete->buffer->stream;
+        void *stream = paquete->buffer->stream;
 
         if (paquete->codigo_operacion == CONTEXTO_ACTUALIZADO) {
 				if (contexto_ejecucion != NULL) 
-				recibir_contexto(socket_cliente_dispatch);
+				recibir_contexto_cpu(paquete,stream);
                 while((no_es_bloqueante(instruccion_actual))) {
                     ciclo_de_instruccion();
                 }	

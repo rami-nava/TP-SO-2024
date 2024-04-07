@@ -58,8 +58,30 @@ void recibir_contexto(int socket_cliente)
     t_paquete *paquete = recibir_paquete(socket_cliente);
     void *stream = paquete->buffer->stream;
     
-    t_contexto* contexto_ejecucion = malloc(sizeof(t_contexto));
+    contexto_ejecucion->pid = sacar_entero_de_paquete(&stream);
+    contexto_ejecucion->program_counter = sacar_entero_de_paquete(&stream);
+    contexto_ejecucion->PC = sacar_entero_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->AX = sacar_entero_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->BX = sacar_entero_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->CX = sacar_entero_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->DX = sacar_entero_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->EAX = sacar_entero_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->EBX = sacar_entero_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->ECX = sacar_entero_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->EDX = sacar_entero_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->SI = sacar_entero_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->DI = sacar_entero_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->motivo_desalojo->cantidad_parametros = sacar_entero_de_paquete(&stream);
+    for (int i = 0; i < contexto_ejecucion->motivo_desalojo->cantidad_parametros; i++)
+    {
+        contexto_ejecucion->motivo_desalojo->parametros[i] = sacar_cadena_de_paquete(&stream);
+    }
+    contexto_ejecucion->motivo_desalojo->comando = sacar_entero_de_paquete(&stream);
+    eliminar_paquete(paquete);
+}
 
+void recibir_contexto_cpu(t_paquete* paquete, void* stream)
+{   
     contexto_ejecucion->pid = sacar_entero_de_paquete(&stream);
     contexto_ejecucion->program_counter = sacar_entero_de_paquete(&stream);
     contexto_ejecucion->PC = sacar_entero_sin_signo_de_paquete(&stream);
