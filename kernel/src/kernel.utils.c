@@ -33,7 +33,7 @@ void inicializar_semaforos(){
   
     sem_init(&hay_procesos_nuevos, 0, 0);
     sem_init(&hay_procesos_ready, 0, 0);
-    sem_init(&mutex_pid, 0, 0);
+    sem_init(&mutex_pid, 0, 1);
     sem_init(&grado_multiprogramacion, 0, config_valores_kernel.grado_multiprogramacion);
 }
 
