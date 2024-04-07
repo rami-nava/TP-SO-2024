@@ -83,12 +83,10 @@ typedef struct
 //======================================================= FUNCIONES =========================================================================================================
 /// CONEXIONES y CONFIG ///
 int atender_clientes_memoria(int);
-void manejo_conexiones(void* );
 void cargar_configuracion(char* );
 void inicializar_semaforos();
 
 /// @brief CPU + INSTRUCCIONES ///
-void enviar_paquete_handshake(int );
 t_proceso_en_memoria* crear_estructuras_memoria(int pid, FILE* archivo);
 char* buscar_instruccion_proceso(int program_counter, int pid);
 t_proceso_en_memoria *buscar_proceso(t_list *lista, int pid_buscado);

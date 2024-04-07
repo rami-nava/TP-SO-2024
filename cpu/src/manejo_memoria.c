@@ -5,44 +5,12 @@
 int tam_pagina;
 
 // FUNCIONES INTERNAS //
-static void enviar_handshake();
-static void recibir_handshake();
 static int traducir_pagina_a_marco(uint32_t numero_pagina);
 static void pedir_numero_frame(uint32_t numero_pagina);
 static int numero_marco_pagina();
 static void enviar_paquete_READ(uint32_t direccion_fisica);
 static uint32_t recibir_valor_a_insertar();
 static void enviar_paquete_WRITE(uint32_t direccion_fisica, uint32_t registro);
-//================================================== Handshake =====================================================================
-void realizar_handshake()
-{
-    enviar_handshake();
-    recibir_handshake();
-}
-
-static void enviar_handshake()
-{
-    t_paquete *paquete = crear_paquete(HANDSHAKE);
-    agregar_entero_a_paquete(paquete, 1);
-    enviar_paquete(paquete, socket_cliente_memoria);
-    eliminar_paquete(paquete);
-}
-
-static void recibir_handshake()
-{
-    t_paquete *paquete = recibir_paquete(socket_cliente_memoria);
-    void *stream = paquete->buffer->stream;
-    if (paquete->codigo_operacion == HANDSHAKE)
-    {
-        tam_pagina = sacar_entero_de_paquete(&stream);
-    }
-    else
-    {
-        log_error(cpu_logger, "No me enviaste el tam_pagina :( \n");
-        abort();
-    }
-    eliminar_paquete(paquete);
-}
 
 //================================================== MMU =================================================================================
 int page_fault = -1;

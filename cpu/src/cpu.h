@@ -41,7 +41,6 @@ extern bool hay_page_fault;
 
 // FUNCIONES
 void cargar_configuracion(char *path);
-void realizar_handshake();
 void atender_dispatch();
 void atender_interrupt();
 void mov_in(char* registro, char* direccion_logica);

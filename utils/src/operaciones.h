@@ -19,7 +19,7 @@
 
 //==================================================== Estructuras =========================================================================================================
 typedef enum{
-	HANDSHAKE
+	CREACION_ESTRUCTURAS_MEMORIA
 } op_code;
 
 typedef enum{
@@ -49,7 +49,6 @@ typedef enum {
 	NUMERO_MARCO,
 	MANDAR_INSTRUCCION,
 	INSTRUCCION_SOLICITADA,
-	CREACION_ESTRUCTURAS_MEMORIA,
 	FINALIZAR_EN_MEMORIA,
 	FINALIZAR_PROCESO,
 	CONTEXTO_ACTUALIZADO,

@@ -9,6 +9,8 @@ pthread_mutex_t mutex_path;
 pthread_mutex_t mutex_instrucciones;
 pthread_mutex_t mutex_lista_instrucciones;
 
+static void manejo_conexiones(void* conexion);
+
 
 // ATENDER CLIENTES CON HILOS//
 int atender_clientes_memoria(int socket_servidor){
@@ -28,7 +30,7 @@ int atender_clientes_memoria(int socket_servidor){
 }
 
 // ATENDER DISPATCH //
-void manejo_conexiones(void* conexion)
+static void manejo_conexiones(void* conexion)
 {
 	int cliente = *(int*)conexion;
 	int posicion_pedida = 0;
@@ -51,12 +53,6 @@ void manejo_conexiones(void* conexion)
     void* stream = paquete->buffer->stream;
 
 	switch(paquete->codigo_operacion){		
-	case HANDSHAKE:
-		//Mandamos por Handshake el tam_pagina
-		int entero = sacar_entero_de_paquete(&stream);
-		//enviar_handshake(cliente);
-		break;
-
 	case MANDAR_INSTRUCCION:
 		//la cpu nos manda el program counter y el pid del proceso que recibio para ejecutar
 		posicion_pedida = sacar_entero_de_paquete(&stream);
