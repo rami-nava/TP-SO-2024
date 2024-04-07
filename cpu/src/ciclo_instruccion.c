@@ -61,7 +61,6 @@ static void pedir_instruccion(){
     agregar_entero_a_paquete(paquete,contexto_ejecucion->program_counter);
     agregar_entero_a_paquete(paquete,contexto_ejecucion->pid);
     enviar_paquete(paquete, socket_cliente_memoria);
-    eliminar_paquete(paquete);
 }
 
 static void recibir_instruccion()
