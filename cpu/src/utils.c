@@ -37,10 +37,8 @@ void atender_dispatch()
 
         if (paquete->codigo_operacion == CONTEXTO_ACTUALIZADO) {
 				if (contexto_ejecucion != NULL) 
-					list_clean_and_destroy_elements (contexto_ejecucion->instrucciones, free),
 				recibir_contexto(socket_cliente_dispatch);
-                while(contexto_ejecucion->program_counter != contexto_ejecucion->cantidad_instrucciones 
-					  && (no_es_bloqueante(instruccion_actual))) {
+                while((no_es_bloqueante(instruccion_actual)) {
                     ciclo_de_instruccion();
                 }	
         }  else {
