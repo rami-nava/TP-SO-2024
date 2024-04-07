@@ -13,8 +13,6 @@ typedef struct {
 typedef struct {
     int pid; 
     int program_counter;
-	int cantidad_instrucciones;
-    t_list* instrucciones; 
     t_motivo_de_desalojo* motivo_desalojo;
     uint32_t PC;
     uint8_t AX;
