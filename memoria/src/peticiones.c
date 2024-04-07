@@ -78,8 +78,8 @@ void manejo_conexiones(void* conexion)
 		path_proceso = sacar_cadena_de_paquete(&stream);
 
 		//abrimos el archivo de instrucciones del proceso 1 sola vez a penas los creamos
-		FILE *f;
-		if (!(f = fopen(path_proceso, "r"))) {
+		FILE * archivo_instrucciones;
+		if (!(archivo_instrucciones = fopen(path_proceso, "r"))) {
 			log_error(memoria_logger, "No se encontro el archivo de instrucciones");
 			return -1;
 		}

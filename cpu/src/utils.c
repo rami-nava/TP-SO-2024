@@ -38,7 +38,7 @@ void atender_dispatch()
         if (paquete->codigo_operacion == CONTEXTO_ACTUALIZADO) {
 				if (contexto_ejecucion != NULL) 
 				recibir_contexto(socket_cliente_dispatch);
-                while((no_es_bloqueante(instruccion_actual)) {
+                while((no_es_bloqueante(instruccion_actual))) {
                     ciclo_de_instruccion();
                 }	
         }  else {
