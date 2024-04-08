@@ -37,7 +37,7 @@ extern int socket_cliente_dispatch;
 extern int socket_cliente_interrupt;
 extern int tam_pagina;
 extern bool hay_page_fault;
-
+extern int instruccion_actual;
 
 // FUNCIONES
 void cargar_configuracion(char *path);

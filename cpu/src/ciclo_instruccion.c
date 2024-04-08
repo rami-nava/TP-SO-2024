@@ -7,19 +7,13 @@ char *comandos[] = {
     [MOV_IN] = "MOV_IN",
     [MOV_OUT] = "MOV_OUT", 
     [SLEEP] = "SLEEP",
-    [F_OPEN] = "F_OPEN",
-    [F_CLOSE] = "F_CLOSE", 
-    [F_SEEK] = "F_SEEK",
-    [F_READ] = "F_READ",
-    [F_WRITE] = "F_WRITE", 
-    [F_TRUNCATE] = "F_TRUNCATE",
     [WAIT] = "WAIT",
     [SIGNAL] = "SIGNAL",
-    [INSTRUCCION_EXIT] = "EXIT"
+    [EXIT] = "EXIT",
+    [7] = NULL
 };
 char* instruccion_a_ejecutar; 
-char** elementos_instrucciones; 
-int instruccion_actual; 
+char** elementos_instrucciones;  
 int cantidad_parametros;
 
 
@@ -28,7 +22,7 @@ static void fetch();
 static void pedir_instruccion();
 static void recibir_instruccion();
 static void decode();
-static int buscar_comando(char *elemento, char **lista_de_comandos);
+static int buscar_comando(char *instruccion);
 static void execute();
 static void liberar_memoria();
 static void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char * parm1, char * parm2, char * parm3);
@@ -48,7 +42,7 @@ void ciclo_de_instruccion(){
 
 // ------- Funciones del ciclo ------- //
 static void fetch() { 
-    log_info(cpu_logger,"PID: <%d> - FETCH - Program Counter: <%d>",contexto_ejecucion->pid, contexto_ejecucion->program_counter);
+    log_info(cpu_logger,"PID: %d - FETCH - Program Counter: %d",contexto_ejecucion->pid, contexto_ejecucion->program_counter);
 
     //le mando el program pointer a la memoria para que me pase la instruccion a la que apunta
     pedir_instruccion();
@@ -80,22 +74,17 @@ static void recibir_instruccion()
 static void decode(){
     elementos_instrucciones = string_n_split(instruccion_a_ejecutar, 4, " ");
     cantidad_parametros = string_array_size(elementos_instrucciones) - 1;
-    instruccion_actual = buscar_comando(elementos_instrucciones[0], comandos);
+    instruccion_actual = buscar_comando(elementos_instrucciones[0]);
 }
 
-static int buscar_comando(char *elemento, char **lista_de_comandos) {
-
-  int i = 0;
-  int tamanio_lista = string_array_size(lista_de_comandos);
-
-  while (i < tamanio_lista) {
-    if (strcmp(elemento, lista_de_comandos[i]) == 0) {
-      return i; 
+static int buscar_comando(char *instruccion) {
+    int tamano_comandos = sizeof(comandos) / sizeof(comandos[0]);
+    for (int i = 0; i < tamano_comandos; i++) {
+        if (comandos[i] != NULL && strcmp(comandos[i], instruccion) == 0) {
+            return i;
+        }
     }
-    i++;
-  }
-
-  return -1;
+    return -1; // Comando no encontrado
 }
  
 static void execute() {
@@ -133,7 +122,7 @@ static void execute() {
         case SIGNAL:
             signal_c(elementos_instrucciones[1]);
             break;
-         case F_OPEN:
+        /*case F_OPEN:
             //f_open(elementosInstruccion[1]);
             break;
         case F_CLOSE:
@@ -150,8 +139,8 @@ static void execute() {
             break;
         case F_TRUNCATE:
             //f_truncate(elementosInstruccion[1], elementosInstruccion[2]);
-            break;
-        case INSTRUCCION_EXIT:
+            break;*/
+        case EXIT:
             exit_c();
             break;
         default:
@@ -179,7 +168,6 @@ static void signal_c(char* recurso){
     modificar_motivo (SIGNAL, 1, recurso, "", "");
     enviar_contexto(socket_cliente_dispatch);
 }
-
 
 static void exit_c() {
     char * terminado = string_duplicate ("SUCCESS");

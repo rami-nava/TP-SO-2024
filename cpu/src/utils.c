@@ -3,6 +3,7 @@
 
 arch_config config_valores_cpu;
 t_config* config;
+int instruccion_actual;
 //================================================== Configuracion =====================================================================
 
 // funcion para levantar el archivo de configuracion de cfg y ponerlo en nuestro stuct de cpu
@@ -30,14 +31,12 @@ void atender_dispatch()
 {
     while(1) 
     {
-        int instruccion_actual = -1;
-
         t_paquete *paquete = recibir_paquete(socket_cliente_dispatch);
         void *stream = paquete->buffer->stream;
 
         if (paquete->codigo_operacion == CONTEXTO_ACTUALIZADO) {
 				recibir_contexto_cpu(paquete,stream);
-                while((no_es_bloqueante(instruccion_actual))) {
+                while(no_es_bloqueante(instruccion_actual)) {
                     ciclo_de_instruccion();
                 }	
         }  else {
@@ -48,12 +47,11 @@ void atender_dispatch()
 }
 
 //================================================== Funciones Auxiliares =====================================================================
-
-
 bool no_es_bloqueante(codigo_instrucciones instruccion_actual) {
 	codigo_instrucciones instrucciones_bloqueantes[13] = {
-        SLEEP, WAIT, SIGNAL, INSTRUCCION_EXIT, 
-		F_OPEN, F_CLOSE, F_SEEK, F_READ, F_WRITE, F_TRUNCATE	
+        SLEEP, WAIT, SIGNAL, EXIT, 
+		RESIZE, IO_GEN_SLEEP, IO_STDIN_READ, IO_STDOUT_WRITE, IO_FS_CREATE,
+	    IO_FS_DELETE, IO_FS_TRUNCATE, IO_FS_WRITE, IO_FS_READ
         };
 
         for (int i = 0; i < 13; i++) 

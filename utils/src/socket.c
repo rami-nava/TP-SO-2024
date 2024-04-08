@@ -63,7 +63,6 @@ int iniciar_servidor(char *ip, char *puerto)
 	listen(socketServidor, SOMAXCONN);
 
 	freeaddrinfo(servinfo);
-	printf("Listo para escuchar a mi cliente");
 
 	return socketServidor;
 }

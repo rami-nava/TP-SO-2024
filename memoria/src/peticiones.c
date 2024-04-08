@@ -66,7 +66,6 @@ static void manejo_conexiones(void* conexion)
 		t_paquete* paquete = crear_paquete(INSTRUCCION_SOLICITADA); 
 		agregar_cadena_a_paquete(paquete, instruccion_pedida); 
 		enviar_paquete(paquete, cliente);
-		eliminar_paquete(paquete);
 		break;
 
 	case CREACION_ESTRUCTURAS_MEMORIA:

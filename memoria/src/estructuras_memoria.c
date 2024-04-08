@@ -28,18 +28,13 @@ t_proceso_en_memoria* crear_estructuras_memoria(int pid, FILE* archivo){
 	free(instruccion);
 	fclose(archivo);
 
-    //muestro las instrucciones a ejecutar del proceso
-	for(int i=0; i<list_size(proceso->instrucciones); i++){
-		char* aux= list_get(proceso->instrucciones, i);
-		printf("%s\n",aux);
-	}
-
 	list_add(procesos_en_memoria, proceso);
 	return proceso;
 }
 
 char* buscar_instruccion_proceso(int program_counter, int pid){
 	t_proceso_en_memoria *proceso = buscar_proceso(procesos_en_memoria, pid);
+	//if(proceso->instrucciones)
 	char *instruccion = list_get(proceso->instrucciones, program_counter);
 	return instruccion;
 }

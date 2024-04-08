@@ -15,7 +15,7 @@ void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion
         case SLEEP:
             sleep_c(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
-        case INSTRUCCION_EXIT:
+        case EXIT:
             exit_c(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
     default:
@@ -52,7 +52,7 @@ static void sleep_c(t_pcb *proceso, char **parametros){
 static void exit_c(t_pcb* proceso, char **parametros){   
     
     //El proceso entra en EXIT
-    cambio_de_estado (proceso, EXIT); 
+    cambio_de_estado (proceso, SALIDA); 
 
     //Avisas pq finalizo el proceso
     loggear_finalizacion_proceso(proceso, parametros[0]); 

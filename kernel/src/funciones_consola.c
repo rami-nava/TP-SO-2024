@@ -142,7 +142,7 @@ void consola_finalizar_proceso(int pid) {
         } 
         else {
         //El proceso entra en EXIT
-        cambio_de_estado (pcb_asociado, EXIT); 
+        cambio_de_estado (pcb_asociado, SALIDA); 
 
         //Avisas pq finalizo el proceso
         loggear_finalizacion_proceso(pcb_asociado, "SUCCESS"); 
