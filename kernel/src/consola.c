@@ -123,5 +123,4 @@ void consola_parsear_instruccion(char *leer_linea) {
       break;
   }
 
-  printf("Busco otra instrucción\n");
 }

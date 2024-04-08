@@ -26,7 +26,14 @@ void listar_PIDS(t_list *cola) {
     list_iterate(cola, agregar_PID);
 }
 
-
+void detener_planificacion() {
+          pthread_mutex_lock(&mutex_corriendo);
+        while (corriendo == 0) { // Mientras no se detenga
+           
+            pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
+        }
+        pthread_mutex_unlock(&mutex_corriendo);
+}
 
 
 

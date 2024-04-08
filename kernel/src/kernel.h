@@ -97,7 +97,7 @@ void agregar_PID(void *valor);
 void listar_PIDS(t_list *cola);
 void cambio_de_estado (t_pcb *pcb, estado_proceso estado_nuevo);
 void ingresar_a_READY(t_pcb *pcb);
-
+void ingresar_a_NEW(t_pcb *pcb);
 ////======================================== MEMORIA ===========================================================================================================
 void enviar_pcb_a_memoria(t_pcb *, int, op_code);
 op_code esperar_respuesta_memoria(int);
@@ -140,9 +140,9 @@ void consola_proceso_estado();
 void detener_planificacion();
 void consola_ejecutar_script(char *path);
 void consola_iniciar_proceso(char *path);
+void detener_planificacion();
 
 
-
-////======================================== File System ===========================================================================================================
+////======================================== IO ===========================================================================================================
 
 #endif
