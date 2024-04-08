@@ -86,6 +86,12 @@ void agregar_entero_sin_signo_a_paquete(t_paquete* paquete, uint32_t entero_no_s
     paquete->buffer->size += sizeof(uint32_t);
 }
 
+void agregar_byte_sin_signo_a_paquete(t_paquete* paquete, uint8_t byte_no_signado)
+{
+    paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + sizeof(uint8_t));
+    memcpy(paquete->buffer->stream + paquete->buffer->size, &byte_no_signado, sizeof(uint8_t));
+    paquete->buffer->size += sizeof(uint8_t);
+}
 
 // Función para agregar datos de tamaño variable a un paquete
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio) {
@@ -236,6 +242,17 @@ uint32_t sacar_entero_sin_signo_de_paquete(void** stream)
 
     return numero;
 }
+
+uint8_t sacar_byte_sin_signo_de_paquete(void** stream) 
+{
+    uint8_t byte = 0;
+
+    memcpy(&byte, *stream, sizeof(uint8_t));
+    *stream += sizeof(uint8_t);
+
+    return byte;
+}
+
 
 char** sacar_array_cadenas_de_paquete(void** stream)
 {

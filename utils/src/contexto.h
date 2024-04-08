@@ -35,6 +35,5 @@ void enviar_contexto(int socket_cliente);
 void recibir_contexto_cpu(t_paquete* paquete, void* stream);
 void recibir_contexto(int socket_cliente);
 void liberar_memoria_contexto();
-void liberar_memoria_contexto_unico();
 
 #endif

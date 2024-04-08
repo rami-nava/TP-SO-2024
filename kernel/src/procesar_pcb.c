@@ -66,7 +66,7 @@ static int incrementar_pid() {
 
 //==================================================== PROCESAR_PCB ====================================================================================
 t_contexto* enviar_a_cpu(t_pcb* proceso) {
-    if (contexto_ejecucion != NULL) liberar_memoria_contexto_unico ();
+    if (contexto_ejecucion != NULL) liberar_memoria_contexto();
 	
     iniciar_contexto();
 
@@ -83,7 +83,6 @@ t_contexto* enviar_a_cpu(t_pcb* proceso) {
 }
 
 void actualizar_PCB(t_pcb* proceso){
-	//list_destroy_and_destroy_elements(proceso->instrucciones, free);
     proceso->pid = contexto_ejecucion->pid;
     proceso->program_counter = contexto_ejecucion->program_counter;
     proceso->PC = contexto_ejecucion->PC;
@@ -120,5 +119,5 @@ void asignar_PBC_a_contexto(t_pcb* proceso){
 void liberar_PCB(t_pcb* proceso) {
     
     //liberar_en_memoria(proceso);
-    liberar_memoria_contexto_unico();
+    liberar_memoria_contexto();
 }

@@ -4,7 +4,7 @@ t_contexto *contexto_ejecucion = NULL;
 
 void iniciar_contexto()
 {
-     contexto_ejecucion = malloc(sizeof(t_contexto));
+    contexto_ejecucion = malloc(sizeof(t_contexto));
     contexto_ejecucion->pid = 0;
     contexto_ejecucion->program_counter = 0;
     contexto_ejecucion->PC = 0;
@@ -33,10 +33,10 @@ void enviar_contexto(int socket_cliente)
     agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
     agregar_entero_a_paquete(paquete, contexto_ejecucion->program_counter);
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->PC);
-    agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->AX);
-    agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->BX);
-    agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->CX);
-    agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->DX);
+    agregar_byte_sin_signo_a_paquete(paquete, contexto_ejecucion->AX);
+    agregar_byte_sin_signo_a_paquete(paquete, contexto_ejecucion->BX);
+    agregar_byte_sin_signo_a_paquete(paquete, contexto_ejecucion->CX);
+    agregar_byte_sin_signo_a_paquete(paquete, contexto_ejecucion->DX);
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->EAX);
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->EBX);
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->ECX);
@@ -55,16 +55,19 @@ void enviar_contexto(int socket_cliente)
 
 void recibir_contexto(int socket_cliente)
 {
+    if (contexto_ejecucion != NULL) liberar_memoria_contexto();
+	iniciar_contexto();
+
     t_paquete *paquete = recibir_paquete(socket_cliente);
     void *stream = paquete->buffer->stream;
     
     contexto_ejecucion->pid = sacar_entero_de_paquete(&stream);
     contexto_ejecucion->program_counter = sacar_entero_de_paquete(&stream);
     contexto_ejecucion->PC = sacar_entero_sin_signo_de_paquete(&stream);
-    contexto_ejecucion->AX = sacar_entero_sin_signo_de_paquete(&stream);
-    contexto_ejecucion->BX = sacar_entero_sin_signo_de_paquete(&stream);
-    contexto_ejecucion->CX = sacar_entero_sin_signo_de_paquete(&stream);
-    contexto_ejecucion->DX = sacar_entero_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->AX = sacar_byte_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->BX = sacar_byte_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->CX = sacar_byte_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->DX = sacar_byte_sin_signo_de_paquete(&stream);
     contexto_ejecucion->EAX = sacar_entero_sin_signo_de_paquete(&stream);
     contexto_ejecucion->EBX = sacar_entero_sin_signo_de_paquete(&stream);
     contexto_ejecucion->ECX = sacar_entero_sin_signo_de_paquete(&stream);
@@ -82,13 +85,16 @@ void recibir_contexto(int socket_cliente)
 
 void recibir_contexto_cpu(t_paquete* paquete, void* stream)
 {   
+    if (contexto_ejecucion != NULL) liberar_memoria_contexto();
+	iniciar_contexto();
+
     contexto_ejecucion->pid = sacar_entero_de_paquete(&stream);
     contexto_ejecucion->program_counter = sacar_entero_de_paquete(&stream);
     contexto_ejecucion->PC = sacar_entero_sin_signo_de_paquete(&stream);
-    contexto_ejecucion->AX = sacar_entero_sin_signo_de_paquete(&stream);
-    contexto_ejecucion->BX = sacar_entero_sin_signo_de_paquete(&stream);
-    contexto_ejecucion->CX = sacar_entero_sin_signo_de_paquete(&stream);
-    contexto_ejecucion->DX = sacar_entero_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->AX = sacar_byte_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->BX = sacar_byte_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->CX = sacar_byte_sin_signo_de_paquete(&stream);
+    contexto_ejecucion->DX = sacar_byte_sin_signo_de_paquete(&stream);
     contexto_ejecucion->EAX = sacar_entero_sin_signo_de_paquete(&stream);
     contexto_ejecucion->EBX = sacar_entero_sin_signo_de_paquete(&stream);
     contexto_ejecucion->ECX = sacar_entero_sin_signo_de_paquete(&stream);
@@ -106,7 +112,6 @@ void recibir_contexto_cpu(t_paquete* paquete, void* stream)
 //================================== LIBERAR MEMORIA ================================================================
 void liberar_memoria_contexto()
 {
-   // list_destroy_and_destroy_elements(contexto_ejecucion->instrucciones, free);
     for (int i = 0; i < contexto_ejecucion->motivo_desalojo->cantidad_parametros; i++)
         if (strcmp(contexto_ejecucion->motivo_desalojo->parametros[i], ""))
             free(contexto_ejecucion->motivo_desalojo->parametros[i]);
@@ -115,13 +120,3 @@ void liberar_memoria_contexto()
     contexto_ejecucion = NULL;
 }
 
-void liberar_memoria_contexto_unico()
-{
-   // list_destroy(contexto_ejecucion->instrucciones);
-    for (int i = 0; i < contexto_ejecucion->motivo_desalojo->cantidad_parametros; i++)
-        if (strcmp(contexto_ejecucion->motivo_desalojo->parametros[i], ""))
-            free(contexto_ejecucion->motivo_desalojo->parametros[i]);
-    free(contexto_ejecucion->motivo_desalojo);
-    free(contexto_ejecucion);
-    contexto_ejecucion = NULL;
-}

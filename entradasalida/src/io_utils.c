@@ -16,8 +16,6 @@ void cargar_configuracion(char* path) {
           abort();
       }
 
-      config_valores_io.ip_io = config_get_string_value(config, "IP_IO");
-      config_valores_io.puerto_io = config_get_string_value(config, "PUERTO_IO");
       config_valores_io.ip_memoria = config_get_string_value(config, "IP_MEMORIA");
       config_valores_io.puerto_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
       config_valores_io.ip_kernel = config_get_string_value(config, "IP_KERNEL");

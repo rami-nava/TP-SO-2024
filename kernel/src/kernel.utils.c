@@ -10,6 +10,7 @@ void cargar_configuracion(char* path) {
         abort();
     }
 
+    config_valores_kernel.ip_escucha = config_get_string_value(config, "IP_ESCUCHA");
     config_valores_kernel.puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
     config_valores_kernel.ip_memoria = config_get_string_value(config, "IP_MEMORIA");
     config_valores_kernel.puerto_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
@@ -47,3 +48,20 @@ void inicializar_planificador(){
     iniciar_colas();
     inicializar_semaforos();
 }
+
+//================================================== ATENDER CLIENTES CON HILOS =====================================================================
+/*int atender_clientes_kernel(int socket_servidor){
+
+	   int* cliente_fd = malloc(sizeof(int));
+        *cliente_fd = esperar_cliente(socket_servidor);
+
+	if(cliente_fd != -1){
+		pthread_t hilo_cliente;
+		pthread_create(&hilo_cliente, NULL, (void*) manejo_conexiones, cliente_fd);
+		pthread_detach(hilo_cliente);
+		return 1;
+	}else {
+		log_error(kernel_logger, "Error al escuchar clientes... Finalizando servidor \n"); 
+	}
+	return 0;
+}*/

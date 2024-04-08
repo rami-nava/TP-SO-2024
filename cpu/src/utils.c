@@ -36,7 +36,6 @@ void atender_dispatch()
         void *stream = paquete->buffer->stream;
 
         if (paquete->codigo_operacion == CONTEXTO_ACTUALIZADO) {
-				if (contexto_ejecucion != NULL) 
 				recibir_contexto_cpu(paquete,stream);
                 while((no_es_bloqueante(instruccion_actual))) {
                     ciclo_de_instruccion();
@@ -53,7 +52,7 @@ void atender_dispatch()
 
 bool no_es_bloqueante(codigo_instrucciones instruccion_actual) {
 	codigo_instrucciones instrucciones_bloqueantes[13] = {
-		SLEEP, WAIT, SIGNAL, EXIT, 
+        SLEEP, WAIT, SIGNAL, INSTRUCCION_EXIT, 
 		F_OPEN, F_CLOSE, F_SEEK, F_READ, F_WRITE, F_TRUNCATE	
         };
 

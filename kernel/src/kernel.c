@@ -6,7 +6,7 @@ t_config* config;
 int socket_cpu_dispatch;
 int socket_cpu_interrupt;
 int socket_memoria;
-int socket_filesystem;
+int servidor_kernel;
 arch_config_kernel config_valores_kernel;
 pthread_t consola;
 pthread_t largo_plazo;
@@ -25,6 +25,9 @@ int main(void)
 
     //MEMORIA
     socket_memoria = crear_conexion(config_valores_kernel.ip_memoria, config_valores_kernel.puerto_memoria);
+
+    //PETICIONES DE IO
+    servidor_kernel = iniciar_servidor(config_valores_kernel.ip_escucha, config_valores_kernel.puerto_escucha);
 
     inicializar_planificador();
     

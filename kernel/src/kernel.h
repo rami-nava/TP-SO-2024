@@ -60,6 +60,7 @@ extern t_list *cola_READY;
 
 typedef struct
 {
+    char *ip_escucha;
     char *puerto_escucha;
     char *ip_memoria;
     char *puerto_memoria;

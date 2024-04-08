@@ -25,7 +25,7 @@
 extern t_config *config;
 extern t_log *io_logger;
 extern int socket_memoria;
-extern int server_fd;
+extern int socket_kernel;
 
 extern t_list *bloques_reservados;
 extern t_list* procesos_en_filesystem;
@@ -38,8 +38,6 @@ extern int proximo_bloque_inicial;
 //STRUCTS//
 typedef struct  
  {
-    char* ip_io;
-    char* puerto_io;
     char* ip_memoria;
     char* puerto_memoria;
     char* ip_kernel;

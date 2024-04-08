@@ -3,9 +3,8 @@
 // Variables Globales//
 t_log *io_logger;
 t_config *config;
-int server_fd;
-int *cliente_fd;
 int socket_memoria;
+int socket_kernel;
 arch_config config_valores_io;
 
 int tam_bloque;
@@ -27,8 +26,8 @@ int main(void)
     // COMUNICACIÓN MEMORIA //
     socket_memoria = crear_conexion(config_valores_io.ip_memoria, config_valores_io.puerto_memoria);
 
-    /// CREA LA CONEXION CON KERNEL Y MEMORIA ///
-    int server_fd = iniciar_servidor(config_valores_io.ip_io, config_valores_io.puerto_io);
+    // COMUNICACION KERNEL //
+    socket_kernel = iniciar_servidor(config_valores_io.ip_kernel, config_valores_io.puerto_kernel);
 
     tam_bloque = config_valores_io.block_size;
     tamanio_archivo_bloques = config_valores_io.block_size * config_valores_io.block_count;

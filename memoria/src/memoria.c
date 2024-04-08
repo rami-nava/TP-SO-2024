@@ -4,7 +4,7 @@
 t_log* memoria_logger;
 t_config* config;
 int socket_memoria;
-int server_fd;
+int server_memoria;
 arch_config config_valores_memoria;
 sem_t solucionado_pf;
 t_list* procesos_en_memoria;
@@ -22,7 +22,7 @@ int main(void) {
 
     inicializar_semaforos();
 
-    int server_memoria = iniciar_servidor(config_valores_memoria.ip_memoria,config_valores_memoria.puerto_escucha);
+    server_memoria = iniciar_servidor(config_valores_memoria.ip_memoria,config_valores_memoria.puerto_escucha);
 
     while(1) 
     {

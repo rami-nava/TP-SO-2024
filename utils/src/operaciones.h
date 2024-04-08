@@ -20,7 +20,8 @@
 //==================================================== Estructuras =========================================================================================================
 typedef enum{
 	CREACION_ESTRUCTURAS_MEMORIA,
-	CONTEXTO_ACTUALIZADO
+	CONTEXTO_ACTUALIZADO,
+	INSTRUCCION_SOLICITADA
 } op_code;
 
 typedef enum{
@@ -49,7 +50,6 @@ typedef enum {
 	TRADUCIR_PAGINA_A_MARCO,
 	NUMERO_MARCO,
 	MANDAR_INSTRUCCION,
-	INSTRUCCION_SOLICITADA,
 	FINALIZAR_EN_MEMORIA,
 	FINALIZAR_PROCESO,
 	WRITE,
@@ -118,6 +118,7 @@ t_paquete* recibir_paquete(int );
 //======================================================= AGREGAR_A_PAQUETE =========================================================================================================
 void agregar_entero_a_paquete(t_paquete* ,int );
 void agregar_entero_sin_signo_a_paquete(t_paquete* , uint32_t);
+void agregar_byte_sin_signo_a_paquete(t_paquete* , uint8_t);
 void agregar_cadena_a_paquete(t_paquete* , char* );
 void agregar_array_cadenas_a_paquete(t_paquete* , char** );
 void agregar_lista_de_cadenas_a_paquete(t_paquete* , t_list*);
@@ -129,6 +130,7 @@ void agregar_bytes_a_paquete(t_paquete* , void* , uint32_t);
 char* sacar_cadena_de_paquete(void** );
 int sacar_entero_de_paquete(void** );
 uint32_t sacar_entero_sin_signo_de_paquete(void** );
+uint8_t sacar_byte_sin_signo_de_paquete(void** );
 char** sacar_array_cadenas_de_paquete(void** );
 t_list* sacar_lista_de_cadenas_de_paquete(void**);
 void* sacar_puntero_de_paquete(void** );
