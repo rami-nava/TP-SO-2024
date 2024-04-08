@@ -27,7 +27,6 @@ char* instruccion_a_ejecutar;
 char** elementos_instrucciones;  
 int cantidad_parametros;
 
-
 // ------- Definiciones del ciclo ------- //
 static void fetch();
 static void pedir_instruccion();
@@ -37,12 +36,13 @@ static int buscar_comando(char *instruccion);
 static void execute();
 static void liberar_memoria();
 static void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char * parm1, char * parm2, char * parm3);
-static void set(char* registro, char* valor); 
+static void set(char* registro, char* valor);
+static void sum(char* registro_origen, char* registro_destino);
+static void sub(char* registro_origen, char* registro_destino); 
 static void sleep_c(char* tiempo);
 static void wait_c(char* recurso);
 static void signal_c(char* recurso);
 static void exit_c();
-
 
 void ciclo_de_instruccion(){
     fetch();
@@ -95,7 +95,7 @@ static int buscar_comando(char *instruccion) {
             return i;
         }
     }
-    return -1; // Comando no encontrado
+    return -1; 
 }
  
 static void execute() {
@@ -118,6 +118,15 @@ static void execute() {
         case SET:
             set(elementos_instrucciones[1], elementos_instrucciones[2]);
             break;
+        case SUM:
+            sum(elementos_instrucciones[1], elementos_instrucciones[2]);
+            break;
+        case SUB:
+            sub(elementos_instrucciones[1], elementos_instrucciones[2]);
+            break;
+        case JNZ:
+            //jnz(elementos_instrucciones[1], elementos_instrucciones[2]);
+            break;
         case MOV_IN:
             mov_in(elementos_instrucciones[1], elementos_instrucciones[2]);
             break;
@@ -133,24 +142,36 @@ static void execute() {
         case SIGNAL:
             signal_c(elementos_instrucciones[1]);
             break;
-        /*case F_OPEN:
-            //f_open(elementosInstruccion[1]);
+        case RESIZE:
+            //resize(elementosInstruccion[1]);
             break;
-        case F_CLOSE:
-            //f_close(elementosInstruccion[1]);
+        case COPY_STRING:
+            //copy_string(elementosInstruccion[1]);
             break;
-        case F_SEEK:
-            //f_seek(elementosInstruccion[1], elementosInstruccion[2]);
+        case IO_GEN_SLEEP:
+            //io_gen_sleep(elementosInstruccion[1], elementosInstruccion[2]);
             break;
-        case F_READ:
-            //f_read(elementosInstruccion[1], elementosInstruccion[2], elementosInstruccion[3]);
+        case IO_STDIN_READ:
+            //io_stdin_read(elementosInstruccion[1], elementosInstruccion[2], elementosInstruccion[3]);
             break;
-        case F_WRITE:
-            //f_write(elementosInstruccion[1], elementosInstruccion[2], elementosInstruccion[3]);
+        case IO_STDOUT_WRITE:
+            //io_stdin_write(elementosInstruccion[1], elementosInstruccion[2], elementosInstruccion[3]);
             break;
-        case F_TRUNCATE:
-            //f_truncate(elementosInstruccion[1], elementosInstruccion[2]);
-            break;*/
+        case IO_FS_CREATE:
+            //io_fs_create(elementosInstruccion[1], elementosInstruccion[2]);
+            break;
+        case IO_FS_DELETE:
+            //io_fs_delete(elementosInstruccion[1], elementosInstruccion[2]);
+            break;
+        case IO_FS_TRUNCATE:
+            //io_fs_truncate(elementosInstruccion[1], elementosInstruccion[2], elementosInstruccion[3]);
+            break;
+        case IO_FS_WRITE:
+            //io_fs_truncate(elementosInstruccion[1], elementosInstruccion[2], elementosInstruccion[3], elementosInstruccion[4], elementosInstruccion[5]);
+            break;
+        case IO_FS_READ:
+            //io_fs_truncate(elementosInstruccion[1], elementosInstruccion[2], elementosInstruccion[3], elementosInstruccion[4], elementosInstruccion[5]);
+            break;
         case EXIT:
             exit_c();
             break;
@@ -160,9 +181,24 @@ static void execute() {
 }
 
 // ------- Funciones del SO ------- //
-
 static void set(char* registro, char* valor){ 
     setear_registro(registro, valor);
+}
+
+static void sum(char* registro_origen, char* registro_destino){ 
+    int valor1 = buscar_registro(registro_destino);
+    int valor2 = buscar_registro(registro_origen);
+
+    int suma = valor1 + valor2;
+    setear_registro(registro_destino, suma);
+}
+
+static void sub(char* registro_origen, char* registro_destino){ 
+    int valor1 = buscar_registro(registro_destino);
+    int valor2 = buscar_registro(registro_origen);
+
+    int resta = valor1 - valor2;
+    setear_registro(registro_destino, resta);
 }
 
 static void sleep_c(char* tiempo){
@@ -188,21 +224,32 @@ static void exit_c() {
 }
 
 
-// ------- Funciones auxiliares ------- //
+// ------- Funciones auxiliares registros ------- //
 
 void setear_registro(char *registros, char* valor)
 {
+    if (string_equals_ignore_case(registros, "PC"))
+        contexto_ejecucion->PC = atoi(valor);
     if (string_equals_ignore_case(registros, "AX"))
         contexto_ejecucion->AX = atoi(valor);
-
     if (string_equals_ignore_case(registros, "BX"))
         contexto_ejecucion->BX = atoi(valor);
-
     if (string_equals_ignore_case(registros, "CX"))
         contexto_ejecucion->CX = atoi(valor);
-
     if (string_equals_ignore_case(registros, "DX"))
         contexto_ejecucion->DX = atoi(valor);
+    if (string_equals_ignore_case(registros, "EAX"))
+        contexto_ejecucion->EAX = atoi(valor);
+    if (string_equals_ignore_case(registros, "EBX"))
+        contexto_ejecucion->EBX = atoi(valor);
+    if (string_equals_ignore_case(registros, "ECX"))
+        contexto_ejecucion->ECX = atoi(valor);
+    if (string_equals_ignore_case(registros, "EDX"))
+        contexto_ejecucion->EDX = atoi(valor);
+    if (string_equals_ignore_case(registros, "SI"))
+        contexto_ejecucion->SI = atoi(valor);
+    if (string_equals_ignore_case(registros, "DI"))
+        contexto_ejecucion->DI = atoi(valor);
 }
 
 static void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char * parm1, char * parm2, char * parm3) {
