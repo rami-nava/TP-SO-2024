@@ -87,7 +87,7 @@ static void recibir_instruccion()
 }
 
 static void decode(){
-    elementos_instrucciones = string_n_split(instruccion_a_ejecutar, 4, " "); // DEBERIA SER 7 la max instruccion tiene 6 params
+    elementos_instrucciones = string_n_split(instruccion_a_ejecutar, 7, " "); 
     cantidad_parametros = string_array_size(elementos_instrucciones) - 1;
     instruccion_actual = buscar_comando(elementos_instrucciones[0]);
 }
@@ -104,24 +104,9 @@ static int buscar_comando(char *instruccion) {
  
 static void execute() {
 
-    switch(cantidad_parametros) {
-        case 0:
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, comandos[instruccion_actual]);
-            break;
-        case 1:
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s -  %s", contexto_ejecucion->pid, comandos[instruccion_actual], elementos_instrucciones[1]);
-            break;
-        case 2:   
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s, %s", contexto_ejecucion->pid, comandos[instruccion_actual], elementos_instrucciones[1], elementos_instrucciones[2]);
-            break;
-        case 3:
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s, %s, %s", contexto_ejecucion->pid, comandos[instruccion_actual], elementos_instrucciones[1], elementos_instrucciones[2], elementos_instrucciones[3]);
-            break; 
-    }
-
-    /*
-    log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, instruccion_a_ejecutar;
-    */
+    
+    log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, instruccion_a_ejecutar);
+    
 
     switch(instruccion_actual){
         case SET:
@@ -192,12 +177,11 @@ static void execute() {
 // ------- Funciones del SO ------- //
 static void set(char* registro, char* valor){ 
     setear_registro(registro, valor);
-    //No es condicion que haya registros posta en la cpu? o con estar en la pcb listo?
 }
 
 static void sum(char* registro_origen, char* registro_destino){ 
     int valor1 = buscar_registro(registro_destino);
-    int valor2 = buscar_registro(registro_origen);  //CUIDADO puede crashear con los uint?
+    int valor2 = buscar_registro(registro_origen);  
 
     int suma = valor1 + valor2;
     setear_registro(registro_destino, suma);
@@ -219,7 +203,7 @@ static void jnz(char* registro, char* numero_instruccion){
 }
 
 static void io_gen_sleep(char* interfaz, char* unidades_trabajo){
-    modificar_motivo (IO_GEN_SLEEP, 2, interfaz, unidades_trabajo, "");
+    modificar_motivo(IO_GEN_SLEEP, 2, interfaz, unidades_trabajo, "");
     enviar_contexto(socket_cliente_dispatch);
 }
 */
@@ -251,8 +235,8 @@ static void exit_c() {
 
 void setear_registro(char *registros, char* valor)
 {
-    if (string_equals_ignore_case(registros, "PC"))
-        contexto_ejecucion->PC = atoi(valor);
+    if (string_equals_ignore_case(registros, "program_counter"))
+        contexto_ejecucion->program_counter = atoi(valor);
     if (string_equals_ignore_case(registros, "AX"))
         contexto_ejecucion->AX = atoi(valor);
     if (string_equals_ignore_case(registros, "BX"))
@@ -275,7 +259,47 @@ void setear_registro(char *registros, char* valor)
         contexto_ejecucion->DI = atoi(valor);
 }
 
-static void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char * parm1, char * parm2, char * parm3) {
+int buscar_registro(char *registro)
+{
+    int valor = 0;
+
+    if (string_equals_ignore_case(registro, "PC"))
+        valor = (int) contexto_ejecucion->PC;
+
+    if (string_equals_ignore_case(registro, "AX"))
+        valor = (int) contexto_ejecucion->AX;
+
+    if (string_equals_ignore_case(registro, "BX"))
+        valor = (int) contexto_ejecucion->BX;
+
+    if (string_equals_ignore_case(registro, "CX"))
+        valor = (int) contexto_ejecucion->CX;
+
+    if (string_equals_ignore_case(registro, "DX"))
+        valor = (int) contexto_ejecucion->DX;
+
+    if (string_equals_ignore_case(registro, "EAX"))
+        valor = (int) contexto_ejecucion->EAX;
+
+    if (string_equals_ignore_case(registro, "EBX"))
+        valor = (int) contexto_ejecucion->EBX;
+
+    if (string_equals_ignore_case(registro, "ECX"))
+        valor = (int) contexto_ejecucion->ECX;
+
+    if (string_equals_ignore_case(registro, "EDX"))
+        valor = (int) contexto_ejecucion->EDX;
+
+    if (string_equals_ignore_case(registro, "SI"))
+        valor = (int) contexto_ejecucion->SI;
+
+    if (string_equals_ignore_case(registro, "DI"))
+        valor = (int) contexto_ejecucion->DI;
+
+    return valor;
+}
+
+static void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char * parm1, char * parm2, char * parm3) { // agregar mas params para las nuevas instrucciones
     char * (parametros[3]) = { parm1, parm2, parm3 };
     contexto_ejecucion->motivo_desalojo->comando = comando;
     for (int i = 0; i < cantidad_parametros; i++)
@@ -287,6 +311,7 @@ static void liberar_memoria() {
     for (int i = 0; i <= cantidad_parametros; i++) free(elementos_instrucciones[i]);
     free(elementos_instrucciones);
 }
+
 
 
 
