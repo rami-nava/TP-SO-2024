@@ -15,10 +15,10 @@ static void manejo_conexiones(void* conexion);
 // ATENDER CLIENTES CON HILOS//
 int atender_clientes_memoria(int socket_servidor){
 
-	   int* cliente_fd = malloc(sizeof(int));
-        *cliente_fd = esperar_cliente(socket_servidor);
+	int* cliente_fd = malloc(sizeof(int));
+	*cliente_fd = esperar_cliente(socket_servidor);
 
-	if(cliente_fd != -1){
+	if(*cliente_fd != -1){ //era sin el * pero  eso corrige el warning
 		pthread_t hilo_cliente;
 		pthread_create(&hilo_cliente, NULL, (void*) manejo_conexiones, cliente_fd);
 		pthread_detach(hilo_cliente);
@@ -76,7 +76,7 @@ static void manejo_conexiones(void* conexion)
 		FILE * archivo_instrucciones;
 		if (!(archivo_instrucciones = fopen(path_proceso, "r"))) {
 			log_error(memoria_logger, "No se encontro el archivo de instrucciones");
-			return -1;
+			//return -1; me tiraba un warning
 		}
 		free(path_proceso);
 

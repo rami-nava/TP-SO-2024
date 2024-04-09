@@ -16,6 +16,8 @@ int main(void)
 
     cargar_configuracion("/home/utnso/tp-2024-1c-SegmenFault/cpu/cfg/cpu.config");
 
+    inicializar_semaforos();
+
     socket_cliente_memoria = crear_conexion(config_valores_cpu.ip_memoria, config_valores_cpu.puerto_memoria);
 
     socket_servidor_dispatch = iniciar_servidor(config_valores_cpu.ip_cpu, config_valores_cpu.puerto_escucha_dispatch);
@@ -24,8 +26,8 @@ int main(void)
     socket_cliente_dispatch = esperar_cliente(socket_servidor_dispatch);
     socket_cliente_interrupt = esperar_cliente(socket_servidor_interrupt);
 
-    //pthread_create(&hilo_interrupt, NULL, (void *)atender_interrupt, &socket_cliente_interrupt);
-    // pthread_detach(hilo_interrupt);
+    pthread_create(&hilo_interrupt, NULL, (void *)atender_interrupt, &socket_cliente_interrupt);
+    pthread_detach(hilo_interrupt);
 
     pthread_create(&cpu, NULL, (void* ) atender_dispatch, NULL);
     pthread_join(cpu, NULL);

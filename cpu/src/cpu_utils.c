@@ -4,6 +4,8 @@
 arch_config config_valores_cpu;
 t_config* config;
 int instruccion_actual;
+pthread_mutex_t seguir_ejecutando_mutex;
+pthread_mutex_t interrupcion_mutex;
 //================================================== Configuracion =====================================================================
 
 // funcion para levantar el archivo de configuracion de cfg y ponerlo en nuestro stuct de cpu
@@ -29,6 +31,10 @@ void cargar_configuracion(char *path)
 //================================================== Servidor KERNEL =====================================================================
 void atender_dispatch()
 {
+    pthread_mutex_lock(&seguir_ejecutando_mutex);
+    seguir_ejecutando = true;
+    pthread_mutex_unlock(&seguir_ejecutando_mutex);
+
     while(1) 
     {
         t_paquete *paquete = recibir_paquete(socket_cliente_dispatch);
@@ -36,9 +42,13 @@ void atender_dispatch()
 
         if (paquete->codigo_operacion == CONTEXTO_ACTUALIZADO) {
 				recibir_contexto_cpu(paquete,stream);
-                while(no_es_bloqueante(instruccion_actual)) {
+                pthread_mutex_lock(&seguir_ejecutando_mutex);
+                while(no_es_bloqueante(instruccion_actual) && seguir_ejecutando) {
+                    pthread_mutex_unlock(&seguir_ejecutando_mutex); // Revisar si va aca o luego del while
                     ciclo_de_instruccion();
-                }	
+                    pthread_mutex_lock(&seguir_ejecutando_mutex); // Revisar
+                }
+                pthread_mutex_unlock(&seguir_ejecutando_mutex);	
         }  else {
             perror("No me enviaste el contexto :( \n");
             abort();
@@ -60,4 +70,8 @@ bool no_es_bloqueante(codigo_instrucciones instruccion_actual) {
 	return true;
 }
 
-
+//================================================== INICIALIZAR SEMAFOROS =====================================================================
+void inicializar_semaforos(){
+    pthread_mutex_init(&interrupcion_mutex,NULL);
+    pthread_mutex_init(&seguir_ejecutando_mutex,NULL);
+}

@@ -1,27 +1,73 @@
 #include "kernel.h"
 
-static t_pcb *proximo_a_ejecutar_FIFO();
+static t_pcb *proximo_a_ejecutar_FIFO_RR();
 
 void planificador_corto_plazo_segun_algoritmo() {
     char *algoritmo = config_valores_kernel.algoritmo;
 
     if (!strcmp(algoritmo, "FIFO"))
     {
-        planificador_corto_plazo(proximo_a_ejecutar_FIFO);
+        planificador_corto_plazo(proximo_a_ejecutar_FIFO_RR);
     }
-    else if (!strcmp(algoritmo, "XX"))
+    else if (!strcmp(algoritmo, "RR"))
     {
-        //planificador_corto_plazo(proximo_a_ejecutar_XX);
+        planificador_corto_plazo(proximo_a_ejecutar_FIFO_RR);
+    }
+    else if (!strcmp(algoritmo, "VRR"))
+    {
+        //planificador_corto_plazo(proximo_a_ejecutar_VRR);
     }
     else
     {
-        log_error(kernel_logger, "Algoritmo invalido. Debe ingresar FIFO");
+        log_error(kernel_logger, "Algoritmo invalido. Debe ingresar FIFO o RR o VRR");
         abort();
     }
 }
 
-static t_pcb *proximo_a_ejecutar_FIFO(){
+static t_pcb *proximo_a_ejecutar_FIFO_RR(){
     return desencolar(cola_READY);
 }
 
- //  Funciones de algoritmo XX //
+ //  Funciones de algoritmo RR //
+ void inicializar_reloj_RR(){
+    quantum = config_valores_kernel.quantum;
+    log_info(kernel_logger, "Se inicializo el hilo para control de quantum");
+
+    pthread_t thread_reloj_RR;
+    pthread_create(&thread_reloj_RR,NULL, comenzar_reloj_RR(),NULL);
+    pthread_detach(thread_reloj_RR); //Para que kernel siga ejecutando a la par de este hilo
+}
+
+ void* comenzar_reloj_RR(){
+    t_temporal* reloj;
+
+    while(1)
+    {
+        if(proceso_en_ejecucion_RR)
+        {
+            reloj = temporal_create();
+            log_info(kernel_logger,"Comienza el quantum de: %d", quantum);
+
+            while(reloj != NULL) //se creo correctamente
+            {
+                if(proceso_en_ejecucion_RR) //hace falta un mutex aca?
+                {
+                    //Hubo salida por I/O o Exit
+                    log_info(kernel_logger, "Salida por I/O o Exit");
+                    desalojo(); 
+                    temporal_destroy(reloj);
+                    reloj = NULL;
+                }
+                else if (temporal_gettime(reloj) >= quantum)
+                {
+                    log_info(kernel_logger, "PID:  - Desalojado por fin de Quantum\n"); //PID FALTANTE! :(
+                    desalojo(); //Interrumpo la ejecucion por fin de quantum
+                    temporal_destroy(reloj);
+                    reloj = NULL;
+                }
+            }
+        }    
+    }
+}
+
+// Funciones de algoritmo VRR //

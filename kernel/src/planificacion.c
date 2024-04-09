@@ -1,5 +1,7 @@
 #include "kernel.h"
 
+bool proceso_en_ejecucion_RR = false;
+
 sem_t hay_procesos_ready;
 sem_t hay_procesos_nuevos;
 sem_t grado_multiprogramacion;
@@ -52,6 +54,12 @@ void planificador_corto_plazo(t_pcb *(*proximo_a_ejecutar)()){
         
         //Enviamos el proceso a ejecutar a la CPU
         contexto_ejecucion = enviar_a_cpu(proceso);
+
+         if(!strcmp(config_valores_kernel.algoritmo, "RR"))
+        {
+            proceso_en_ejecucion_RR = true;
+            inicializar_reloj_RR();
+        }
 
         //Recibimos el contexto de ejecucion de la CPU
         recibir_contexto_actualizado(proceso, contexto_ejecucion);

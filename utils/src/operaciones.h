@@ -30,7 +30,8 @@ typedef enum{
 	MANDAR_INSTRUCCION,
 	FINALIZAR_EN_MEMORIA,
 	FINALIZAR_PROCESO,
-	WRITE
+	WRITE,
+	DESALOJO
 } op_code;
 
 typedef enum{

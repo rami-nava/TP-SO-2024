@@ -15,6 +15,7 @@
 #include <commons/collections/list.h>
 #include <commons/collections/dictionary.h>
 #include <commons/log.h>
+#include <commons/temporal.h>
 
 #include "socket.h"
 #include "operaciones.h"
@@ -26,6 +27,8 @@ extern t_log *kernel_logger;
 extern t_config *config;
 extern char* pids;
 extern int corriendo;
+extern int quantum;
+extern bool proceso_en_ejecucion_RR;
 
 extern int socket_cpu_dispatch;
 extern int socket_cpu_interrupt;
@@ -46,6 +49,7 @@ extern pthread_mutex_t mutex_recursos;
 extern pthread_mutex_t mutex_colas;
 extern pthread_mutex_t mutex_corriendo;
 extern pthread_cond_t cond_corriendo;
+extern pthread_t reloj_RR;
 
 
 extern t_list *cola_NEW;
@@ -83,6 +87,7 @@ void manejar_conexion(int);
 void iniciar_proceso(char *, int, int);
 void inicializar_diccionarios();
 void inicializar_colas();
+void inicializar_reloj_RR();
 void inicializar_planificador();
 void inicializar_semaforos();
 void crear_colas_bloqueo();
@@ -98,6 +103,9 @@ void listar_PIDS(t_list *cola);
 void cambio_de_estado (t_pcb *pcb, estado_proceso estado_nuevo);
 void ingresar_a_READY(t_pcb *pcb);
 void ingresar_a_NEW(t_pcb *pcb);
+void desalojo();
+void* comenzar_reloj_RR();
+
 ////======================================== MEMORIA ===========================================================================================================
 void enviar_pcb_a_memoria(t_pcb *, int, op_code);
 op_code esperar_respuesta_memoria(int);

@@ -1,7 +1,7 @@
 #include "kernel.h"
 
 char* pids; 
-
+int quantum;
 //==================================================== ENCOLAR Y DESENCOLAR ====================================================================================
 void encolar(t_list *cola, t_pcb *pcb){
     list_add(cola, (void *)pcb);
@@ -35,10 +35,9 @@ void detener_planificacion() {
         pthread_mutex_unlock(&mutex_corriendo);
 }
 
-
-
-
-
-
-
-
+void desalojo(){
+    t_paquete *paquete = crear_paquete(DESALOJO);
+    proceso_en_ejecucion_RR = false;
+    agregar_entero_a_paquete(paquete,1);
+    enviar_paquete(paquete, socket_cpu_interrupt);
+}

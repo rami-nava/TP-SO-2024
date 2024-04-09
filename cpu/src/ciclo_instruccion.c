@@ -30,6 +30,8 @@ char *comandos[] = {
 char* instruccion_a_ejecutar; 
 char** elementos_instrucciones;  
 int cantidad_parametros;
+int interrupcion = 0;
+bool seguir_ejecutando = true;
 
 // ------- Definiciones del ciclo ------- //
 static void fetch();
@@ -38,11 +40,14 @@ static void recibir_instruccion();
 static void decode();
 static int buscar_comando(char *instruccion);
 static void execute();
+static void check_interrupt();
 static void liberar_memoria();
 static void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char * parm1, char * parm2, char * parm3);
 static void set(char* registro, char* valor);
 static void sum(char* registro_origen, char* registro_destino);
 static void sub(char* registro_origen, char* registro_destino); 
+static void jnz(char* registro, char* numero_instruccion);
+static void io_gen_sleep(char* interfaz, char* unidades_trabajo);
 static void sleep_c(char* tiempo);
 static void wait_c(char* recurso);
 static void signal_c(char* recurso);
@@ -52,6 +57,7 @@ void ciclo_de_instruccion(){
     fetch();
     decode();
     execute();
+    check_interrupt();
     liberar_memoria();
 }
 
@@ -104,9 +110,7 @@ static int buscar_comando(char *instruccion) {
  
 static void execute() {
 
-    
     log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, instruccion_a_ejecutar);
-    
 
     switch(instruccion_actual){
         case SET:
@@ -119,7 +123,7 @@ static void execute() {
             sub(elementos_instrucciones[1], elementos_instrucciones[2]);
             break;
         case JNZ:
-            //jnz(elementos_instrucciones[1], elementos_instrucciones[2]);
+            jnz(elementos_instrucciones[1], elementos_instrucciones[2]);
             break;
         case MOV_IN:
             mov_in(elementos_instrucciones[1], elementos_instrucciones[2]);
@@ -143,7 +147,7 @@ static void execute() {
             //copy_string(elementosInstruccion[1]);
             break;
         case IO_GEN_SLEEP:
-            //io_gen_sleep(elementosInstruccion[1], elementosInstruccion[2]);
+            io_gen_sleep(elementos_instrucciones[1], elementos_instrucciones[2]);
             break;
         case IO_STDIN_READ:
             //io_stdin_read(elementosInstruccion[1], elementosInstruccion[2], elementosInstruccion[3]);
@@ -174,6 +178,43 @@ static void execute() {
     }
 }
 
+static void check_interrupt(){
+
+    pthread_mutex_lock(&interrupcion_mutex);
+    if(interrupcion != 0){
+        interrupcion = 0;
+        pthread_mutex_unlock(&interrupcion_mutex);
+        pthread_mutex_lock(&seguir_ejecutando_mutex);
+        seguir_ejecutando = false;
+        pthread_mutex_unlock(&seguir_ejecutando_mutex);
+        pthread_mutex_lock(&interrupcion_mutex);
+    }
+    pthread_mutex_unlock(&interrupcion_mutex);
+}
+
+void atender_interrupt(void * socket_servidor_interrupt){
+    int conexion = *(int*)socket_servidor_interrupt;
+
+    while(1){
+        t_paquete *paquete = recibir_paquete(conexion);
+
+        void* stream = paquete->buffer->stream;
+
+        if (paquete->codigo_operacion == DESALOJO){
+            int entero = sacar_entero_de_paquete(&stream);
+            
+            pthread_mutex_lock(&interrupcion_mutex);
+            interrupcion ++;
+            pthread_mutex_unlock(&interrupcion_mutex);
+        }
+        else{
+            log_error(cpu_logger,"No recibi un codigo de interrupcion");
+            abort();
+        }
+        eliminar_paquete(paquete);
+    }
+
+}
 // ------- Funciones del SO ------- //
 static void set(char* registro, char* valor){ 
     setear_registro(registro, valor);
@@ -184,7 +225,12 @@ static void sum(char* registro_origen, char* registro_destino){
     int valor2 = buscar_registro(registro_origen);  
 
     int suma = valor1 + valor2;
-    setear_registro(registro_destino, suma);
+    
+    //convierte la suma a una cadena de caracteres antes de pasarlo a setear_registro
+    char suma_str[20]; // Tamaño suficiente para almacenar números enteros
+    snprintf(suma_str, sizeof(suma_str), "%d", suma);
+
+    setear_registro(registro_destino, suma_str);
 }
 
 static void sub(char* registro_origen, char* registro_destino){ 
@@ -192,13 +238,18 @@ static void sub(char* registro_origen, char* registro_destino){
     int valor2 = buscar_registro(registro_origen);
 
     int resta = valor1 - valor2;
-    setear_registro(registro_destino, resta);
+    
+    //convierte la resta a una cadena de caracteres antes de pasarlo a setear_registro
+    char resta_str[20]; // Tamaño suficiente para almacenar números enteros
+    snprintf(resta_str, sizeof(resta_str), "%d", resta);
+
+    setear_registro(registro_destino, resta_str);
 }
 
-/*
+
 static void jnz(char* registro, char* numero_instruccion){
     if (buscar_registro(registro) != 0){
-        contexto_ejecucion->PC = atoi(numero_instruccion);
+        contexto_ejecucion->program_counter = atoi(numero_instruccion); //Lo modifique a program_counter
     }
 }
 
@@ -206,7 +257,7 @@ static void io_gen_sleep(char* interfaz, char* unidades_trabajo){
     modificar_motivo(IO_GEN_SLEEP, 2, interfaz, unidades_trabajo, "");
     enviar_contexto(socket_cliente_dispatch);
 }
-*/
+
 
 static void sleep_c(char* tiempo){
     modificar_motivo (SLEEP, 1, tiempo, "", "");
