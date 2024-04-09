@@ -4,21 +4,28 @@ pthread_cond_t cond_corriendo;
 pthread_mutex_t mutex_corriendo;
 int corriendo = 1;
 
-void consola_ejecutar_script(char *path)
+
+void consola_ejecutar_script(char* path) 
 {
-    printf("EJECUTAMOS SCRIPT \n");
-    FILE* script = fopen(path, "r");
-        if (script == NULL) {
-            printf("Error opening file\n");
-            return;
-        }
+  printf("EJECUTAMOS SCRIPT \n");
 
-    char linea[256];
-    while (fgets(linea, sizeof(linea), script) != NULL) {
+  FILE* archivo = fopen(path, "r"); 
+  if (archivo == NULL) {
+    printf("No se pudo abrir el archivo: %s\n", path);
+    return;
+  }
+
+  char linea[256]; 
+
+  // Leemos el archivo línea por línea
+  while (fgets(linea, sizeof(linea), archivo) != NULL) {
+    // Eliminamos el salto de línea al final de la línea
+    linea[strcspn(linea, "\n")] = 0;
+
     consola_parsear_instruccion(linea);
-    }
+  }
 
-    fclose(script);
+  fclose(archivo);
 }
 
 
