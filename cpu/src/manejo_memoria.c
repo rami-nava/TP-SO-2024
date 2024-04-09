@@ -156,6 +156,7 @@ static void enviar_paquete_WRITE(uint32_t direccion_fisica, uint32_t valor_regis
     enviar_paquete(paquete, socket_cliente_memoria);
 }
 
+//VER DE PASAR ESTAS FUNCIONES A UN SOLO .C
 uint32_t buscar_registro(char *registro)
 {
     uint32_t valor = 0;

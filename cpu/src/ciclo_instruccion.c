@@ -3,26 +3,30 @@
 // Variables globales //
 
 char *comandos[] = {
-    [SET] = "SET",
-    [MOV_IN] = "MOV_IN",
-    [MOV_OUT] = "MOV_OUT", 
-    [SLEEP] = "SLEEP",
-    [WAIT] = "WAIT",
-    [SIGNAL] = "SIGNAL",
-    [JNZ] = "JNZ",
-    [RESIZE] = "RESIZE",
-    [COPY_STRING] = "COPY_STRING",
-    [IO_GEN_SLEEP] = "IO_GEN_SLEEP",
-    [IO_STDIN_READ] = "IO_STDIN_READ",
-    [IO_STDOUT_WRITE] = "IO_STDOUT_WRITE",
-    [IO_FS_CREATE] = "IO_FS_CREATE",
-    [IO_FS_DELETE] = "IO_FS_DELETE",
-    [IO_FS_TRUNCATE] = "IO_FS_TRUNCATE",
-    [IO_FS_WRITE] = "IO_FS_WRITE",
-    [IO_FS_READ] = "IO_FS_READ",
-    [EXIT] = "EXIT",
+    [SET] = "SET", //2p
+    [MOV_IN] = "MOV_IN", //2p
+    [MOV_OUT] = "MOV_OUT", //2p
+    [SUB] = "SUB", //2p
+    [SUM] = "SUM", //2p
+    [WAIT] = "WAIT", //1p
+    [SIGNAL] = "SIGNAL", //1p
+    [JNZ] = "JNZ", //2p
+    [RESIZE] = "RESIZE", //1p
+    [COPY_STRING] = "COPY_STRING", //1p
+    [IO_GEN_SLEEP] = "IO_GEN_SLEEP", //2p
+    [IO_STDIN_READ] = "IO_STDIN_READ", //3p
+    [IO_STDOUT_WRITE] = "IO_STDOUT_WRITE", //3p
+    [IO_FS_CREATE] = "IO_FS_CREATE", //2p
+    [IO_FS_DELETE] = "IO_FS_DELETE", //2p
+    [IO_FS_TRUNCATE] = "IO_FS_TRUNCATE", //3p
+    [IO_FS_WRITE] = "IO_FS_WRITE", //5p
+    [IO_FS_READ] = "IO_FS_READ", //5p
+    [EXIT] = "EXIT", //0
     [7] = NULL
 };
+
+
+
 char* instruccion_a_ejecutar; 
 char** elementos_instrucciones;  
 int cantidad_parametros;
@@ -83,7 +87,7 @@ static void recibir_instruccion()
 }
 
 static void decode(){
-    elementos_instrucciones = string_n_split(instruccion_a_ejecutar, 4, " ");
+    elementos_instrucciones = string_n_split(instruccion_a_ejecutar, 4, " "); // DEBERIA SER 7 la max instruccion tiene 6 params
     cantidad_parametros = string_array_size(elementos_instrucciones) - 1;
     instruccion_actual = buscar_comando(elementos_instrucciones[0]);
 }
@@ -114,6 +118,11 @@ static void execute() {
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s, %s, %s", contexto_ejecucion->pid, comandos[instruccion_actual], elementos_instrucciones[1], elementos_instrucciones[2], elementos_instrucciones[3]);
             break; 
     }
+
+    /*
+    log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, instruccion_a_ejecutar;
+    */
+
     switch(instruccion_actual){
         case SET:
             set(elementos_instrucciones[1], elementos_instrucciones[2]);
@@ -183,11 +192,12 @@ static void execute() {
 // ------- Funciones del SO ------- //
 static void set(char* registro, char* valor){ 
     setear_registro(registro, valor);
+    //No es condicion que haya registros posta en la cpu? o con estar en la pcb listo?
 }
 
 static void sum(char* registro_origen, char* registro_destino){ 
     int valor1 = buscar_registro(registro_destino);
-    int valor2 = buscar_registro(registro_origen);
+    int valor2 = buscar_registro(registro_origen);  //CUIDADO puede crashear con los uint?
 
     int suma = valor1 + valor2;
     setear_registro(registro_destino, suma);
@@ -200,6 +210,19 @@ static void sub(char* registro_origen, char* registro_destino){
     int resta = valor1 - valor2;
     setear_registro(registro_destino, resta);
 }
+
+/*
+static void jnz(char* registro, char* numero_instruccion){
+    if (buscar_registro(registro) != 0){
+        contexto_ejecucion->PC = atoi(numero_instruccion);
+    }
+}
+
+static void io_gen_sleep(char* interfaz, char* unidades_trabajo){
+    modificar_motivo (IO_GEN_SLEEP, 2, interfaz, unidades_trabajo, "");
+    enviar_contexto(socket_cliente_dispatch);
+}
+*/
 
 static void sleep_c(char* tiempo){
     modificar_motivo (SLEEP, 1, tiempo, "", "");
