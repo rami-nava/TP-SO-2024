@@ -197,7 +197,6 @@ void atender_interrupt(void * socket_servidor_interrupt){
 
     while(1){
         t_paquete *paquete = recibir_paquete(conexion);
-
         void* stream = paquete->buffer->stream;
 
         if (paquete->codigo_operacion == DESALOJO){
@@ -206,6 +205,8 @@ void atender_interrupt(void * socket_servidor_interrupt){
             pthread_mutex_lock(&interrupcion_mutex);
             interrupcion ++;
             pthread_mutex_unlock(&interrupcion_mutex);
+
+            log_info(cpu_logger, "Recibi una interrupcion\n");
         }
         else{
             log_error(cpu_logger,"No recibi un codigo de interrupcion");

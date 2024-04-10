@@ -1,5 +1,7 @@
 #include "kernel.h"
 
+pthread_mutex_t proceso_en_ejecucion_RR_mutex;
+
 static t_pcb *proximo_a_ejecutar_FIFO_RR();
 
 void planificador_corto_plazo_segun_algoritmo() {
@@ -43,30 +45,39 @@ static t_pcb *proximo_a_ejecutar_FIFO_RR(){
 
     while(1)
     {
+        pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
         if(proceso_en_ejecucion_RR)
         {
+        pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
             reloj = temporal_create();
             log_info(kernel_logger,"Comienza el quantum de: %d", quantum);
 
             while(reloj != NULL) //se creo correctamente
             {
-                if(proceso_en_ejecucion_RR) //hace falta un mutex aca?
+                pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
+                if(!proceso_en_ejecucion_RR) //hace falta un mutex aca?
                 {
+                pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
                     //Hubo salida por I/O o Exit
                     log_info(kernel_logger, "Salida por I/O o Exit");
-                    desalojo(); 
                     temporal_destroy(reloj);
                     reloj = NULL;
+                pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
                 }
                 else if (temporal_gettime(reloj) >= quantum)
                 {
+                    pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
                     log_info(kernel_logger, "PID:  - Desalojado por fin de Quantum\n"); //PID FALTANTE! :(
                     desalojo(); //Interrumpo la ejecucion por fin de quantum
                     temporal_destroy(reloj);
                     reloj = NULL;
+                    pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
                 }
+                pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
             }
-        }    
+        pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
+        }   
+        pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);     
     }
 }
 

@@ -52,14 +52,15 @@ void planificador_corto_plazo(t_pcb *(*proximo_a_ejecutar)()){
         //Loggear estado 
         cambio_de_estado(proceso, EXEC);
         
+        if(!strcmp(config_valores_kernel.algoritmo, "RR"))
+        {
+            pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
+            proceso_en_ejecucion_RR = true;
+            pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
+        }
+
         //Enviamos el proceso a ejecutar a la CPU
         contexto_ejecucion = enviar_a_cpu(proceso);
-
-         if(!strcmp(config_valores_kernel.algoritmo, "RR"))
-        {
-            proceso_en_ejecucion_RR = true;
-            inicializar_reloj_RR();
-        }
 
         //Recibimos el contexto de ejecucion de la CPU
         recibir_contexto_actualizado(proceso, contexto_ejecucion);

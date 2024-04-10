@@ -37,8 +37,10 @@ int main(void)
    
    using_history(); // Inicializar la historia de comando
 
-   pthread_join(largo_plazo,NULL);
-   pthread_join(corto_plazo,NULL);
+   pthread_detach(largo_plazo);
+   pthread_detach(corto_plazo);
+   if(!strcmp(config_valores_kernel.algoritmo, "RR"))
+        inicializar_reloj_RR();
    pthread_join(consola, NULL);
 
    return EXIT_SUCCESS;

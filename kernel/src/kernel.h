@@ -50,6 +50,7 @@ extern pthread_mutex_t mutex_colas;
 extern pthread_mutex_t mutex_corriendo;
 extern pthread_cond_t cond_corriendo;
 extern pthread_t reloj_RR;
+extern pthread_mutex_t proceso_en_ejecucion_RR_mutex;
 
 
 extern t_list *cola_NEW;
