@@ -31,7 +31,10 @@ typedef enum{
 	FINALIZAR_EN_MEMORIA,
 	FINALIZAR_PROCESO,
 	WRITE,
-	DESALOJO
+	DESALOJO,
+	GENERICA_IO_SLEEP,
+	STDIN_READ,
+	HACER_LECTURA
 } op_code;
 
 typedef enum{
@@ -53,7 +56,6 @@ typedef enum {
 	SUM,
 	SUB,
 	JNZ,
-	SLEEP,
 	WAIT,
 	SIGNAL,
 	MOV_IN,

@@ -29,6 +29,7 @@ int main(void)
     //PETICIONES DE IO
     servidor_kernel = iniciar_servidor(config_valores_kernel.ip_escucha, config_valores_kernel.puerto_escucha);
 
+    //PLANIFICADORES
     inicializar_planificador();
     
     pthread_create(&largo_plazo, NULL, (void* ) planificador_largo_plazo, NULL);

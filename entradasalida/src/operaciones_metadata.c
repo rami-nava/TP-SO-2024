@@ -1,5 +1,7 @@
 #include "io.h"
 
+char* path_dial_fs; // Path base de dialfs cambiar en un futuro
+
 metadata_archivo* levantar_metadata (char * nombre) {
 
     char * path = string_from_format ("%s/%s.fcb", path_dial_fs, nombre);

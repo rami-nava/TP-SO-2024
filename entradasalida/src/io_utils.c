@@ -1,32 +1,52 @@
 #include "io.h"
 
-static void atender_clientes_io(void*);
+//static void atender_clientes_io(void*);
+static void existe_interfaz(char* nombre);
 
-metadata_archivo config_valores_metadata_archivo;
-FILE* archivo_fat;
+void iniciar_interfaz(char* nombre, char* path_config) {
 
-//=======================================================================================================================
+    existe_interfaz(nombre);
 
-void cargar_configuracion(char* path) {
+    t_config* config = config_create(path_config); 
 
-       config = config_create(path); //Leo el archivo de configuracion
+    if(config == NULL) {
+        perror("Error al leer el archivo de configuración");
+        abort();
+    }
 
-      if (config == NULL) {
-          perror("Archivo de configuracion de io no encontrado \n");
-          abort();
-      }
+    char* tipo_interfaz = config_get_string_value(config, "TIPO_INTERFAZ");
 
-      config_valores_io.ip_memoria = config_get_string_value(config, "IP_MEMORIA");
-      config_valores_io.puerto_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
-      config_valores_io.ip_kernel = config_get_string_value(config, "IP_KERNEL");
-      config_valores_io.puerto_kernel = config_get_string_value(config, "PUERTO_KERNEL");
-      config_valores_io.path_base_dialfs = config_get_string_value(config, "PATH_BASE_DIALFS");
-      config_valores_io.block_size = config_get_int_value(config, "BLOCK_SIZE");
-      config_valores_io.block_count = config_get_int_value(config, "BLOCK_COUNT");
-      config_valores_io.tiempo_unidad_de_trabajo = config_get_int_value(config, "TIEMPO_UNIDAD_DE_TRABAJO");
-      config_valores_io.tipo_interfaz = config_get_string_value(config, "TIPO_INTERFAZ");
+    if (strcmp(tipo_interfaz, "GENERICA") == 0) {
+        iniciar_interfaz_generica(nombre, config);
+    } else if (strcmp(tipo_interfaz, "STDIN") == 0) {
+        iniciar_interfaz_stdin(nombre, config);
+    } else if (strcmp(tipo_interfaz, "STDOUT") == 0) {
+        iniciar_interfaz_stdout(nombre, config);
+    } else if (strcmp(tipo_interfaz, "DIALFS") == 0) {
+        iniciar_interfaz_dialfs(nombre, config);
+    } else {
+        log_error(io_logger, "Tipo de interfaz invalido. Debe ser STDIN, STDOUT, GENERICA o DIALFS");
+        abort();
+    }
 }
 
+static void existe_interfaz(char* nombre) {
+    
+    int tamanio_lista = list_size(nombres_de_interfaz);
+
+    //Revisamos si ya existe una interfaz con ese nombre
+    for(int i = 0; i < tamanio_lista; i++) {
+    if(strcmp(list_get(nombres_de_interfaz, i), nombre) == 0) {
+        printf("Ya existe una interfaz con ese nombre");
+        inicializar_consola_interactiva();
+        }
+    }
+
+    //Si no existe, la agregamos
+    list_add(nombres_de_interfaz, nombre);
+}
+
+/*
 void protocolo_multihilo() {
      int *cliente_fd = malloc(sizeof(int));
     *cliente_fd = esperar_cliente(server_fd);
@@ -34,6 +54,7 @@ void protocolo_multihilo() {
     pthread_create(&multihilo, NULL, (void *)atender_clientes_io, cliente_fd);
     pthread_detach(multihilo);
 }
+
 
 static void atender_clientes_io(void* conexion) {
     int cliente_fd = *(int*)conexion;
@@ -55,4 +76,4 @@ static void atender_clientes_io(void* conexion) {
 		eliminar_paquete(paquete);
 	}
 }
-
+*/

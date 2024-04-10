@@ -17,5 +17,6 @@ int crear_conexion(char*, char*);
 void liberar_conexion(int socket_cliente);
 int iniciar_servidor(char*, char*);
 int esperar_cliente(int);
+int esta_conectado(int);
 
 #endif

@@ -13,7 +13,7 @@ void inicializar_consola_interactiva() {
 }
 
 void parse_ejecutar_script(char *linea) {
-  char **linea_espaciada = string_split(linea, " ");  // Divide la línea en tokens
+  char **linea_espaciada = string_split(linea, " ");  // Divide la línea en tokens 
   char path[256]; 
 
   if (linea_espaciada && linea_espaciada[1]) {

@@ -41,3 +41,16 @@ void desalojo(){
     agregar_entero_a_paquete(paquete,1);
     enviar_paquete(paquete, socket_cpu_interrupt);
 }
+
+void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo) 
+{
+    cambio_de_estado (pcb_asociado, SALIDA); 
+
+    //Avisas pq finalizo el proceso
+    loggear_finalizacion_proceso(pcb_asociado, motivo); 
+
+    //Liberamos memoria
+    liberar_PCB(pcb_asociado);
+
+    sem_post(&grado_multiprogramacion); 
+}

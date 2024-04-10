@@ -33,6 +33,7 @@ extern bool proceso_en_ejecucion_RR;
 extern int socket_cpu_dispatch;
 extern int socket_cpu_interrupt;
 extern int socket_memoria;
+extern int servidor_kernel;
 
 extern sem_t mutex_pid;
 extern sem_t hay_procesos_nuevos;
@@ -105,6 +106,7 @@ void ingresar_a_READY(t_pcb *pcb);
 void ingresar_a_NEW(t_pcb *pcb);
 void desalojo();
 void* comenzar_reloj_RR();
+void mandar_a_EXIT(t_pcb* proceso, char* motivo);
 
 ////======================================== MEMORIA ===========================================================================================================
 void enviar_pcb_a_memoria(t_pcb *, int, op_code);
