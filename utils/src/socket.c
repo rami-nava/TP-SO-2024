@@ -72,3 +72,15 @@ int esperar_cliente(int socket_servidor) {
 
 	return socketClienteFD;
 }
+
+
+int esta_conectado(int socket_fd) {
+    struct sockaddr_storage addr;
+    socklen_t addr_len = sizeof(addr);
+
+    if (getpeername(socket_fd, (struct sockaddr*)&addr, &addr_len) == 0) {
+        return 1; // Conectado
+    } else {
+        return 0; // Desconectado
+    }
+}

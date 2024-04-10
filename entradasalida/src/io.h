@@ -9,6 +9,8 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 #include <commons/log.h>
 #include <commons/collections/list.h>
@@ -19,37 +21,10 @@
 #include "contexto.h"
 #include "operaciones.h"
 
-
-
-
-extern t_config *config;
 extern t_log *io_logger;
-extern int socket_memoria;
-extern int socket_kernel;
-
-extern t_list *bloques_reservados;
-extern t_list* procesos_en_filesystem;
-
-extern int tamanio_archivo_bloques;
-extern t_dictionary* diccionario_archivos_abiertos;
-extern int proximo_bloque_inicial;
-
+extern t_list* nombres_de_interfaz;
 
 //STRUCTS//
-typedef struct  
- {
-    char* ip_memoria;
-    char* puerto_memoria;
-    char* ip_kernel;
-    char* puerto_kernel;
-    char* path_base_dialfs;
-    int block_size;
-    int block_count;
-    int tiempo_unidad_de_trabajo;
-    char* tipo_interfaz;
-    
-} arch_config;
-
 typedef struct 
 {
     char* nombre_archivo; 
@@ -57,17 +32,16 @@ typedef struct
     int bloque_inicial;
 } metadata_archivo;
 
-typedef struct 
-{
-    int pid;
-} t_proceso_en_io;
-
-
-
-extern arch_config config_valores_io;
 extern FILE* archivo_de_bloques;
-extern char* path_dial_fs;
 extern int tam_bloque;
+
+//..................................FUNCIONES IO.......................................................................
+void inicializar_consola_interactiva();
+void iniciar_interfaz(char* nombre, char* path_de_config);
+void iniciar_interfaz_generica(char* nombre, t_config* config);
+void iniciar_interfaz_stdin(char* nombre, t_config* config);
+void iniciar_interfaz_stdout(char* nombre, t_config* config);
+void iniciar_interfaz_dialfs(char* nombre, t_config* config);
 
 //..................................FUNCIONES UTILES IO.....................................................................
 void protocolo_multihilo();
@@ -75,7 +49,6 @@ void cargar_configuracion(char*);
 void cargamos_cambios_a_fcb_ampliar(int tamanio_nuevo, uint32_t bloque_inicial, char* nombre_archivo);
 void cargamos_cambios_a_fcb_reducir(int tamanio_nuevo, char* nombre_archivo);
 void actualizar_metadata(metadata_archivo* nueva_metadata);
-t_proceso_en_io* buscar_proceso_en_io(int pid);
 
 //..................................FUNCIONES ARCHIVOS.....................................................................
 

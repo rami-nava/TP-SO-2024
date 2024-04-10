@@ -2,47 +2,20 @@
 
 // Variables Globales//
 t_log *io_logger;
-t_config *config;
-int socket_memoria;
-int socket_kernel;
-arch_config config_valores_io;
-
-int tam_bloque;
-int tamanio_fat;
-int tamanio_archivo_bloques;
-char *path_dial_fs;
-t_list* procesos_en_io;
-
-t_dictionary *diccionario_archivos_abiertos;
-
-//============================================================================================================
+pthread_t consola;
+t_list* nombres_de_interfaz;
 
 int main(void)
 {
-    io_logger = log_create("/home/utnso/tp-2024-1c-SegmenFault/io/cfg/io.log", "io.log", 1, LOG_LEVEL_INFO);
+    io_logger = log_create("/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/io.log", "io.log", 1, LOG_LEVEL_INFO);
 
-    cargar_configuracion("/home/utnso/tp-2024-1c-SegmenFault/io/cfg/io.config");
+    nombres_de_interfaz = list_create();
 
-    // COMUNICACIÓN MEMORIA //
-    socket_memoria = crear_conexion(config_valores_io.ip_memoria, config_valores_io.puerto_memoria);
+    pthread_create(&consola, NULL, (void* ) inicializar_consola_interactiva, NULL);
 
-    // COMUNICACION KERNEL //
-    socket_kernel = iniciar_servidor(config_valores_io.ip_kernel, config_valores_io.puerto_kernel);
+    using_history(); // Inicializar la historia de comando
 
-    tam_bloque = config_valores_io.block_size;
-    tamanio_archivo_bloques = config_valores_io.block_size * config_valores_io.block_count;
-    path_dial_fs = config_valores_io.path_base_dialfs;
-
-    procesos_en_io = list_create();
-
-    diccionario_archivos_abiertos = dictionary_create();
-
-    //crear_archivo_de_bloque();
-
-    while (1)
-    {
-       protocolo_multihilo();
-    }
+    pthread_join(consola, NULL);
 
     return EXIT_SUCCESS;
 }

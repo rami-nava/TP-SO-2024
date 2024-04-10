@@ -40,7 +40,6 @@ static void manejo_conexiones(void* conexion)
 	int* valor_registro = 0;
 	uint32_t direccion_fisica = 0;
 	uint32_t direccion_logica = 0;
-	//char* path_asignado = NULL;
 	char* path_proceso = NULL;
 	uint32_t numero_pagina;
 	uint32_t tam_contenido;

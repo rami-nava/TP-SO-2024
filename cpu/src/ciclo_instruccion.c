@@ -131,9 +131,6 @@ static void execute() {
         case MOV_OUT:
             mov_out(elementos_instrucciones[1], elementos_instrucciones[2]);
             break;
-        case SLEEP:
-            sleep_c(elementos_instrucciones[1]);
-            break;
         case WAIT:
             wait_c(elementos_instrucciones[1]);
             break;
@@ -256,12 +253,6 @@ static void jnz(char* registro, char* numero_instruccion){
 
 static void io_gen_sleep(char* interfaz, char* unidades_trabajo){
     modificar_motivo(IO_GEN_SLEEP, 2, interfaz, unidades_trabajo, "");
-    enviar_contexto(socket_cliente_dispatch);
-}
-
-
-static void sleep_c(char* tiempo){
-    modificar_motivo (SLEEP, 1, tiempo, "", "");
     enviar_contexto(socket_cliente_dispatch);
 }
 
