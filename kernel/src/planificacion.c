@@ -16,7 +16,6 @@ char *estados_procesos[5] = {"NEW", "READY", "EXEC", "BLOCK", "SALIDA"};
 
 
 static t_pcb *siguiente_proceso_a_ready();
-static void log_ingreso_a_ready();
 //========================================================================================================================================
 
 void planificador_largo_plazo(){
@@ -30,8 +29,6 @@ void planificador_largo_plazo(){
         detener_planificacion();
 
         t_pcb *pcb = siguiente_proceso_a_ready();
-
-        cambio_de_estado(pcb, READY);
         
         ingresar_a_READY(pcb); 
 
@@ -86,6 +83,8 @@ static t_pcb *siguiente_proceso_a_ready()
 
 void ingresar_a_READY(t_pcb *pcb)
 {
+    cambio_de_estado(pcb, READY);
+
     pthread_mutex_lock(&mutex_READY);
     encolar(cola_READY, pcb);    
     pthread_mutex_unlock(&mutex_READY);
@@ -109,16 +108,3 @@ void cambio_de_estado (t_pcb *pcb, estado_proceso estado_nuevo)
     log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual: %s \n", pcb->pid, estados_procesos[anterior], estados_procesos[estado_nuevo]);
 
 }
-
-static void log_ingreso_a_ready() 
-{
-    pids = string_new();
-    listar_PIDS(cola_READY);
-
-    //pthread_mutex_lock(&mutex_pids);
-    log_info(kernel_logger, "Cola Ready %s: %s \n", config_valores_kernel.algoritmo, pids);
-    //pthread_mutex_unlock(&mutex_pids);
-
-    free(pids);
-}
-

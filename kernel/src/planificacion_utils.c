@@ -56,3 +56,15 @@ void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo)
 
     sem_post(&grado_multiprogramacion); 
 }
+
+void log_ingreso_a_ready() 
+{
+    pids = string_new();
+    listar_PIDS(cola_READY);
+
+    //pthread_mutex_lock(&mutex_pids);
+    log_info(kernel_logger, "Cola Ready %s: %s \n", config_valores_kernel.algoritmo, pids);
+    //pthread_mutex_unlock(&mutex_pids);
+
+    free(pids);
+}

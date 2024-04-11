@@ -8,6 +8,7 @@ static void exit_c(t_pcb* proceso, char **parametros);
 
 static void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo);
 static void volver_a_CPU(t_pcb* proceso);
+static void fin_quantum(t_pcb* proceso);
 
 
 void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion){
@@ -18,11 +19,19 @@ void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion
         case EXIT:
             exit_c(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
+        case FIN_QUANTUM:
+            fin_quantum(proceso);
+            break;
     default:
         log_error(kernel_logger, "Comando incorrecto");
         break;
     }
 }
+
+static void fin_quantum(t_pcb* proceso){
+    ingresar_a_READY(proceso);
+}
+
 /*
 void peticiones_de_io(proceso, parametros) {
     if (!conectada_y_existe_interfaz(parametros[0])) {

@@ -107,6 +107,7 @@ void ingresar_a_READY(t_pcb *pcb);
 void ingresar_a_NEW(t_pcb *pcb);
 void desalojo();
 void* comenzar_reloj_RR();
+void log_ingreso_a_ready();
 void mandar_a_EXIT(t_pcb* proceso, char* motivo);
 
 ////======================================== MEMORIA ===========================================================================================================

@@ -185,6 +185,8 @@ static void check_interrupt(){
         seguir_ejecutando = false;
         pthread_mutex_unlock(&seguir_ejecutando_mutex);
         pthread_mutex_lock(&interrupcion_mutex);
+        modificar_motivo (FIN_QUANTUM, 0, "", "", "");
+        enviar_contexto(socket_cliente_dispatch);
     }
     pthread_mutex_unlock(&interrupcion_mutex);
 }
