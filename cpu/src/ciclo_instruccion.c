@@ -44,11 +44,10 @@ static void check_interrupt();
 static void liberar_memoria();
 static void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char * parm1, char * parm2, char * parm3);
 static void set(char* registro, char* valor);
-static void sum(char* registro_origen, char* registro_destino);
-static void sub(char* registro_origen, char* registro_destino); 
+static void sum(char* registro_destino, char* registro_origen);
+static void sub(char* registro_destino, char* registro_origen); 
 static void jnz(char* registro, char* numero_instruccion);
 static void io_gen_sleep(char* interfaz, char* unidades_trabajo);
-static void sleep_c(char* tiempo);
 static void wait_c(char* recurso);
 static void signal_c(char* recurso);
 static void exit_c();
@@ -111,6 +110,7 @@ static int buscar_comando(char *instruccion) {
 static void execute() {
 
     log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, instruccion_a_ejecutar);
+    free(instruccion_a_ejecutar);
 
     switch(instruccion_actual){
         case SET:
@@ -220,7 +220,7 @@ static void set(char* registro, char* valor){
     setear_registro(registro, valor);
 }
 
-static void sum(char* registro_origen, char* registro_destino){ 
+static void sum(char* registro_destino, char* registro_origen){ 
     int valor1 = buscar_registro(registro_destino);
     int valor2 = buscar_registro(registro_origen);  
 
@@ -233,7 +233,7 @@ static void sum(char* registro_origen, char* registro_destino){
     setear_registro(registro_destino, suma_str);
 }
 
-static void sub(char* registro_origen, char* registro_destino){ 
+static void sub(char* registro_destino, char* registro_origen){ 
     int valor1 = buscar_registro(registro_destino);
     int valor2 = buscar_registro(registro_origen);
 

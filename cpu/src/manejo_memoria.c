@@ -96,7 +96,10 @@ void mov_in(char *registro, char *direccion_logica)
 
         int valor = recibir_valor_a_insertar(socket_cliente_memoria);
 
-        setear_registro(registro, (char *)valor);
+        char valor_str[20]; // Tamaño suficiente para almacenar números enteros
+        snprintf(valor_str, sizeof(valor_str), "%d", valor);
+
+        setear_registro(registro, valor_str);
 
         log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %d \n", contexto_ejecucion->pid, "LEER", direccion_fisica, valor);
     }

@@ -4,7 +4,7 @@ int indice_pid = 0;
 sem_t mutex_pid;
 //==================================================== FUNCIONES ESTATICAS ====================================================================================
 static int incrementar_pid();
-static void enviar_creacion_estructuras_memoria(t_pcb* pcb);
+static void enviar_creacion_estructuras_memoria(int pid, char* path_proceso);
 
 //==================================================== CREAR_PCB ====================================================================================
 t_pcb* crear_pcb(char* path) 
@@ -13,10 +13,7 @@ t_pcb* crear_pcb(char* path)
     nuevo_pcb->pid = incrementar_pid();
     nuevo_pcb->estado = NEW;
 
-    //podemos guardar el path en el pcb del proceso directamente
-    if (path != NULL) {
-    nuevo_pcb->path_proceso = strdup(path);
-    } else {
+    if (path == NULL) {
         log_error(kernel_logger, "No me enviaste un path correcto\n");
         free(nuevo_pcb);
     }
@@ -36,16 +33,16 @@ t_pcb* crear_pcb(char* path)
     nuevo_pcb->quantum = config_valores_kernel.quantum;
 
     ingresar_a_NEW(nuevo_pcb);
-    enviar_creacion_estructuras_memoria(nuevo_pcb);
+    enviar_creacion_estructuras_memoria(nuevo_pcb->pid, path);
 
     sem_post(&hay_procesos_nuevos);
     return nuevo_pcb;
 }
 
-static void enviar_creacion_estructuras_memoria(t_pcb* pcb){
+static void enviar_creacion_estructuras_memoria(int pid, char* path_proceso){
     t_paquete* paquete = crear_paquete(CREACION_ESTRUCTURAS_MEMORIA);
-    agregar_entero_a_paquete(paquete,pcb-> pid);
-    agregar_cadena_a_paquete(paquete,pcb->path_proceso);
+    agregar_entero_a_paquete(paquete,pid);
+    agregar_cadena_a_paquete(paquete,path_proceso);
     enviar_paquete(paquete, socket_memoria);
 
     int respuesta = 0;
@@ -120,4 +117,5 @@ void liberar_PCB(t_pcb* proceso) {
     
     //liberar_en_memoria(proceso);
     liberar_memoria_contexto();
+    free(proceso);
 }

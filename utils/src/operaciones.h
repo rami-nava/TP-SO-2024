@@ -95,7 +95,6 @@ typedef struct{
 	int pid;
 	int program_counter;
 	estado_proceso estado;
-	char* path_proceso;
     uint32_t PC;
     uint8_t AX;
     uint8_t BX;
