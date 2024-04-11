@@ -1,13 +1,17 @@
 #include "io.h"
 
+t_interfaz* interfaz;
+t_config* config; 
+
 //static void atender_clientes_io(void*);
 static void existe_interfaz(char* nombre);
+static t_interfaz* crear_interfaz(char* nombre, t_config* config);
 
 void iniciar_interfaz(char* nombre, char* path_config) {
 
     existe_interfaz(nombre);
 
-    t_config* config = config_create(path_config); 
+    config = config_create(path_config); 
 
     if(config == NULL) {
         perror("Error al leer el archivo de configuración");
@@ -32,48 +36,27 @@ void iniciar_interfaz(char* nombre, char* path_config) {
 
 static void existe_interfaz(char* nombre) {
     
-    int tamanio_lista = list_size(nombres_de_interfaz);
+    int tamanio_lista = list_size(interfaces);
 
     //Revisamos si ya existe una interfaz con ese nombre
     for(int i = 0; i < tamanio_lista; i++) {
-    if(strcmp(list_get(nombres_de_interfaz, i), nombre) == 0) {
-        printf("Ya existe una interfaz con ese nombre");
+    t_interfaz* interfaz_lista = list_get(interfaces, i);
+    if(strcmp(interfaz_lista->nombre_interfaz, nombre) == 0) {
+        printf("Ya existe una interfaz con ese nombre\n ");
         inicializar_consola_interactiva();
         }
     }
 
-    //Si no existe, la agregamos
-    list_add(nombres_de_interfaz, nombre);
+    //Si no existe, la creamos y agregamos a la lista
+    interfaz = crear_interfaz(nombre, config);
+    list_add(interfaces, interfaz);
 }
 
-/*
-void protocolo_multihilo() {
-     int *cliente_fd = malloc(sizeof(int));
-    *cliente_fd = esperar_cliente(server_fd);
-    pthread_t multihilo;
-    pthread_create(&multihilo, NULL, (void *)atender_clientes_io, cliente_fd);
-    pthread_detach(multihilo);
+t_interfaz* crear_interfaz(char* nombre, t_config* config){
+    t_interfaz* interfaz_creada = malloc(sizeof(t_interfaz));
+
+    interfaz_creada->nombre_interfaz = nombre;
+    interfaz_creada->config_interfaz = config;
+
+    return interfaz_creada;
 }
-
-
-static void atender_clientes_io(void* conexion) {
-    int cliente_fd = *(int*)conexion;
-	
-	while (1) 
-	{		
-		t_paquete* paquete = recibir_paquete(cliente_fd);
-		void* stream = paquete->buffer->stream;
-
-		switch(paquete->codigo_operacion)
-		{
-            //case ALGO:
-            //TODO
-			//break;
-
-			default:
-			break;
-		}
-		eliminar_paquete(paquete);
-	}
-}
-*/

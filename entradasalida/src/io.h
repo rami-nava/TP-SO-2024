@@ -22,7 +22,7 @@
 #include "operaciones.h"
 
 extern t_log *io_logger;
-extern t_list* nombres_de_interfaz;
+extern t_list* interfaces;
 
 //STRUCTS//
 typedef struct 
@@ -31,6 +31,13 @@ typedef struct
     int tamanio_archivo; 
     int bloque_inicial;
 } metadata_archivo;
+
+typedef struct 
+{
+    char* nombre_interfaz;
+    t_config* config_interfaz; 
+} t_interfaz;
+
 
 extern FILE* archivo_de_bloques;
 extern int tam_bloque;
