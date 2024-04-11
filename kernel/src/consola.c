@@ -119,7 +119,7 @@ void consola_parsear_instruccion(char *leer_linea) {
       parse_proceso_estado(leer_linea);
       break;
     default:
-      //printf("Comando desconocido: %s\n", leer_linea);
+      printf("Comando desconocido: %s\n", leer_linea);
       break;
   }
 

@@ -3,7 +3,6 @@
 t_interfaz* interfaz;
 t_config* config; 
 
-//static void atender_clientes_io(void*);
 static void existe_interfaz(char* nombre);
 static t_interfaz* crear_interfaz(char* nombre, t_config* config);
 

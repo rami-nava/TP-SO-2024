@@ -9,6 +9,7 @@ static int proceso_conectado;
 static int cantidad_tiempo;
 
 static void realizar_sleep();
+static void conectarse_a_kernel(char* nombre);
 
 void iniciar_interfaz_generica(char* nombre, t_config* config) {
     
@@ -18,8 +19,9 @@ void iniciar_interfaz_generica(char* nombre, t_config* config) {
 
     log_info(io_logger, "Iniciando interfaz generica: %s\n", nombre);
 
-    // COMUNICACION KERNEL //
     socket_kernel = crear_conexion(ip_kernel, puerto_kernel);
+
+    conectarse_a_kernel(nombre);
     
     realizar_sleep();
 }
@@ -41,9 +43,19 @@ void realizar_sleep()
         log_info(io_logger, "PID: %d - Operacion: IO_GEN_SLEEP\n", proceso_conectado);
 
         usleep(tiempo_unidad_de_trabajo * cantidad_tiempo * 1000);
+
+        int termino_de_mimir = 1;
+        send(socket_kernel, &termino_de_mimir, sizeof(int), 0);
         } else {
             eliminar_paquete(paquete);
-            log_error(io_logger, "Comando invalido. Debe ser GENERICA_IO_SLEEP\n");
         }
     }
+}
+
+void conectarse_a_kernel(char* nombre)
+{
+    t_paquete* paquete = crear_paquete(INTERFAZ_GENERICA);
+    agregar_cadena_a_paquete(paquete, nombre);
+    agregar_cadena_a_paquete(paquete, "GENERICA");
+    enviar_paquete(paquete, socket_kernel);
 }

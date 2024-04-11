@@ -34,6 +34,7 @@ extern int socket_cpu_dispatch;
 extern int socket_cpu_interrupt;
 extern int socket_memoria;
 extern int servidor_kernel;
+extern int socket_cliente_io;
 
 extern sem_t mutex_pid;
 extern sem_t hay_procesos_nuevos;
@@ -61,6 +62,10 @@ extern t_list *cola_READY;
 //extern t_list *cola_EXEC;
 //extern t_list *cola_EXIT;
 
+extern t_list* interfaces_genericas;
+extern t_list* interfaces_stdin;
+extern t_list* interfaces_stdout;
+extern t_list* interfaces_dialfs;
 
 //==============================================================================================================================
 
@@ -80,6 +85,14 @@ typedef struct
     int grado_multiprogramacion;
 } arch_config_kernel;
 
+typedef struct
+{
+    int socket_conectado;
+    char* nombre;
+    char* tipo_interfaz;
+} t_interfaz;    
+
+extern t_interfaz interfaz;
 extern arch_config_kernel config_valores_kernel;
 
 
@@ -93,7 +106,7 @@ void inicializar_reloj_RR();
 void inicializar_planificador();
 void inicializar_semaforos();
 void crear_colas_bloqueo();
-
+void inicializar_listas();
 //============================================= Planificador =================================================================================================================
 void planificador_largo_plazo();
 void planificador_corto_plazo_segun_algoritmo();
@@ -156,5 +169,10 @@ void detener_planificacion();
 
 
 ////======================================== IO ===========================================================================================================
+//void atender_clientes_io();
+void atender_io();
+bool peticiones_de_io(t_pcb *proceso, t_interfaz* interfaz);
+bool admite_operacion_interfaz(t_interfaz* interfaz, codigo_instrucciones operacion);
+t_interfaz* obtener_interfaz_por_nombre(char* nombre_interfaz);
 
 #endif

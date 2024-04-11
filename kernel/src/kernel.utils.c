@@ -1,5 +1,10 @@
 #include "kernel.h"
 
+t_list* interfaces_genericas;
+t_list* interfaces_stdin;
+t_list* interfaces_stdout;
+t_list* interfaces_dialfs;
+
 //================================================== Configuracion =====================================================================
 void cargar_configuracion(char* path) {
 
@@ -50,20 +55,11 @@ void inicializar_planificador(){
     inicializar_semaforos();
 }
 
-
-//================================================== ATENDER CLIENTES CON HILOS =====================================================================
-/*int atender_clientes_kernel(int socket_servidor){
-
-	   int* cliente_fd = malloc(sizeof(int));
-        *cliente_fd = esperar_cliente(socket_servidor);
-
-	if(cliente_fd != -1){
-		pthread_t hilo_cliente;
-		pthread_create(&hilo_cliente, NULL, (void*) manejo_conexiones, cliente_fd);
-		pthread_detach(hilo_cliente);
-		return 1;
-	}else {
-		log_error(kernel_logger, "Error al escuchar clientes... Finalizando servidor \n"); 
-	}
-	return 0;
-}*/
+//================================================== Listas =====================================================================
+void inicializar_listas(){
+    interfaces_genericas = list_create();
+    interfaces_stdin = list_create();
+    interfaces_stdout = list_create();
+    interfaces_dialfs = list_create();
+}
+ 
