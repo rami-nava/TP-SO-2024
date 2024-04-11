@@ -272,6 +272,12 @@ static void exit_c() {
     char * terminado = string_duplicate ("SUCCESS");
     modificar_motivo (EXIT, 1, terminado, "", "");
     enviar_contexto(socket_cliente_dispatch);
+    
+    //cuando me llega exit el proceso que esta ejecutando para
+    pthread_mutex_lock(&seguir_ejecutando_mutex);
+    seguir_ejecutando = false;
+    pthread_mutex_unlock(&seguir_ejecutando_mutex);
+    
     free (terminado);
 }
 
@@ -302,6 +308,8 @@ void setear_registro(char *registros, char* valor)
         contexto_ejecucion->SI = atoi(valor);
     if (string_equals_ignore_case(registros, "DI"))
         contexto_ejecucion->DI = atoi(valor);
+
+    log_info(cpu_logger, "PID %d - Registro: %s - Valor: %s", contexto_ejecucion->pid, registros, valor);
 }
 
 int buscar_registro(char *registro)
