@@ -31,12 +31,13 @@ void cargar_configuracion(char *path)
 //================================================== Servidor KERNEL =====================================================================
 void atender_dispatch()
 {
-    pthread_mutex_lock(&seguir_ejecutando_mutex);
-    seguir_ejecutando = true;
-    pthread_mutex_unlock(&seguir_ejecutando_mutex);
 
     while(1) 
     {
+        pthread_mutex_lock(&seguir_ejecutando_mutex);
+        seguir_ejecutando = true;
+        pthread_mutex_unlock(&seguir_ejecutando_mutex);
+
         t_paquete *paquete = recibir_paquete(socket_cliente_dispatch);
         void *stream = paquete->buffer->stream;
 
@@ -58,13 +59,13 @@ void atender_dispatch()
 
 //================================================== Funciones Auxiliares =====================================================================
 bool no_es_bloqueante(codigo_instrucciones instruccion_actual) {
-	codigo_instrucciones instrucciones_bloqueantes[13] = {
+	codigo_instrucciones instrucciones_bloqueantes[12] = {
         WAIT, SIGNAL, EXIT, 
 		RESIZE, IO_GEN_SLEEP, IO_STDIN_READ, IO_STDOUT_WRITE, IO_FS_CREATE,
 	    IO_FS_DELETE, IO_FS_TRUNCATE, IO_FS_WRITE, IO_FS_READ
         };
 
-        for (int i = 0; i < 13; i++) 
+        for (int i = 0; i < 11; i++) 
 		if (instruccion_actual == instrucciones_bloqueantes[i]) return false;
 
 	return true;
