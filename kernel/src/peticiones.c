@@ -59,6 +59,7 @@ static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz)
     int socket_io = interfaz->socket_conectado;
 
     t_paquete* paquete = crear_paquete(GENERICA_IO_SLEEP);
+    agregar_entero_a_paquete(paquete, proceso->pid);
     agregar_entero_a_paquete(paquete, tiempo_sleep);
     enviar_paquete(paquete, socket_io);
 
@@ -69,6 +70,7 @@ static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz)
 
     int termina_sleep = 0;
     recv(socket_io, &termina_sleep, sizeof(int), 0);
+    log_info(kernel_logger, "Finalmente volvio de io el proceso: %d\n", proceso->pid);
 
 }
 

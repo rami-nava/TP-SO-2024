@@ -2,13 +2,31 @@
 
 static void agregar_interfaz(op_code tipo, void* stream, int socket_cliente_io); 
 
-void atender_io() 
+void servidor_kernel_io(){
+    
+    int socket_cliente_io;
+     servidor_kernel = iniciar_servidor(config_valores_kernel.ip_escucha, config_valores_kernel.puerto_escucha);
+     while(1){
+          
+          socket_cliente_io = esperar_cliente(servidor_kernel);
+          
+          if(socket_cliente_io != -1)
+          {
+               pthread_t hilo_io;
+               pthread_create(&hilo_io, NULL, (void* ) atender_io, socket_cliente_io);
+               pthread_detach(hilo_io);
+          }
+     }
+}
+
+
+void atender_io(int socket) 
 {
     while(1) {
-        t_paquete* paquete = recibir_paquete(socket_cliente_io);
+        t_paquete* paquete = recibir_paquete(socket);
         void* stream = paquete->buffer->stream;
 
-        agregar_interfaz(paquete->codigo_operacion, stream, socket_cliente_io); 
+        agregar_interfaz(paquete->codigo_operacion, stream, socket); 
         eliminar_paquete(paquete);
     }
 }
@@ -41,12 +59,14 @@ static void agregar_interfaz(op_code tipo, void* stream, int socket_cliente_io)
 
 bool peticiones_de_io(t_pcb *proceso, t_interfaz* interfaz) 
 {
+    //Si existe la interfaz y esta conectada
     if (interfaz == NULL) {
         log_error(kernel_logger, "Interfaz inexistente");
         mandar_a_EXIT(proceso, "ERROR");
         return false;
     }
 
+    //Si admite el comando de instruccion
     if(!admite_operacion_interfaz(interfaz, contexto_ejecucion->motivo_desalojo->comando))
     {
         log_error(kernel_logger, "Interfaz incorrecta");
@@ -110,31 +130,3 @@ bool admite_operacion_interfaz(t_interfaz* interfaz, codigo_instrucciones operac
     }
     return false;
 }
-
- /*if(paquete->codigo_operacion == INTERFAZ_GENERICA) {
-
-        t_interfaz* interfaz_nueva = malloc(sizeof(t_interfaz));
-        interfaz_nueva->nombre = sacar_cadena_de_paquete(&stream);
-        interfaz_nueva->socket_conectado = socket_cliente_io;
-
-        list_add(interfaces_genericas, interfaz_nueva);
-        log_info(kernel_logger, "Se agrego interfaz generica: %s \n", interfaz_nueva->nombre);
-        } else {
-            perror("TROLEEEAMOSSS\n");
-            abort();
-        }*/
-//static void atender_io(int socket_cliente_io);
-/*
-void atender_clientes_io()
-{
-	int socket_cliente_io = esperar_cliente(servidor_kernel);
-
-    if(socket_cliente_io != -1){ 
-        pthread_t hilo_io;
-        pthread_create(&hilo_io, NULL, (void *)atender_io, &socket_cliente_io);
-        pthread_detach(hilo_io);
-    }else {
-        log_error(kernel_logger, "Error al escuchar clientes... Finalizando servidor \n"); 
-    }
-}
-*/

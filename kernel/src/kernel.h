@@ -169,8 +169,8 @@ void detener_planificacion();
 
 
 ////======================================== IO ===========================================================================================================
-//void atender_clientes_io();
-void atender_io();
+void servidor_kernel_io();
+void atender_io(int socket);
 bool peticiones_de_io(t_pcb *proceso, t_interfaz* interfaz);
 bool admite_operacion_interfaz(t_interfaz* interfaz, codigo_instrucciones operacion);
 t_interfaz* obtener_interfaz_por_nombre(char* nombre_interfaz);

@@ -34,6 +34,7 @@ void atender_dispatch()
 
     while(1) 
     {
+        instruccion_actual = -1;
         pthread_mutex_lock(&seguir_ejecutando_mutex);
         seguir_ejecutando = true;
         pthread_mutex_unlock(&seguir_ejecutando_mutex);

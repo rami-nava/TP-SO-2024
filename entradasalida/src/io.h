@@ -45,7 +45,7 @@ extern int tam_bloque;
 //..................................FUNCIONES IO.......................................................................
 void inicializar_consola_interactiva();
 void iniciar_interfaz(char* nombre, char* path_de_config);
-void iniciar_interfaz_generica(char* nombre, t_config* config);
+void iniciar_interfaz_generica(t_interfaz* interfaz);
 void iniciar_interfaz_stdin(char* nombre, t_config* config);
 void iniciar_interfaz_stdout(char* nombre, t_config* config);
 void iniciar_interfaz_dialfs(char* nombre, t_config* config);

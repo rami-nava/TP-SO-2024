@@ -32,12 +32,12 @@ static void consola_parsear_instruccion(char *leer_linea) {
 }
 static void parse_iniciar_interfaz(char *linea) {
   char **linea_espaciada = string_split(linea, " ");  // Divide la línea en tokens 
-  char nombre[256];
+  char* nombre = malloc(sizeof(linea_espaciada[1])); //Error de memoria => CORREGIR
   char path[256]; 
   
-  if (linea_espaciada && linea_espaciada[1] && linea_espaciada[2]) {
-    if (sscanf(linea_espaciada[1], "\"%255[^\"]\"", nombre) == 1 && 
-        sscanf(linea_espaciada[2], "\"%255[^\"]\"", path) == 1) {
+  if (linea_espaciada[0] && linea_espaciada[1] && linea_espaciada[2]) {
+    if (sscanf(linea_espaciada[2], "\"%255[^\"]\"", path) == 1) {
+      strcpy(nombre,linea_espaciada[1]); //Falta hacer el free(nombre)!!
       iniciar_interfaz(nombre,path);
     }
     string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token

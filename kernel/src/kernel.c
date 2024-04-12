@@ -7,13 +7,11 @@ int socket_cpu_dispatch;
 int socket_cpu_interrupt;
 int socket_memoria;
 int servidor_kernel;
-int socket_cliente_io;
 
 arch_config_kernel config_valores_kernel;
 pthread_t consola;
 pthread_t largo_plazo;
 pthread_t corto_plazo;
-pthread_t hilo_io;
 
 //========================================================================================================================================
 int main(void)
@@ -35,25 +33,20 @@ int main(void)
     //MEMORIA
     socket_memoria = crear_conexion(config_valores_kernel.ip_memoria, config_valores_kernel.puerto_memoria);
 
-    //SERVIDOR DE IO
-    servidor_kernel = iniciar_servidor(config_valores_kernel.ip_escucha, config_valores_kernel.puerto_escucha);
-    socket_cliente_io = esperar_cliente(servidor_kernel);
-
+    //MULTIHILOS
     pthread_create(&largo_plazo, NULL, (void* ) planificador_largo_plazo, NULL);
     pthread_create(&corto_plazo, NULL, (void* ) planificador_corto_plazo_segun_algoritmo, NULL);
     pthread_create(&consola, NULL, (void* ) inicializar_consola_interactiva, NULL);
-    pthread_create(&hilo_io, NULL, (void* ) atender_io, NULL);
    
-   using_history(); // Inicializar la historia de comando
-    
-   //atender_clientes_io();
-   pthread_detach(hilo_io);
-   pthread_detach(largo_plazo);
-   pthread_detach(corto_plazo);
-   if(!strcmp(config_valores_kernel.algoritmo, "RR"))
-        inicializar_reloj_RR();
-   pthread_join(consola, NULL);
+    using_history(); // Inicializar la historia de comando
+  
+    servidor_kernel_io();
 
-   return EXIT_SUCCESS;
+    pthread_detach(largo_plazo);
+    pthread_detach(corto_plazo);
+    if(!strcmp(config_valores_kernel.algoritmo, "RR"))
+         inicializar_reloj_RR();
+    pthread_join(consola, NULL);
+
+    return EXIT_SUCCESS;
 }
-
