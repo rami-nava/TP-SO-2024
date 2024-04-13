@@ -67,7 +67,7 @@ void consola_proceso_estado() {
 
 void consola_finalizar_proceso(int pid) {
 
-    printf("Finalizamos proceso el proceso %d \n", pid);
+    printf("Finalizamos el proceso %d \n", pid);
 
     t_pcb* pcb_asociado = NULL;  
     int estado = -1;    

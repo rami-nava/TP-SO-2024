@@ -32,11 +32,12 @@ void planificador_largo_plazo(){
         t_pcb *pcb = siguiente_proceso_a_ready();
         
         ingresar_a_READY(pcb); 
-
     }
 } 
 
 void planificador_corto_plazo(t_pcb *(*proximo_a_ejecutar)()){
+
+    crear_colas_bloqueo();
 
     while (1)
     {

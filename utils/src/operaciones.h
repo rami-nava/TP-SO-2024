@@ -98,6 +98,7 @@ typedef struct{
 typedef struct{
 	int pid;
 	estado_proceso estado;
+	t_list* recursos_asignados;
     uint32_t PC;
     uint8_t AX;
     uint8_t BX;

@@ -4,7 +4,7 @@ static void io_gen_sleep(t_pcb *proceso, char **parametros);
 static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz); 
 static void exit_c(t_pcb* proceso, char **parametros);
 
-static void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo);
+void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo);
 static void fin_quantum(t_pcb* proceso);
 static void esperar_sleep(int socket_io);
 
@@ -14,6 +14,12 @@ void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion
         case IO_GEN_SLEEP:
             io_gen_sleep(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
+        case WAIT:
+            wait_s(proceso, contexto_ejecucion->motivo_desalojo->parametros);
+            break;
+        case SIGNAL:
+            signal_s(proceso, contexto_ejecucion->motivo_desalojo->parametros);
+            break;        
         case EXIT:
             exit_c(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
@@ -84,11 +90,11 @@ static void exit_c(t_pcb* proceso, char **parametros){
     mandar_a_EXIT(proceso, parametros[0]);
 }
 
-static void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo) {
-    log_info(kernel_logger,"PID: %d - Bloqueado por: %s", proceso->pid, motivo); 
+void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo) {
+    log_info(kernel_logger,"PID: %d - Bloqueado por: %s\n", proceso->pid, motivo); 
 }
 
 void loggear_finalizacion_proceso(t_pcb* proceso, char* motivo) {
-    log_info(kernel_logger,"Finaliza el proceso %d - Motivo: %s", proceso->pid, motivo); 
+    log_info(kernel_logger,"Finaliza el proceso %d - Motivo: %s\n", proceso->pid, motivo); 
 }
 

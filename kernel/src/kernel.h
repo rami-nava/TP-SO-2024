@@ -136,18 +136,18 @@ t_contexto* enviar_a_cpu(t_pcb* proceso);
 void actualizar_PCB(t_pcb* proceso);
 void asignar_PBC_a_contexto(t_pcb* proceso);
 void liberar_PCB(t_pcb* proceso);
+void liberar_recursos_asignados(t_pcb* proceso);
 void destruir_PCB(t_pcb* proceso);
 void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion);
 void loggear_finalizacion_proceso(t_pcb* proceso, char* motivo);
+void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo);
 void volver_a_CPU(t_pcb* proceso);
 
 //================================================ Recursos =====================================================================================================================
-int indice_recurso (char* );
-void asignacion_recursos(t_pcb* );
-char* recibir_peticion_recurso(t_pcb* );
 void liberacion_recursos(t_pcb* );
-bool proceso_reteniendo_recurso(t_pcb* ,char* );
 void liberar_todos_recurso(t_pcb* );
+void wait_s(t_pcb *proceso, char **parametros);
+void signal_s(t_pcb *proceso, char **parametros);
 
 //================================================ Consola ==================================================================================================================
 void inicializar_consola_interactiva();

@@ -54,7 +54,7 @@ void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo)
     //Liberamos memoria
     liberar_PCB(pcb_asociado);
 
-    sem_post(&grado_multiprogramacion); 
+    sem_post(&grado_multiprogramacion);
 }
 
 void log_ingreso_a_ready() 

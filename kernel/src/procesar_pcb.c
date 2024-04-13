@@ -12,6 +12,7 @@ t_pcb* crear_pcb(char* path)
     t_pcb* nuevo_pcb = malloc(sizeof(t_pcb)); 
     nuevo_pcb->pid = incrementar_pid();
     nuevo_pcb->estado = NEW;
+    nuevo_pcb->recursos_asignados = list_create();
 
     if (path == NULL) {
         log_error(kernel_logger, "No me enviaste un path correcto\n");
@@ -113,6 +114,23 @@ void asignar_PBC_a_contexto(t_pcb* proceso){
 void liberar_PCB(t_pcb* proceso) {
     
     //liberar_en_memoria(proceso);
+    if(!list_is_empty(proceso->recursos_asignados)) {
+        liberar_recursos_asignados(proceso);
+    }
     liberar_memoria_contexto();
     free(proceso);
+}
+
+void liberar_recursos_asignados(t_pcb* proceso){
+
+    int cant_recursos = list_size(proceso->recursos_asignados);
+
+    if(cant_recursos != 0){
+        for(int i=0; i<cant_recursos; cant_recursos--){
+            char * parametros[3] = {(char *)list_get(proceso->recursos_asignados, i), "", "EXIT"};
+
+            //porque esos recursos ahora estan libres
+            signal_s(proceso, parametros);
+        }
+    }
 }

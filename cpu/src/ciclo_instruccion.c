@@ -272,11 +272,19 @@ static void io_gen_sleep(char* interfaz, char* unidades_trabajo){
 static void wait_c(char* recurso){
     modificar_motivo (WAIT, 1, recurso, "", "");
     enviar_contexto(socket_cliente_dispatch);
+
+    pthread_mutex_lock(&seguir_ejecutando_mutex);
+    seguir_ejecutando = false;
+    pthread_mutex_unlock(&seguir_ejecutando_mutex);
 }
 
 static void signal_c(char* recurso){
     modificar_motivo (SIGNAL, 1, recurso, "", "");
     enviar_contexto(socket_cliente_dispatch);
+
+    pthread_mutex_lock(&seguir_ejecutando_mutex);
+    seguir_ejecutando = false;
+    pthread_mutex_unlock(&seguir_ejecutando_mutex);
 }
 
 static void exit_c() {
