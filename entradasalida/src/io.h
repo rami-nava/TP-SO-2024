@@ -43,13 +43,12 @@ extern FILE* archivo_de_bloques;
 extern int tam_bloque;
 
 //.................................. INICIALIZACION IO .......................................................................
-void inicializar_consola_interactiva();
 void iniciar_interfaz(char* nombre, char* path_de_config);
 void main_generica(t_interfaz* interfaz_hilo);
 void main_stdin(t_interfaz* interfaz_hilo);
 void main_stdout(t_interfaz* interfaz_hilo);
 void main_dialfs(t_interfaz* interfaz_hilo);
-void conectarse_a_kernel(int socket, char* nombre, char* tipo_interfaz);
+void conectarse_a_kernel(int socket, op_code codigo_operacion ,char* nombre, char* tipo_interfaz);
 
 //.................................. METADATA .....................................................................
 void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inicial, char* nombre_archivo, char* path_dial_fs);

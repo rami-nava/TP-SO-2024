@@ -1,21 +1,22 @@
 #include "io.h"
 
 // Funciones Locales //
-static void solicitar_informacion_memoria(int socket_memoria, int tiempo_unidad_de_trabajo, int socket_kernel);
-static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio, int socket_memoria); 
+static void solicitar_informacion_memoria();
+static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio); 
+
+static char *ip_kernel;
+static char *puerto_kernel;
+static char *ip_memoria;
+static char *puerto_memoria;
+static int socket_kernel;
+static int socket_memoria;
+static int tiempo_unidad_de_trabajo;
 
 // Funciones Globales //
 void main_stdout(t_interfaz* interfaz_hilo) 
 {
     char* nombre = interfaz_hilo->nombre_interfaz;
     t_config* config = interfaz_hilo->config_interfaz;
-    char* ip_kernel;
-    char* puerto_kernel;
-    char* ip_memoria;
-    char* puerto_memoria;
-    int socket_kernel;
-    int socket_memoria;
-    int tiempo_unidad_de_trabajo;
     
     ip_kernel = config_get_string_value(config, "IP_KERNEL");
     puerto_kernel = config_get_string_value(config, "PUERTO_KERNEL");
@@ -28,14 +29,14 @@ void main_stdout(t_interfaz* interfaz_hilo)
     socket_kernel = crear_conexion(ip_kernel, puerto_kernel);
     socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
-    conectarse_a_kernel(socket_kernel, nombre, "STDOUT");
+    conectarse_a_kernel(socket_kernel, INTERFAZ_STDOUT,nombre, "STDOUT");
 
     // Realiza su IO_STDOUT_WRITE
-    solicitar_informacion_memoria(socket_memoria, tiempo_unidad_de_trabajo, socket_kernel);
+    solicitar_informacion_memoria();
 
 }
 
-static void solicitar_informacion_memoria (int socket_memoria, int tiempo_unidad_de_trabajo, int socket_kernel)
+static void solicitar_informacion_memoria ()
 {
     while (1)
     {
@@ -56,7 +57,7 @@ static void solicitar_informacion_memoria (int socket_memoria, int tiempo_unidad
             usleep(tiempo_unidad_de_trabajo * 1000);
 
             //Por donde muestro el resultado
-            pedir_lectura(direccion_fisica, tamanio, socket_memoria);
+            pedir_lectura(direccion_fisica, tamanio);
 
             //Mostrar el resultado?
         } 
@@ -68,7 +69,7 @@ static void solicitar_informacion_memoria (int socket_memoria, int tiempo_unidad
     
 }
 
-static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio, int socket_memoria) 
+static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio) 
 {
     t_paquete* paquete = crear_paquete(HACER_LECTURA);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);

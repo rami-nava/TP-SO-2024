@@ -35,12 +35,12 @@ void detener_planificacion() {
         pthread_mutex_unlock(&mutex_corriendo);
 }
 
-void desalojo(){
+void desalojo(int tipo_interrupcion){
     t_paquete *paquete = crear_paquete(DESALOJO);
     pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
     proceso_en_ejecucion_RR = false;
     pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
-    agregar_entero_a_paquete(paquete,1);
+    agregar_entero_a_paquete(paquete,tipo_interrupcion);
     enviar_paquete(paquete, socket_cpu_interrupt);
 }
 

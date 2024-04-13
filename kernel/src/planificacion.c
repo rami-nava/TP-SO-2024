@@ -11,6 +11,7 @@ pthread_mutex_t mutex_READY;
 
 t_list *cola_NEW;
 t_list *cola_READY;
+t_list *cola_BLOCKED;
 
 char *estados_procesos[5] = {"NEW", "READY", "EXEC", "BLOCK", "SALIDA"};
 

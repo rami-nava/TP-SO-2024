@@ -1,30 +1,32 @@
 
 #include "io.h"
 
-static void realizar_sleep(int socket, int tiempo_trabajo);
+static char *ip_kernel;
+static char *puerto_kernel;
+static int socket_kernel;
+static int tiempo_unidad_de_trabajo;
 
-void main_generica(t_interfaz* interfaz_hilo){
-    char* nombre_hilo_interfaz = interfaz_hilo->nombre_interfaz;
-    t_config* config_hilo_interfaz = interfaz_hilo->config_interfaz;
-    int socket_kernel;
-    int tiempo_unidad_de_trabajo;
-    char* ip_kernel;
-    char* puerto_kernel;
+static void realizar_sleep();
 
-    ip_kernel = config_get_string_value(config_hilo_interfaz, "IP_KERNEL");
-    puerto_kernel = config_get_string_value(config_hilo_interfaz, "PUERTO_KERNEL");
-    tiempo_unidad_de_trabajo = config_get_int_value(config_hilo_interfaz, "TIEMPO_UNIDAD_TRABAJO");
+void main_generica(t_interfaz* interfaz){
+    char* nombre_interfaz = interfaz->nombre_interfaz;
+    t_config* config_interfaz = interfaz->config_interfaz;
+    
 
-    log_info(io_logger, "Iniciando interfaz generica: %s\n", nombre_hilo_interfaz);
+    ip_kernel = config_get_string_value(config_interfaz, "IP_KERNEL");
+    puerto_kernel = config_get_string_value(config_interfaz, "PUERTO_KERNEL");
+    tiempo_unidad_de_trabajo = config_get_int_value(config_interfaz, "TIEMPO_UNIDAD_TRABAJO");
+
+    log_info(io_logger, "Iniciando interfaz generica: %s\n", nombre_interfaz);
 
     socket_kernel = crear_conexion(ip_kernel, puerto_kernel);
 
-    conectarse_a_kernel(socket_kernel, nombre_hilo_interfaz, "GENERICA");
+    conectarse_a_kernel(socket_kernel, INTERFAZ_GENERICA ,nombre_interfaz, "GENERICA");
     
-    realizar_sleep(socket_kernel, tiempo_unidad_de_trabajo);
+    realizar_sleep();
 }
 
-void realizar_sleep(int socket_kernel,int tiempo_unidad_de_trabajo) 
+void realizar_sleep() 
 {
 
     int proceso_conectado;

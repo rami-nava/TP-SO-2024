@@ -40,12 +40,14 @@ int main(void)
    
     using_history(); // Inicializar la historia de comando
   
-    servidor_kernel_io();
+
 
     pthread_detach(largo_plazo);
     pthread_detach(corto_plazo);
     if(!strcmp(config_valores_kernel.algoritmo, "RR"))
          inicializar_reloj_RR();
+
+        servidor_kernel_io();
     pthread_join(consola, NULL);
 
     return EXIT_SUCCESS;

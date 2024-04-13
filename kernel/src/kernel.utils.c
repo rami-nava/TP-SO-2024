@@ -48,6 +48,7 @@ void inicializar_semaforos(){
 void iniciar_colas(){
     cola_NEW = list_create();
     cola_READY = list_create();
+    cola_BLOCKED = list_create();
 }
 
 void inicializar_planificador(){

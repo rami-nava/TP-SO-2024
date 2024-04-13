@@ -57,6 +57,7 @@ extern pthread_mutex_t proceso_en_ejecucion_RR_mutex;
 
 extern t_list *cola_NEW;
 extern t_list *cola_READY;
+extern t_list *cola_BLOCKED;
 
 //extern t_list *cola_BLOCKED;
 //extern t_list *cola_EXEC;
@@ -66,6 +67,7 @@ extern t_list* interfaces_genericas;
 extern t_list* interfaces_stdin;
 extern t_list* interfaces_stdout;
 extern t_list* interfaces_dialfs;
+
 
 //==============================================================================================================================
 
@@ -118,7 +120,7 @@ void listar_PIDS(t_list *cola);
 void cambio_de_estado (t_pcb *pcb, estado_proceso estado_nuevo);
 void ingresar_a_READY(t_pcb *pcb);
 void ingresar_a_NEW(t_pcb *pcb);
-void desalojo();
+void desalojo(int tipo_interrupcion);
 void* comenzar_reloj_RR();
 void log_ingreso_a_ready();
 void mandar_a_EXIT(t_pcb* proceso, char* motivo);
@@ -137,6 +139,7 @@ void liberar_PCB(t_pcb* proceso);
 void destruir_PCB(t_pcb* proceso);
 void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion);
 void loggear_finalizacion_proceso(t_pcb* proceso, char* motivo);
+void volver_a_CPU(t_pcb* proceso);
 
 //================================================ Recursos =====================================================================================================================
 int indice_recurso (char* );

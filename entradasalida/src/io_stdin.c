@@ -1,19 +1,20 @@
 #include "io.h"
 
 // Funciones Locales //
-static void realizar_lectura(int socket_kernel, int socket_memoria);
+static void realizar_lectura();
 static void pedir_lectura (uint32_t direccion_fisica, int socket_memoria);
+
+static char *ip_kernel;
+static char *puerto_kernel;
+static char *ip_memoria;
+static char *puerto_memoria;
+static int socket_kernel;
+static int socket_memoria;
 
 void main_stdin(t_interfaz* interfaz_hilo) 
 {
     char* nombre = interfaz_hilo->nombre_interfaz;
     t_config* config = interfaz_hilo->config_interfaz;
-    char* ip_kernel;
-    char* puerto_kernel;
-    char* ip_memoria;
-    char* puerto_memoria;
-    int socket_kernel;
-    int socket_memoria;
     
     ip_kernel = config_get_string_value(config, "IP_KERNEL");
     puerto_kernel = config_get_string_value(config, "PUERTO_KERNEL");
@@ -25,13 +26,13 @@ void main_stdin(t_interfaz* interfaz_hilo)
     socket_kernel = crear_conexion(ip_kernel, puerto_kernel);
     socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
-    conectarse_a_kernel(socket_kernel, nombre, "STDIN");
+    conectarse_a_kernel(socket_kernel, INTERFAZ_STDIN,nombre, "STDIN");
 
-    realizar_lectura(socket_kernel, socket_memoria);
+    realizar_lectura();
 }
 
 // Tenemos que escribir en alguna parte un texto, en la consola?
-static void realizar_lectura(int socket_kernel, int socket_memoria) 
+static void realizar_lectura() 
 {
     while (1)
     {

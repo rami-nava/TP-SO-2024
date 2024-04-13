@@ -68,7 +68,7 @@ static t_pcb *proximo_a_ejecutar_FIFO_RR(){
                 {
                     pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
                     log_info(kernel_logger, "PID:  - Desalojado por fin de Quantum\n"); //PID FALTANTE! :(
-                    desalojo(); //Interrumpo la ejecucion por fin de quantum
+                    desalojo(1); //Interrumpo la ejecucion por fin de quantum
                     temporal_destroy(reloj);
                     reloj = NULL;
                     pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);

@@ -31,7 +31,7 @@ void main_dialfs(t_interfaz *interfaz_hilo)
     socket_kernel = crear_conexion(ip_kernel, puerto_kernel);
     socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
-    conectarse_a_kernel(socket_kernel, nombre, "DIALFS");
+    conectarse_a_kernel(socket_kernel, INTERFAZ_STDOUT,nombre, "DIALFS");
 
     crear_archivo_de_bloque(path_dial_fs, tamanio_archivo_bloques);
 

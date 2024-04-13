@@ -32,7 +32,7 @@ char** elementos_instrucciones;
 int cantidad_parametros;
 int interrupcion = 0;
 bool seguir_ejecutando = true;
-
+int tipo_interrupcion;
 // ------- Definiciones del ciclo ------- //
 static void fetch();
 static void pedir_instruccion();
@@ -184,8 +184,19 @@ static void check_interrupt(){
         pthread_mutex_lock(&seguir_ejecutando_mutex);
         seguir_ejecutando = false;
         pthread_mutex_unlock(&seguir_ejecutando_mutex);
+
         pthread_mutex_lock(&interrupcion_mutex);
-        modificar_motivo (FIN_QUANTUM, 0, "", "", "");
+
+        if(tipo_interrupcion == 1)
+            modificar_motivo (FIN_QUANTUM, 0, "", "", "");
+        else if(tipo_interrupcion == 2){
+            log_info(cpu_logger,"VUELVO!!!!!!!!!!!!!!!!!!!!!\n\n");
+            modificar_motivo (EXIT, 1, "Error IO", "", "");
+        }
+        else{
+            perror("Recibi un codigo de interrupcion desconocido");
+        }
+
         enviar_contexto(socket_cliente_dispatch);
     }
     pthread_mutex_unlock(&interrupcion_mutex);
@@ -199,7 +210,7 @@ void atender_interrupt(void * socket_servidor_interrupt){
         void* stream = paquete->buffer->stream;
 
         if (paquete->codigo_operacion == DESALOJO){
-            int entero = sacar_entero_de_paquete(&stream);
+            tipo_interrupcion = sacar_entero_de_paquete(&stream);
             
             pthread_mutex_lock(&interrupcion_mutex);
             interrupcion ++;
@@ -269,16 +280,8 @@ static void signal_c(char* recurso){
 }
 
 static void exit_c() {
-    char * terminado = string_duplicate ("SUCCESS");
-    modificar_motivo (EXIT, 1, terminado, "", "");
+    modificar_motivo (EXIT, 1, "SUCCESS", "", "");
     enviar_contexto(socket_cliente_dispatch);
-    
-    //cuando me llega exit el proceso que esta ejecutando para
-    pthread_mutex_lock(&seguir_ejecutando_mutex);
-    seguir_ejecutando = false;
-    pthread_mutex_unlock(&seguir_ejecutando_mutex);
-    
-    free (terminado);
 }
 
 

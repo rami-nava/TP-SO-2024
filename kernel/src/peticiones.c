@@ -5,8 +5,8 @@ static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz);
 static void exit_c(t_pcb* proceso, char **parametros);
 
 static void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo);
-static void volver_a_CPU(t_pcb* proceso);
 static void fin_quantum(t_pcb* proceso);
+static void esperar_sleep(int socket_io);
 
 
 void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion){
@@ -30,7 +30,7 @@ static void fin_quantum(t_pcb* proceso){
     ingresar_a_READY(proceso);
 }
 
-static void volver_a_CPU(t_pcb* proceso) {
+void volver_a_CPU(t_pcb* proceso) {
     contexto_ejecucion = enviar_a_cpu(proceso);
     recibir_contexto_actualizado(proceso, contexto_ejecucion);  
 }
@@ -49,8 +49,8 @@ static void io_gen_sleep(t_pcb *proceso, char **parametros){
     a_mimir(proceso, tiempo_sleep, interfaz);
 
     //Sale de Blocked
+    desencolar(cola_BLOCKED);
     ingresar_a_READY(proceso);
-
     }
 }
 
@@ -64,14 +64,19 @@ static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz)
     enviar_paquete(paquete, socket_io);
 
     //Crear funcion ingresar a blocked
-    cambio_de_estado(proceso, BLOCKED); 
+    cambio_de_estado(proceso, BLOCKED);
+    encolar(cola_BLOCKED, proceso); 
 
     loggear_motivo_bloqueo(proceso, "INTERFAZ GENERICA"); 
 
+    pthread_t hilo_manejo_sleep;
+    pthread_create(&hilo_manejo_sleep, NULL, (void* ) esperar_sleep, socket_io);
+}
+
+static void esperar_sleep(int socket_io){
     int termina_sleep = 0;
     recv(socket_io, &termina_sleep, sizeof(int), 0);
-    printf("Finalmente volvio de io el proceso: %d\n", proceso->pid);
-
+    printf("Se volvio de IO \n");
 }
 
 static void exit_c(t_pcb* proceso, char **parametros){   

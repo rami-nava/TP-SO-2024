@@ -26,7 +26,6 @@ static void enviar_handshake()
     t_paquete *paquete = crear_paquete(HANDSHAKE);
     agregar_entero_a_paquete(paquete, 1);
     enviar_paquete(paquete, socket_cliente_memoria);
-    eliminar_paquete(paquete);
 }
 
 static void recibir_handshake()
