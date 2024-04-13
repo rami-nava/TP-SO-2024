@@ -69,11 +69,7 @@ static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz)
     agregar_entero_a_paquete(paquete, tiempo_sleep);
     enviar_paquete(paquete, socket_io);
 
-    //Crear funcion ingresar a blocked
-    cambio_de_estado(proceso, BLOCKED);
-    encolar(cola_BLOCKED, proceso); 
-
-    loggear_motivo_bloqueo(proceso, "INTERFAZ GENERICA"); 
+    ingresar_a_BLOCKED(proceso, "INTERFAZ GENERICA");
 
     pthread_t hilo_manejo_sleep;
     pthread_create(&hilo_manejo_sleep, NULL, (void* ) esperar_sleep, socket_io);

@@ -44,9 +44,9 @@ extern sem_t grado_multiprogramacion;
 
 extern pthread_mutex_t mutex_NEW;
 extern pthread_mutex_t mutex_READY;
+extern pthread_mutex_t mutex_BLOCKED;
 extern pthread_mutex_t mutex_exec;
 extern pthread_mutex_t mutex_exit;
-extern pthread_mutex_t mutex_blocked;
 extern pthread_mutex_t mutex_recursos;
 extern pthread_mutex_t mutex_colas;
 extern pthread_mutex_t mutex_corriendo;
@@ -120,10 +120,12 @@ void listar_PIDS(t_list *cola);
 void cambio_de_estado (t_pcb *pcb, estado_proceso estado_nuevo);
 void ingresar_a_READY(t_pcb *pcb);
 void ingresar_a_NEW(t_pcb *pcb);
+void ingresar_a_BLOCKED(t_pcb *pcb, char* motivo);
 void desalojo(int tipo_interrupcion);
 void* comenzar_reloj_RR();
 void log_ingreso_a_ready();
 void mandar_a_EXIT(t_pcb* proceso, char* motivo);
+int buscar_pcb_en_cola(t_list* cola, int pid);
 
 ////======================================== MEMORIA ===========================================================================================================
 void enviar_pcb_a_memoria(t_pcb *, int, op_code);

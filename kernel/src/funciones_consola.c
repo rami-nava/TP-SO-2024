@@ -71,10 +71,10 @@ void consola_finalizar_proceso(int pid) {
 
     t_pcb* pcb_asociado = NULL;  
     int estado = -1;    
-    /*
+    
     // Recorremos cola de Blocked
-    pthread_mutex_lock(&mutex_blocked);
     if (list_size(cola_BLOCKED) > 0) {
+        pthread_mutex_lock(&mutex_BLOCKED);
         for (int i = 0; i < list_size(cola_BLOCKED); i++) {
             t_pcb* pcb = list_get(cola_BLOCKED, i);
             if (pcb->pid == pid) {
@@ -84,9 +84,9 @@ void consola_finalizar_proceso(int pid) {
             }
         }
     }
-    pthread_mutex_unlock(&mutex_blocked);
+    pthread_mutex_unlock(&mutex_BLOCKED);
 
-    // Recorremos cola de Execute
+    /* Recorremos cola de Execute
     if (pcb_asociado == NULL) {
         pthread_mutex_lock(&mutex_exec);
         if (list_size(cola_EXEC) > 0) {
@@ -119,7 +119,7 @@ void consola_finalizar_proceso(int pid) {
     }
 
     // Recorremos cola de READY
-    if (pcb_asociado == NULL) {
+    if (pcb_asociado != NULL) {
         pthread_mutex_lock(&mutex_READY);
         if (list_size(cola_READY) > 0) {
             for (int i = 0; i < list_size(cola_READY); i++) {

@@ -8,6 +8,7 @@ sem_t grado_multiprogramacion;
 
 pthread_mutex_t mutex_NEW;
 pthread_mutex_t mutex_READY; 
+pthread_mutex_t mutex_BLOCKED; 
 
 t_list *cola_NEW;
 t_list *cola_READY;
@@ -94,7 +95,17 @@ void ingresar_a_READY(t_pcb *pcb)
     sem_post(&hay_procesos_ready);
 
     log_ingreso_a_ready();
-   
+}
+
+void ingresar_a_BLOCKED(t_pcb *pcb, char* motivo)
+{
+    cambio_de_estado(pcb, BLOCKED);
+
+    pthread_mutex_lock(&mutex_BLOCKED);
+    encolar(cola_BLOCKED, pcb); 
+    pthread_mutex_unlock(&mutex_BLOCKED);
+
+    loggear_motivo_bloqueo(pcb, motivo);
 }
 
 //=====================================================LOGS MINIMOS Y OBLIGATORIOS==================================================================================//

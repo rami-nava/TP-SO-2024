@@ -85,9 +85,7 @@ void wait_s(t_pcb *proceso, char **parametros){
         //bloqueamos el proceso en la cola de bloqueados del recursos
         list_add(cola_bloqueados_recurso, (void *)proceso);
 
-        //meto el proceso en blocked porque esta bloqueado por el recurso
-        cambio_de_estado(proceso, BLOCKED); 
-        loggear_motivo_bloqueo(proceso, recurso);
+        ingresar_a_BLOCKED(proceso, recurso);
     }else{
         list_add(proceso->recursos_asignados, (void*)string_duplicate (recurso));
     
