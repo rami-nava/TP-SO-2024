@@ -70,7 +70,7 @@ static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz)
 
     int termina_sleep = 0;
     recv(socket_io, &termina_sleep, sizeof(int), 0);
-    log_info(kernel_logger, "Finalmente volvio de io el proceso: %d\n", proceso->pid);
+    printf("Finalmente volvio de io el proceso: %d\n", proceso->pid);
 
 }
 

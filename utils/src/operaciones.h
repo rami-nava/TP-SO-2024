@@ -22,18 +22,24 @@ typedef enum{
 	CREACION_ESTRUCTURAS_MEMORIA,
 	CONTEXTO_ACTUALIZADO,
 	INSTRUCCION_SOLICITADA,
-	CONTEXTO,
+	MANDAR_INSTRUCCION,
+	HANDSHAKE,
 	READ,
 	VALOR_READ,
 	TRADUCIR_PAGINA_A_MARCO,
 	NUMERO_MARCO,
-	MANDAR_INSTRUCCION,
 	FINALIZAR_EN_MEMORIA,
 	FINALIZAR_PROCESO,
 	WRITE,
 	DESALOJO,
 	GENERICA_IO_SLEEP,
 	STDIN_READ,
+	STDOUT_WRITE,
+	FS_CREATE,
+	FS_DELETE,
+	FS_TRUNCATE,
+	FS_WRITE,
+	FS_READ,
 	HACER_LECTURA,
 	INTERFAZ_GENERICA,
     INTERFAZ_STDIN,
@@ -48,12 +54,6 @@ typedef enum{
 	BLOCKED,
 	SALIDA
 } estado_proceso;
-
-typedef enum{
-	FIFO,
-	VRR,
-	RR
-} algoritmo;
 
 typedef enum {
 	SET,
@@ -97,7 +97,6 @@ typedef struct{
 //======================================================= PCB ==============================================================================================================
 typedef struct{
 	int pid;
-	int program_counter;
 	estado_proceso estado;
     uint32_t PC;
     uint8_t AX;

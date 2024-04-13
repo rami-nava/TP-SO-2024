@@ -35,7 +35,6 @@ extern int socket_servidor_dispatch;
 extern int socket_servidor_interrupt;
 extern int socket_cliente_dispatch;
 extern int socket_cliente_interrupt;
-extern bool hay_page_fault;
 extern int instruccion_actual;
 extern bool seguir_ejecutando;
 
@@ -54,8 +53,7 @@ bool no_es_bloqueante(codigo_instrucciones instruccion_actual);
 void ciclo_de_instruccion();
 int buscar_registro(char*registro);
 void inicializar_semaforos();
-
-
+void realizar_handshake();
 
 
 #endif 

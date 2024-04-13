@@ -62,17 +62,17 @@ void ciclo_de_instruccion(){
 
 // ------- Funciones del ciclo ------- //
 static void fetch() { 
-    log_info(cpu_logger,"PID: %d - FETCH - Program Counter: %d",contexto_ejecucion->pid, contexto_ejecucion->program_counter);
+    log_info(cpu_logger,"PID: %d - FETCH - Program Counter: %d",contexto_ejecucion->pid, contexto_ejecucion->PC);
 
     //le mando el program pointer a la memoria para que me pase la instruccion a la que apunta
     pedir_instruccion();
     recibir_instruccion();
-    contexto_ejecucion->program_counter +=1;
+    contexto_ejecucion->PC +=1;
 }
 
 static void pedir_instruccion(){
     t_paquete *paquete = crear_paquete(MANDAR_INSTRUCCION);
-    agregar_entero_a_paquete(paquete,contexto_ejecucion->program_counter);
+    agregar_entero_a_paquete(paquete,contexto_ejecucion->PC);
     agregar_entero_a_paquete(paquete,contexto_ejecucion->pid);
     enviar_paquete(paquete, socket_cliente_memoria);
 }
@@ -249,7 +249,7 @@ static void sub(char* registro_destino, char* registro_origen){
 
 static void jnz(char* registro, char* numero_instruccion){
     if (buscar_registro(registro) != 0){
-        contexto_ejecucion->program_counter = atoi(numero_instruccion); //Lo modifique a program_counter
+        contexto_ejecucion->PC = atoi(numero_instruccion); 
     }
 }
 
@@ -286,8 +286,8 @@ static void exit_c() {
 
 void setear_registro(char *registros, char* valor)
 {
-    if (string_equals_ignore_case(registros, "program_counter"))
-        contexto_ejecucion->program_counter = atoi(valor);
+    if (string_equals_ignore_case(registros, "PC"))
+        contexto_ejecucion->PC = atoi(valor);
     if (string_equals_ignore_case(registros, "AX"))
         contexto_ejecucion->AX = atoi(valor);
     if (string_equals_ignore_case(registros, "BX"))

@@ -126,7 +126,6 @@ void mandar_a_EXIT(t_pcb* proceso, char* motivo);
 ////======================================== MEMORIA ===========================================================================================================
 void enviar_pcb_a_memoria(t_pcb *, int, op_code);
 op_code esperar_respuesta_memoria(int);
-void atender_page_fault(t_pcb *);
 
 //================================================== PCB =====================================================================================================================
 t_pcb *crear_pcb(char*); 
@@ -145,8 +144,6 @@ void asignacion_recursos(t_pcb* );
 char* recibir_peticion_recurso(t_pcb* );
 void liberacion_recursos(t_pcb* );
 bool proceso_reteniendo_recurso(t_pcb* ,char* );
-void deteccion_deadlock (t_pcb*, char* );
-void mensaje_deadlock_detectado(t_pcb* , char* );
 void liberar_todos_recurso(t_pcb* );
 
 //================================================ Consola ==================================================================================================================

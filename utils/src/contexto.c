@@ -6,7 +6,6 @@ void iniciar_contexto()
 {
     contexto_ejecucion = malloc(sizeof(t_contexto));
     contexto_ejecucion->pid = 0;
-    contexto_ejecucion->program_counter = 0;
     contexto_ejecucion->PC = 0;
     contexto_ejecucion->AX = 0;
     contexto_ejecucion->BX = 0;
@@ -31,7 +30,6 @@ void enviar_contexto(int socket_cliente)
 {
     t_paquete *paquete = crear_paquete(CONTEXTO_ACTUALIZADO);
     agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
-    agregar_entero_a_paquete(paquete, contexto_ejecucion->program_counter);
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->PC);
     agregar_byte_sin_signo_a_paquete(paquete, contexto_ejecucion->AX);
     agregar_byte_sin_signo_a_paquete(paquete, contexto_ejecucion->BX);
@@ -62,7 +60,6 @@ void recibir_contexto(int socket_cliente)
     void *stream = paquete->buffer->stream;
     
     contexto_ejecucion->pid = sacar_entero_de_paquete(&stream);
-    contexto_ejecucion->program_counter = sacar_entero_de_paquete(&stream);
     contexto_ejecucion->PC = sacar_entero_sin_signo_de_paquete(&stream);
     contexto_ejecucion->AX = sacar_byte_sin_signo_de_paquete(&stream);
     contexto_ejecucion->BX = sacar_byte_sin_signo_de_paquete(&stream);
@@ -89,7 +86,6 @@ void recibir_contexto_cpu(t_paquete* paquete, void* stream)
 	iniciar_contexto();
 
     contexto_ejecucion->pid = sacar_entero_de_paquete(&stream);
-    contexto_ejecucion->program_counter = sacar_entero_de_paquete(&stream);
     contexto_ejecucion->PC = sacar_entero_sin_signo_de_paquete(&stream);
     contexto_ejecucion->AX = sacar_byte_sin_signo_de_paquete(&stream);
     contexto_ejecucion->BX = sacar_byte_sin_signo_de_paquete(&stream);

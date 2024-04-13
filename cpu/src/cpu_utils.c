@@ -31,7 +31,6 @@ void cargar_configuracion(char *path)
 //================================================== Servidor KERNEL =====================================================================
 void atender_dispatch()
 {
-
     while(1) 
     {
         instruccion_actual = -1;

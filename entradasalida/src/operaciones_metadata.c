@@ -1,28 +1,26 @@
 #include "io.h"
 
-char* path_dial_fs; // Path base de dialfs cambiar en un futuro
+metadata_archivo* levantar_metadata (char* nombre, char* path_dial_fs) {
 
-metadata_archivo* levantar_metadata (char * nombre) {
+    char* path = string_from_format ("%s/%s.txt", path_dial_fs, nombre);
 
-    char * path = string_from_format ("%s/%s.fcb", path_dial_fs, nombre);
+    t_config* archivo = config_create (path);
 
-    t_config * archivo = config_create (path);
-
-    metadata_archivo* archivo_FCB = malloc (sizeof (metadata_archivo)); 
-    archivo_FCB->nombre_archivo = string_duplicate(config_get_string_value (archivo, "NOMBRE_ARCHIVO"));
-    archivo_FCB->bloque_inicial = config_get_int_value(archivo, "BLOQUE_INICIAL");
-    archivo_FCB->tamanio_archivo = config_get_int_value (archivo, "TAMANIO_ARCHIVO");
+    metadata_archivo* metadata_archivo = malloc (sizeof (metadata_archivo)); 
+    metadata_archivo->nombre_archivo = string_duplicate(config_get_string_value (archivo, "NOMBRE_ARCHIVO"));
+    metadata_archivo->bloque_inicial = config_get_int_value(archivo, "BLOQUE_INICIAL");
+    metadata_archivo->tamanio_archivo = config_get_int_value (archivo, "TAMANIO_ARCHIVO");
 
 	config_destroy (archivo);
     free(path);
-    return archivo_FCB;
+    return metadata_archivo;
 }
 
-void cargamos_cambios_a_fcb_ampliar(int tamanio_nuevo, uint32_t bloque_inicial, char* nombre_archivo) {
-
+void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inicial, char* nombre_archivo, char* path_dial_fs) 
+{
 	char* puntero_auxiliar = NULL;
 
-	char* path = string_from_format ("%s/%s.fcb", path_dial_fs, nombre_archivo);
+	char* path = string_from_format ("%s/%s.txt", path_dial_fs, nombre_archivo);
     t_config * archivo = config_create (path);
 
     puntero_auxiliar = string_from_format("%d", bloque_inicial);
@@ -39,11 +37,11 @@ void cargamos_cambios_a_fcb_ampliar(int tamanio_nuevo, uint32_t bloque_inicial, 
     config_destroy(archivo);
 }
 
-void cargamos_cambios_a_fcb_reducir(int tamanio_nuevo, char* nombre_archivo) {
+void cargamos_cambios_a_metadata_reducir(int tamanio_nuevo, char* nombre_archivo, char* path_dial_fs) {
 
 	char* puntero_auxiliar = NULL;
 
-	char* path = string_from_format ("%s/%s.fcb", path_dial_fs, nombre_archivo);
+    char* path = string_from_format ("%s/%s.txt", path_dial_fs, nombre_archivo);
     t_config * archivo = config_create (path);
 	
 	puntero_auxiliar = string_from_format("%d", tamanio_nuevo);

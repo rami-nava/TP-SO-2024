@@ -18,7 +18,6 @@ t_pcb* crear_pcb(char* path)
         free(nuevo_pcb);
     }
 
-    nuevo_pcb->program_counter = 0;
     nuevo_pcb->PC = 0;
     nuevo_pcb->AX = 0;
     nuevo_pcb->BX = 0;
@@ -81,7 +80,6 @@ t_contexto* enviar_a_cpu(t_pcb* proceso) {
 
 void actualizar_PCB(t_pcb* proceso){
     proceso->pid = contexto_ejecucion->pid;
-    proceso->program_counter = contexto_ejecucion->program_counter;
     proceso->PC = contexto_ejecucion->PC;
     proceso->AX = contexto_ejecucion->AX;
     proceso->BX = contexto_ejecucion->BX;
@@ -98,7 +96,6 @@ void actualizar_PCB(t_pcb* proceso){
 void asignar_PBC_a_contexto(t_pcb* proceso){
 
     contexto_ejecucion->pid = proceso->pid;
-    contexto_ejecucion->program_counter = proceso->program_counter;
     contexto_ejecucion->PC = proceso->PC;
     contexto_ejecucion->AX = proceso->AX;
     contexto_ejecucion->BX = proceso->BX;

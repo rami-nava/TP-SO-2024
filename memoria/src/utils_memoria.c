@@ -17,14 +17,35 @@ void cargar_configuracion(char* path){
 	config_valores_memoria.retardo_respuesta=config_get_int_value(config,"RETARDO_RESPUESTA");
 }
 
-//======================================= SEMÁFOROS ============================================================
-
-void inicializar_semaforos()
+// ======================================= PROCESOS =====================================================================
+t_proceso_en_memoria *buscar_proceso(t_list *lista, int pid_buscado)
 {
-    pthread_mutex_init(&mutex_instrucciones, NULL);
-    pthread_mutex_init(&mutex_lista_instrucciones, NULL);
-    pthread_mutex_init(&mutex_path, NULL);
-	//pthread_mutex_init(&mutex_tiempo, NULL);
+	int elementos = list_size(lista);
+	for (int i = 0; i < elementos; i++)
+	{
+		t_proceso_en_memoria *proceso = list_get(lista, i);
+		if (pid_buscado == proceso->pid)
+		{
+			return proceso;
+		}
+	}
+	log_error(memoria_logger, "Proceso no encontrado\n");
+	return NULL;
+}
 
-    sem_init(&(solucionado_pf), 0, 0);
+void finalizar_en_memoria(int pid){
+
+	//Obtengo el proceso por el pid
+	t_proceso_en_memoria *proceso = buscar_proceso(procesos_en_memoria, pid);
+
+	//limpiar_tabla_paginas(proceso);
+
+	//Elimino el proceso de la lista
+	list_remove_element(procesos_en_memoria, proceso);
+
+	//Limpio su lista de instrucciones
+	list_destroy(proceso->instrucciones);
+
+	//Libero su memoria
+	free(proceso);
 }
