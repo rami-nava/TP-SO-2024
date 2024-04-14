@@ -2,7 +2,7 @@
 
 // Funciones Locales //
 static void solicitar_informacion_memoria();
-static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio); 
+static char* pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio); 
 
 static char *ip_kernel;
 static char *puerto_kernel;
@@ -34,7 +34,7 @@ void main_stdout(t_interfaz* interfaz_hilo)
     // Realiza su IO_STDOUT_WRITE
     solicitar_informacion_memoria();
 
-}
+}   
 
 static void solicitar_informacion_memoria ()
 {
@@ -57,9 +57,13 @@ static void solicitar_informacion_memoria ()
             usleep(tiempo_unidad_de_trabajo * 1000);
 
             //Por donde muestro el resultado
-            pedir_lectura(direccion_fisica, tamanio);
+            char* lectura = pedir_lectura(direccion_fisica, tamanio);
 
             //Mostrar el resultado?
+            printf("Lectura realizada: %s\n", lectura);
+
+            int lectura_realizada = 1;
+            send(socket_kernel, &lectura_realizada, sizeof(int), 0); //Le avisa a Kernel que ya se realizo la lectura, y ya se mostro por pantalla
         } 
         else { 
             eliminar_paquete(paquete);
@@ -69,11 +73,26 @@ static void solicitar_informacion_memoria ()
     
 }
 
-static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio) 
+static char* pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio) 
 {
     t_paquete* paquete = crear_paquete(HACER_LECTURA);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
     agregar_entero_sin_signo_a_paquete(paquete, tamanio);
     enviar_paquete(paquete, socket_memoria);
     eliminar_paquete(paquete);
+
+    paquete = recibir_paquete(socket_kernel);
+    if(paquete->codigo_operacion == DEVOLVER_LECTURA){
+        void* stream = paquete->buffer->stream;
+        char* texto_leido = sacar_cadena_de_paquete(&stream);
+        eliminar_paquete(paquete);
+
+        return texto_leido;
+    }
+    else{
+        eliminar_paquete(paquete);
+        log_error(io_logger, "El paquete no es del tipo DEVOLVER_LECTURA");
+
+        return NULL;
+    }
 }

@@ -49,6 +49,7 @@ static void sub(char* registro_destino, char* registro_origen);
 static void jnz(char* registro, char* numero_instruccion);
 static void io_gen_sleep(char* interfaz, char* unidades_trabajo);
 static void io_stdin_read(char* interfaz, char* direccion_fisica, char* tamanio_registro);
+static void io_stdout_write(char* interfaz, char* direccion_fisica, char* tamanio_registro);
 static void wait_c(char* recurso);
 static void signal_c(char* recurso);
 static void exit_c();
@@ -151,7 +152,7 @@ static void execute() {
             io_stdin_read(elementos_instrucciones[1], elementos_instrucciones[2], elementos_instrucciones[3]);
             break;
         case IO_STDOUT_WRITE:
-            //io_stdin_write(elementosInstruccion[1], elementosInstruccion[2], elementosInstruccion[3]);
+            io_stdout_write(elementos_instrucciones[1], elementos_instrucciones[2], elementos_instrucciones[3]);
             break;
         case IO_FS_CREATE:
             //io_fs_create(elementosInstruccion[1], elementosInstruccion[2]);
@@ -272,6 +273,11 @@ static void io_gen_sleep(char* interfaz, char* unidades_trabajo){
 
 static void io_stdin_read(char* interfaz, char* direccion_fisica, char* tamanio_registro){
     modificar_motivo(IO_STDIN_READ, 2, interfaz, direccion_fisica, tamanio_registro);
+    enviar_contexto(socket_cliente_dispatch);
+}
+
+static void io_stdout_write(char* interfaz, char* direccion_fisica, char* tamanio_registro){
+    modificar_motivo(IO_STDOUT_WRITE, 2, interfaz, direccion_fisica, tamanio_registro);
     enviar_contexto(socket_cliente_dispatch);
 }
 

@@ -24,7 +24,7 @@ void main_stdin(t_interfaz* interfaz_hilo)
     log_info(io_logger, "Iniciando interfaz STDIN: %s", nombre);
     
     socket_kernel = crear_conexion(ip_kernel, puerto_kernel);
-    //socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
+    socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
     conectarse_a_kernel(socket_kernel, INTERFAZ_STDIN,nombre, "STDIN");
 
@@ -48,7 +48,7 @@ static void realizar_escritura()
 
             log_info(io_logger, "PID: %d - Operacion: IO_STDIN_READ\n", proceso_conectado);
 
-            guardar_escritura(direccion_fisica, tamanio_registro, socket_memoria);
+            guardar_escritura(direccion_fisica, tamanio_registro);
         } 
         else { 
             eliminar_paquete(paquete);
