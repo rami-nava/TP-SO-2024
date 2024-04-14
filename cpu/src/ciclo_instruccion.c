@@ -48,6 +48,7 @@ static void sum(char* registro_destino, char* registro_origen);
 static void sub(char* registro_destino, char* registro_origen); 
 static void jnz(char* registro, char* numero_instruccion);
 static void io_gen_sleep(char* interfaz, char* unidades_trabajo);
+static void io_stdin_read(char* interfaz, char* direccion_fisica, char* tamanio_registro);
 static void wait_c(char* recurso);
 static void signal_c(char* recurso);
 static void exit_c();
@@ -147,7 +148,7 @@ static void execute() {
             io_gen_sleep(elementos_instrucciones[1], elementos_instrucciones[2]);
             break;
         case IO_STDIN_READ:
-            //io_stdin_read(elementosInstruccion[1], elementosInstruccion[2], elementosInstruccion[3]);
+            io_stdin_read(elementos_instrucciones[1], elementos_instrucciones[2], elementos_instrucciones[3]);
             break;
         case IO_STDOUT_WRITE:
             //io_stdin_write(elementosInstruccion[1], elementosInstruccion[2], elementosInstruccion[3]);
@@ -187,10 +188,12 @@ static void check_interrupt(){
 
         pthread_mutex_lock(&interrupcion_mutex);
 
-        if(tipo_interrupcion == 1)
+        if(tipo_interrupcion == 1){
+            log_info(cpu_logger, "Recibi una interrupcion de Fin de Quantum\n");
             modificar_motivo (FIN_QUANTUM, 0, "", "", "");
+        }
         else if(tipo_interrupcion == 2){
-            log_info(cpu_logger,"VUELVO!!!!!!!!!!!!!!!!!!!!!\n\n");
+            log_info(cpu_logger, "Recibi una interrupcion de Error de IO\n");
             modificar_motivo (EXIT, 1, "Error IO", "", "");
         }
         else{
@@ -215,8 +218,6 @@ void atender_interrupt(void * socket_servidor_interrupt){
             pthread_mutex_lock(&interrupcion_mutex);
             interrupcion ++;
             pthread_mutex_unlock(&interrupcion_mutex);
-
-            log_info(cpu_logger, "Recibi una interrupcion\n");
         }
         else{
             log_error(cpu_logger,"No recibi un codigo de interrupcion");
@@ -266,6 +267,11 @@ static void jnz(char* registro, char* numero_instruccion){
 
 static void io_gen_sleep(char* interfaz, char* unidades_trabajo){
     modificar_motivo(IO_GEN_SLEEP, 2, interfaz, unidades_trabajo, "");
+    enviar_contexto(socket_cliente_dispatch);
+}
+
+static void io_stdin_read(char* interfaz, char* direccion_fisica, char* tamanio_registro){
+    modificar_motivo(IO_STDIN_READ, 2, interfaz, direccion_fisica, tamanio_registro);
     enviar_contexto(socket_cliente_dispatch);
 }
 

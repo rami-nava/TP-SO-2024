@@ -4,7 +4,7 @@ static void io_gen_sleep(t_pcb *proceso, char **parametros);
 static void io_stdin_read(t_pcb *proceso, char **parametros);
 static void io_stdout_write(t_pcb *proceso, char **parametros);
 static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz);
-static void a_leer_de_interfaz(t_pcb * proceso, int direccion, int tamanio, t_interfaz* interfaz);
+static void a_leer_de_interfaz(t_pcb * proceso, uint32_t direccion, uint32_t tamanio, t_interfaz* interfaz);
 static void a_escribir_interfaz(t_pcb * proceso, char* nombre_archivo, int direccion, int tamanio, int puntero_archivo,t_interfaz* interfaz);
 static void exit_c(t_pcb* proceso, char **parametros);
 
@@ -68,8 +68,8 @@ static void io_gen_sleep(t_pcb *proceso, char **parametros){
 
 static void io_stdin_read(t_pcb *proceso, char **parametros){
     char* nombre_interfaz = parametros[0];
-    int direccion = atoi(parametros[1]);
-    int tamanio = atoi(parametros[2]);
+    uint32_t direccion = atoi(parametros[1]);
+    uint32_t tamanio = atoi(parametros[2]);
 
     t_interfaz* interfaz = obtener_interfaz_por_nombre(nombre_interfaz);
 
@@ -108,13 +108,13 @@ static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz)
     crear_hilo_io(proceso, interfaz);
 }
 
-static void a_leer_de_interfaz(t_pcb * proceso, int direccion, int tamanio, t_interfaz* interfaz) {
+static void a_leer_de_interfaz(t_pcb * proceso, uint32_t direccion, uint32_t tamanio, t_interfaz* interfaz) {
     int socket_io = interfaz->socket_conectado;
 
-    t_paquete* paquete = crear_paquete(GENERICA_IO_SLEEP);
+    t_paquete* paquete = crear_paquete(STDIN_READ);
     agregar_entero_a_paquete(paquete, proceso->pid);
-    agregar_entero_a_paquete(paquete, direccion);
-    agregar_entero_a_paquete(paquete, tamanio);
+    agregar_entero_sin_signo_a_paquete(paquete, direccion);
+    agregar_entero_sin_signo_a_paquete(paquete, tamanio);
     enviar_paquete(paquete, socket_io);
 
     crear_hilo_io(proceso, interfaz);
@@ -123,7 +123,7 @@ static void a_leer_de_interfaz(t_pcb * proceso, int direccion, int tamanio, t_in
 static void a_escribir_interfaz(t_pcb * proceso, char* nombre_archivo, int direccion, int tamanio, int puntero_archivo,t_interfaz* interfaz){
     int socket_io = interfaz->socket_conectado;
 
-    t_paquete* paquete = crear_paquete(GENERICA_IO_SLEEP);
+    t_paquete* paquete = crear_paquete(STDOUT_WRITE);
     agregar_entero_a_paquete(paquete, proceso->pid);
     agregar_cadena_a_paquete(paquete, nombre_archivo);
     agregar_entero_a_paquete(paquete, direccion);

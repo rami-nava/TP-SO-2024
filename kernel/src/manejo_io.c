@@ -46,12 +46,15 @@ static void agregar_interfaz(op_code tipo, void* stream, int socket_cliente_io)
             break;
         case INTERFAZ_STDIN:
             list_add(interfaces_stdin, interfaz_nueva);
+            log_info(kernel_logger, "Se agrego interfaz STDIN: %s \n", interfaz_nueva->nombre);
             break;
         case INTERFAZ_STDOUT:
             list_add(interfaces_stdout, interfaz_nueva);
+            log_info(kernel_logger, "Se agrego interfaz STDOUT: %s \n", interfaz_nueva->nombre);
             break;
         case INTERFAZ_DIALFS:
             list_add(interfaces_dialfs, interfaz_nueva);
+            log_info(kernel_logger, "Se agrego interfaz DIALFS: %s \n", interfaz_nueva->nombre);
             break;
         default:
             break;
