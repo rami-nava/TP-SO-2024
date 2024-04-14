@@ -37,6 +37,7 @@ static void agregar_interfaz(op_code tipo, void* stream, int socket_cliente_io)
     interfaz_nueva->nombre = sacar_cadena_de_paquete(&stream);
     interfaz_nueva->tipo_interfaz = sacar_cadena_de_paquete(&stream);
     interfaz_nueva->socket_conectado = socket_cliente_io;
+    pthread_mutex_init(&interfaz_nueva->comunicacion_interfaz_mutex, NULL);
 
     switch(tipo) {
         case INTERFAZ_GENERICA:

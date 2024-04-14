@@ -11,9 +11,7 @@ static void exit_c(t_pcb* proceso, char **parametros);
 void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo);
 static void fin_quantum(t_pcb* proceso);
 static void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz);
-static void esperar_io(int socket_io);
-
-pthread_mutex_t leer_respuesta_io_mutex;
+static void esperar_io(t_interfaz* interfaz);
 
 
 void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion){
@@ -137,7 +135,7 @@ static void a_escribir_interfaz(t_pcb * proceso, char* nombre_archivo, int direc
 }
 
 static void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz){
-    char motivo[20];
+    char motivo[20] = "";
 
     strcat(motivo, "INTERFAZ ");
     strcat(motivo, interfaz->tipo_interfaz);
@@ -145,15 +143,15 @@ static void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz){
     ingresar_a_BLOCKED(proceso, motivo);
 
     pthread_t hilo_manejo_io;
-    pthread_create(&hilo_manejo_io, NULL, (void* ) esperar_io, interfaz->socket_conectado);
+    pthread_create(&hilo_manejo_io, NULL, (void* ) esperar_io, interfaz);
     pthread_detach(hilo_manejo_io);
 }
 
-static void esperar_io(int socket_io){
+static void esperar_io(t_interfaz* interfaz){
     int termina_io = 0;
-    pthread_mutex_lock(&leer_respuesta_io_mutex); //Evita que varios hilos conectados a la misma IO lean el mismo mensaje y ignoren otros
-    recv(socket_io, &termina_io, sizeof(int), 0); 
-    pthread_mutex_unlock(&leer_respuesta_io_mutex); //Revisar, si una IO hace sleep por mucho tiempo, bloquea a todos los demas hilos?
+    pthread_mutex_lock(&interfaz->comunicacion_interfaz_mutex); //Evita que varios hilos conectados a la misma IO lean el mismo mensaje y ignoren otros
+    recv(interfaz->socket_conectado, &termina_io, sizeof(int), 0); 
+    pthread_mutex_unlock(&interfaz->comunicacion_interfaz_mutex);
     
     //Sale de Blocked
     ingresar_a_READY(desencolar(cola_BLOCKED)); //En realidad habria que buscar el proceso que se acaba de desbloquear

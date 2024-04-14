@@ -53,7 +53,6 @@ extern pthread_mutex_t mutex_corriendo;
 extern pthread_cond_t cond_corriendo;
 extern pthread_t reloj_RR;
 extern pthread_mutex_t proceso_en_ejecucion_RR_mutex;
-extern pthread_mutex_t leer_respuesta_io_mutex;
 
 
 extern t_list *cola_NEW;
@@ -93,6 +92,7 @@ typedef struct
     int socket_conectado;
     char* nombre;
     char* tipo_interfaz;
+    pthread_mutex_t comunicacion_interfaz_mutex;
 } t_interfaz;    
 
 extern t_interfaz interfaz;
