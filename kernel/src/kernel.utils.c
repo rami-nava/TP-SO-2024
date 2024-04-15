@@ -34,6 +34,7 @@ void inicializar_semaforos(){
     pthread_mutex_init(&mutex_NEW, NULL);
     pthread_mutex_init(&mutex_READY,NULL); 
     pthread_mutex_init(&mutex_BLOCKED,NULL); 
+    pthread_mutex_init(&mutex_PROCESOS_DEL_SISTEMA,NULL);
     pthread_mutex_init(&mutex_corriendo, NULL);
     pthread_cond_init(&cond_corriendo, NULL);
     pthread_mutex_init(&proceso_en_ejecucion_RR_mutex, NULL);
@@ -50,6 +51,7 @@ void iniciar_colas(){
     cola_NEW = list_create();
     cola_READY = list_create();
     cola_BLOCKED = list_create();
+    cola_PROCESOS_DEL_SISTEMA = list_create();
 }
 
 void inicializar_planificador(){
