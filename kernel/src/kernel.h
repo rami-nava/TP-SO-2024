@@ -25,7 +25,6 @@
 //================================================== Variables =====================================================================
 extern t_log *kernel_logger;
 extern t_config *config;
-extern char* pids;
 extern int corriendo;
 extern int quantum;
 extern bool proceso_en_ejecucion_RR;
@@ -173,7 +172,7 @@ void consola_ejecutar_script(char *path);
 void consola_iniciar_proceso(char *path);
 void detener_planificacion();
 t_pcb* buscar_pcb_de_lista(t_list *lista, int pid_buscado);
-
+void mostrar_lista_pcb(t_list *cola, char *nombre_cola, pthread_mutex_t mutex_cola);
 
 ////======================================== IO ===========================================================================================================
 void servidor_kernel_io();
