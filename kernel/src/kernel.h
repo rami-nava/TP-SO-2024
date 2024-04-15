@@ -59,6 +59,7 @@ extern pthread_mutex_t proceso_en_ejecucion_RR_mutex;
 extern t_list *cola_NEW;
 extern t_list *cola_READY;
 extern t_list *cola_BLOCKED;
+extern t_list *cola_PROCESOS_DEL_SISTEMA;
 
 //extern t_list *cola_BLOCKED;
 //extern t_list *cola_EXEC;
