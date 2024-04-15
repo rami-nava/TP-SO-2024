@@ -5,6 +5,8 @@ sem_t mutex_pid;
 //==================================================== FUNCIONES ESTATICAS ====================================================================================
 static int incrementar_pid();
 static void enviar_creacion_estructuras_memoria(int pid, char* path_proceso);
+pthread_mutex_t mutex_PROCESOS_DEL_SISTEMA;
+t_list* cola_PROCESOS_DEL_SISTEMA;
 
 //==================================================== CREAR_PCB ====================================================================================
 t_pcb* crear_pcb(char* path) 
@@ -34,6 +36,8 @@ t_pcb* crear_pcb(char* path)
 
     ingresar_a_NEW(nuevo_pcb);
     enviar_creacion_estructuras_memoria(nuevo_pcb->pid, path);
+
+    agregar_proceso_a_lista_procesos_del_sistema(nuevo_pcb);
 
     sem_post(&hay_procesos_nuevos);
     return nuevo_pcb;
@@ -110,27 +114,34 @@ void asignar_PBC_a_contexto(t_pcb* proceso){
     contexto_ejecucion->DI = proceso->DI;
 }
 
+void agregar_proceso_a_lista_procesos_del_sistema(t_pcb *proceso){
+    pthread_mutex_lock(&mutex_PROCESOS_DEL_SISTEMA);
+    encolar(cola_PROCESOS_DEL_SISTEMA, proceso);    
+    pthread_mutex_unlock(&mutex_PROCESOS_DEL_SISTEMA);
+}
+
 //==================================================== ELIMINAR_PCB ====================================================================================
 void liberar_PCB(t_pcb* proceso) {
     
     //liberar_en_memoria(proceso);
-    if(!list_is_empty(proceso->recursos_asignados)) {
-        liberar_recursos_asignados(proceso);
-    }
+    list_destroy_and_destroy_elements(proceso->recursos_asignados, free);
     liberar_memoria_contexto();
     free(proceso);
 }
 
-void liberar_recursos_asignados(t_pcb* proceso){
-
+void liberar_recursos_asignados(t_pcb* proceso) {
     int cant_recursos = list_size(proceso->recursos_asignados);
 
-    if(cant_recursos != 0){
-        for(int i=0; i<cant_recursos; cant_recursos--){
-            char * parametros[3] = {(char *)list_get(proceso->recursos_asignados, i), "", "EXIT"};
+    if (cant_recursos != 0) {
+        t_list* recursos_a_liberar = list_duplicate(proceso->recursos_asignados);
 
-            //porque esos recursos ahora estan libres
+        for (int i = 0; i < cant_recursos; i++) {
+            char* recurso = (char*)list_get(recursos_a_liberar, i);
+            char* parametros[3] = {recurso, "", "EXIT"};
             signal_s(proceso, parametros);
         }
+
+        list_destroy(recursos_a_liberar);
     }
 }
+
