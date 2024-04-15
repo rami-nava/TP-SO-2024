@@ -192,12 +192,13 @@ static void check_interrupt(){
         if(tipo_interrupcion == 1){
             log_info(cpu_logger, "Recibi una interrupcion de Fin de Quantum\n");
             modificar_motivo (FIN_QUANTUM, 0, "", "", "");
-        }
-        else if(tipo_interrupcion == 2){
+        }else if(tipo_interrupcion == 2){
             log_info(cpu_logger, "Recibi una interrupcion de Error de IO\n");
             modificar_motivo (EXIT, 1, "Error IO", "", "");
-        }
-        else{
+        }else if(tipo_interrupcion == 3){
+            log_info(cpu_logger,"Recibi una interrupcion de finalizacion del proceso PID: %d\n", contexto_ejecucion->pid);
+            modificar_motivo (EXIT, 1, "Pedido de finalizacion", "", "");
+        }else{
             perror("Recibi un codigo de interrupcion desconocido");
         }
 
