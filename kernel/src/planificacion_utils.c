@@ -50,6 +50,13 @@ void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo)
 
     //Avisas pq finalizo el proceso
     loggear_finalizacion_proceso(pcb_asociado, motivo); 
+    
+    //si es un error de signal, no quiero mandarlo a liberar un recurso que no existe porque entra en un bucle
+    if(strcmp(motivo, "Error de signal, el recurso solicitado no existe") != 0){
+        if(!list_is_empty(pcb_asociado->recursos_asignados)) {
+            liberar_recursos_asignados(pcb_asociado);
+        }
+    }
 
     //Liberamos memoria
     liberar_PCB(pcb_asociado);
