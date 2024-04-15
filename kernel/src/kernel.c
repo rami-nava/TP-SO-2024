@@ -12,6 +12,7 @@ arch_config_kernel config_valores_kernel;
 pthread_t consola;
 pthread_t largo_plazo;
 pthread_t corto_plazo;
+pthread_t hilo_servidor_kernel_io;
 
 //========================================================================================================================================
 int main(void)
@@ -37,6 +38,7 @@ int main(void)
     pthread_create(&largo_plazo, NULL, (void* ) planificador_largo_plazo, NULL);
     pthread_create(&corto_plazo, NULL, (void* ) planificador_corto_plazo_segun_algoritmo, NULL);
     pthread_create(&consola, NULL, (void* ) inicializar_consola_interactiva, NULL);
+    pthread_create(&hilo_servidor_kernel_io, NULL, (void* ) servidor_kernel_io, NULL);
    
     using_history(); // Inicializar la historia de comando
   
@@ -44,10 +46,9 @@ int main(void)
 
     pthread_detach(largo_plazo);
     pthread_detach(corto_plazo);
-    if(!strcmp(config_valores_kernel.algoritmo, "RR"))
+    pthread_detach(hilo_servidor_kernel_io);
+    if(!strcmp(config_valores_kernel.algoritmo, "RR") || !strcmp(config_valores_kernel.algoritmo, "VRR"))
          inicializar_reloj_RR();
-
-        servidor_kernel_io();
     pthread_join(consola, NULL);
 
     return EXIT_SUCCESS;
