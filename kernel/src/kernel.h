@@ -45,6 +45,7 @@ extern sem_t grado_multiprogramacion;
 extern pthread_mutex_t mutex_NEW;
 extern pthread_mutex_t mutex_READY;
 extern pthread_mutex_t mutex_BLOCKED;
+extern pthread_mutex_t mutex_PROCESOS_DEL_SISTEMA;
 extern pthread_mutex_t mutex_exec;
 extern pthread_mutex_t mutex_exit;
 extern pthread_mutex_t mutex_recursos;
@@ -169,6 +170,7 @@ void detener_planificacion();
 void consola_ejecutar_script(char *path);
 void consola_iniciar_proceso(char *path);
 void detener_planificacion();
+t_pcb* buscar_pcb_de_lista(t_list *lista, int pid_buscado);
 
 
 ////======================================== IO ===========================================================================================================
