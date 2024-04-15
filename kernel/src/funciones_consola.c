@@ -61,9 +61,50 @@ void consola_iniciar_planificacion() {
 }
 
 void consola_proceso_estado() {
-    listar_PIDS(cola_NEW);
-    listar_PIDS(cola_READY);
+  mostrar_lista_pcb(cola_NEW, "NEW", mutex_NEW);
+  mostrar_lista_pcb(cola_READY, "READY", mutex_READY);
+  mostrar_lista_pcb(cola_BLOCKED, "BLOCKED", mutex_BLOCKED);
 }
+
+void mostrar_lista_pcb(t_list *cola, char *nombre_cola, pthread_mutex_t mutex_cola)
+{
+  char *string_pid = NULL;
+  char *pids_para_mostrar = NULL;
+
+  pthread_mutex_lock(&mutex_cola);
+  int tam_cola = list_size(cola);
+  pthread_mutex_unlock(&mutex_cola);
+
+  if (tam_cola == 0) {
+    log_info(kernel_logger, "esta vacia la cola %s", nombre_cola);
+  }else{ 
+    pids_para_mostrar = string_new();
+    for (int i = 0; i < tam_cola; i++){
+      pthread_mutex_lock(&mutex_cola);
+
+      //Acceso al elemento en el indice i, guardo en pcb local
+      t_pcb *pcb = list_get(cola, i);
+      string_pid = string_itoa(pcb->pid);
+
+      pthread_mutex_unlock(&mutex_cola);
+
+      // Junto los pids
+      string_append(&pids_para_mostrar, string_pid);
+
+      free(string_pid);
+
+      // Separo los PIDs con comas
+      if (i < tam_cola - 1) string_append(&pids_para_mostrar, ", ");
+    }
+      // mostramos la lista con los pids en la cola 
+    log_info(kernel_logger, "Cola %s: [%s]\n", nombre_cola, pids_para_mostrar);
+  }
+
+  if (pids_para_mostrar != NULL) {
+    free(pids_para_mostrar);  // Free pids if it was allocated
+  }
+}
+
 
 t_pcb* buscar_pcb_de_lista(t_list *lista, int pid_buscado)
 {
