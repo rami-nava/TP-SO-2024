@@ -65,92 +65,42 @@ void consola_proceso_estado() {
     listar_PIDS(cola_READY);
 }
 
+t_pcb* buscar_pcb_de_lista(t_list *lista, int pid_buscado)
+{
+	int elementos = list_size(lista);
+	for (int i = 0; i < elementos; i++)
+	{
+		t_pcb *pcb = list_get(lista, i);
+		if (pid_buscado == pcb->pid)
+		{
+			list_remove_element(lista, (void*)pcb);
+            return pcb;
+		}
+	}
+    return NULL;
+}
+
 void consola_finalizar_proceso(int pid) {
 
-    printf("Finalizamos el proceso %d \n", pid);
+  printf("Finalizamos el proceso: %d \n", pid);
 
-    t_pcb* pcb_asociado = NULL;  
-    int estado = -1;    
-    
-    // Recorremos cola de Blocked
-    if (list_size(cola_BLOCKED) > 0) {
-        pthread_mutex_lock(&mutex_BLOCKED);
-        for (int i = 0; i < list_size(cola_BLOCKED); i++) {
-            t_pcb* pcb = list_get(cola_BLOCKED, i);
-            if (pcb->pid == pid) {
-                pcb_asociado = pcb;
-                estado = BLOCKED;
-                break;
-            }
-        }
-    }
-    pthread_mutex_unlock(&mutex_BLOCKED);
+  t_pcb* pcb_asociado = NULL;  
 
-    /* Recorremos cola de Execute
-    if (pcb_asociado == NULL) {
-        pthread_mutex_lock(&mutex_exec);
-        if (list_size(cola_EXEC) > 0) {
-            for (int i = 0; i < list_size(cola_EXEC); i++) {
-                t_pcb* pcb = list_get(cola_EXEC, i);
-                if (pcb->pid == pid) {
-                    pcb_asociado = pcb;
-                    estado = EXEC;
-                    break;
-                }
-            }
-        }
-        pthread_mutex_unlock(&mutex_exec);
-    }*/
+  pthread_mutex_lock(&mutex_PROCESOS_DEL_SISTEMA);
+  pcb_asociado = buscar_pcb_de_lista(cola_PROCESOS_DEL_SISTEMA,pid);
+  pthread_mutex_unlock(&mutex_PROCESOS_DEL_SISTEMA);
 
-   // Recorremos cola de NEW
-    if (pcb_asociado == NULL) {
-        pthread_mutex_lock(&mutex_NEW);
-        if (list_size(cola_NEW) > 0) {
-            for (int i = 0; i < list_size(cola_NEW); i++) {
-                t_pcb* pcb = list_get(cola_NEW, i);
-                if (pcb->pid == pid) {
-                    pcb_asociado = pcb;
-                    estado = NEW;
-                    break;
-                }
-            }
-        }
-        pthread_mutex_unlock(&mutex_NEW);
-    }
-
-    // Recorremos cola de READY
-    if (pcb_asociado != NULL) {
-        pthread_mutex_lock(&mutex_READY);
-        if (list_size(cola_READY) > 0) {
-            for (int i = 0; i < list_size(cola_READY); i++) {
-                t_pcb* pcb = list_get(cola_READY, i);
-                if (pcb->pid == pid) {
-                    pcb_asociado = pcb;
-                    estado = READY;
-                    break;
-                }
-            }
-        }
-        pthread_mutex_unlock(&mutex_READY);
-    }
-
-    //Si encuentra el pcb
-    if (pcb_asociado != NULL) {
-
-        //Lo desalojo
-        if(estado == EXEC) {
-        t_paquete *paquete_fin = crear_paquete(FINALIZAR_PROCESO);
-        int interrupcion_exit = 2;
+  //veo si existe en el sistema
+  if(pcb_asociado != NULL){
+    //si existe y esta ejecutando, lo desalojo
+    if (pcb_asociado->estado == EXEC){
+        t_paquete *paquete_fin = crear_paquete(DESALOJO);
+        int interrupcion_exit = 3;
         agregar_entero_a_paquete(paquete_fin, interrupcion_exit);
         enviar_paquete(paquete_fin, socket_cpu_interrupt);
-        eliminar_paquete(paquete_fin);
-
-        liberar_PCB(pcb_asociado);
-        } 
-        else {
-        //El proceso entra en EXIT
-        mandar_a_EXIT(pcb_asociado, "SUCCESS");
-        }
-    } else printf("Proceso no encontrado. Intente nuevamente.\n");
-    
+    }else{
+      //si existe pero esta en otro estado, lo mando a exit
+      mandar_a_EXIT(pcb_asociado, "Pedido de finalizacion");
+    }
+  }else printf("Proceso no encontrado. Intente nuevamente.\n");
 }
