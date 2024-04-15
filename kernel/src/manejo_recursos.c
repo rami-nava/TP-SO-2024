@@ -63,7 +63,7 @@ void wait_s(t_pcb *proceso, char **parametros){
     //si el recurso no existe, mando el proceso a exit
     if (indice_pedido == -1)
     {
-        mandar_a_EXIT(proceso, "El recurso solicitado no existe"); 
+        mandar_a_EXIT(proceso, "Error de wait, el recurso solicitado no existe"); 
         return;
     }
 
@@ -101,7 +101,8 @@ void signal_s(t_pcb *proceso, char **parametros)
      // si el recurso no existe, mando el proceso a exit
     if (indice_pedido == -1)
     {
-        mandar_a_EXIT(proceso, "El recurso solicitado no existe"); 
+        //en exit esta el signal y si recibo un recurso invalido, se hace un loop
+        mandar_a_EXIT(proceso, "Error de signal, el recurso solicitado no existe"); 
         return;
     }
 
@@ -125,9 +126,7 @@ void signal_s(t_pcb *proceso, char **parametros)
     {
         t_list *cola_bloqueados_recurso = (t_list *)list_get(lista_recursos, indice_pedido);
 
-        /*esta funcion ya la habre hecho como 10 veces en lo que vamos de codigo, no hace falta presentacion
-        esta cola se va a desbloquear por FIFO, para no perder la costumbre. Nos llega por parametro la cola
-        del recurso y de ahi vamos a sacar nuestro proceso*/
+        //Nos llega por parametro la cola del recurso y de ahi vamos a sacar nuestro proceso
         if(!list_is_empty(cola_bloqueados_recurso)){
         t_pcb *pcb_desbloqueado = desencolar(cola_bloqueados_recurso);
 
@@ -137,7 +136,8 @@ void signal_s(t_pcb *proceso, char **parametros)
         }
     }
 
-    volver_a_CPU(proceso);
+    //si llega como instruccion algo distinto de EXIT, el proceso sigue su ejecucion 
+    if (strncmp (parametros[2], "EXIT", 4)) volver_a_CPU(proceso);
 }
 
 static int indice_recurso(char *recurso_buscado)
@@ -157,9 +157,10 @@ static int indice_recurso(char *recurso_buscado)
 static void eliminar_recurso_proceso(t_list* recursos, char* recurso){
     int cant_recursos = list_size(recursos);
     int i;
-    for(i=0;i<cant_recursos;i++){        
+    
+    for(i=0;i<cant_recursos;i++){
         if(!strcmp((char*)list_get(recursos,i), recurso)){
-            list_remove_and_destroy_element(recursos,i,free);
+            list_remove(recursos,i);
             return;
         }
     }
