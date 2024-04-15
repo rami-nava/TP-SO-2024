@@ -111,6 +111,7 @@ void inicializar_planificador();
 void inicializar_semaforos();
 void crear_colas_bloqueo();
 void inicializar_listas();
+void agregar_proceso_a_lista_procesos_del_sistema(t_pcb *proceso);
 //============================================= Planificador =================================================================================================================
 void planificador_largo_plazo();
 void planificador_corto_plazo_segun_algoritmo();
