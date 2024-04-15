@@ -11,10 +11,13 @@ static char *puerto_memoria;
 static int socket_kernel;
 static int socket_memoria;
 static int tiempo_unidad_de_trabajo;
+t_log* stdout_logger;
 
 // Funciones Globales //
 void main_stdout(t_interfaz* interfaz_hilo) 
 {
+    stdout_logger = log_create("/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/stdout.log", "stdout.log", 1, LOG_LEVEL_INFO);
+
     char* nombre = interfaz_hilo->nombre_interfaz;
     t_config* config = interfaz_hilo->config_interfaz;
     
@@ -24,7 +27,7 @@ void main_stdout(t_interfaz* interfaz_hilo)
     puerto_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
     tiempo_unidad_de_trabajo = config_get_int_value(config, "TIEMPO_UNIDAD_TRABAJO");
     
-    log_info(io_logger, "Iniciando interfaz STDOUT: %s", nombre);
+    log_info(stdout_logger, "Iniciando interfaz STDOUT: %s", nombre);
         
     socket_kernel = crear_conexion(ip_kernel, puerto_kernel);
     socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
@@ -51,47 +54,56 @@ static void solicitar_informacion_memoria ()
             
             eliminar_paquete(paquete);
 
-            log_info(io_logger, "PID: %d - Operacion: IO_STDOUT_WRITE\n", proceso_conectado);
+            log_info(stdout_logger, "PID: %d - Operacion: IO_STDOUT_WRITE\n", proceso_conectado);
 
             //Tarda una unidad de trabajo
             usleep(tiempo_unidad_de_trabajo * 1000);
 
-            //Por donde muestro el resultado
-            char* lectura = pedir_lectura(direccion_fisica, tamanio);
+            //Le pide la lectura de esa direccion a la memoria 
+            pedir_lectura(direccion_fisica, tamanio);
 
-            //Mostrar el resultado?
+            //Recibe la lectura de la memoria
+            char* lectura = recibir_lectura();
+
+            //Mostramos por pantalla la lectura
             printf("Lectura realizada: %s\n", lectura);
             
-            send(socket_kernel, &proceso_conectado, sizeof(int), 0); //Le avisa a Kernel que ya se realizo la lectura, y ya se mostro por pantalla
+            //Le avisa a Kernel que ya se realizo la lectura, y ya se mostro por pantalla
+            send(socket_kernel, &proceso_conectado, sizeof(int), 0); 
         } 
         else { 
             eliminar_paquete(paquete);
-            log_error(io_logger, "El paquete no es de tipo STDOUT_WRITE");
+            log_error(stdout_logger, "El paquete no es de tipo STDOUT_WRITE");
         }
     }
     
 }
 
-static char* pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio) 
+static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio) 
 {
-    t_paquete* paquete = crear_paquete(HACER_LECTURA);
+    t_paquete* paquete = crear_paquete(REALIZAR_LECTURA);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
     agregar_entero_sin_signo_a_paquete(paquete, tamanio);
     enviar_paquete(paquete, socket_memoria);
-    eliminar_paquete(paquete);
+}
 
-    paquete = recibir_paquete(socket_kernel);
-    if(paquete->codigo_operacion == DEVOLVER_LECTURA){
+static char* recibir_lectura() 
+{
+    while (1)
+    {
+        t_paquete* paquete = recibir_paquete(socket_memoria);
         void* stream = paquete->buffer->stream;
-        char* texto_leido = sacar_cadena_de_paquete(&stream);
-        eliminar_paquete(paquete);
 
-        return texto_leido;
-    }
-    else{
-        eliminar_paquete(paquete);
-        log_error(io_logger, "El paquete no es del tipo DEVOLVER_LECTURA");
+        if(paquete->codigo_operacion == DEVOLVER_LECTURA){
+            char* texto_leido = sacar_cadena_de_paquete(&stream);
 
-        return NULL;
+            return texto_leido;
+        } else
+        {
+            log_error(stdout_logger, "El paquete no es del tipo DEVOLVER_LECTURA");
+            return NULL;
+        }
+
+        eliminar_paquete(paquete);
     }
 }

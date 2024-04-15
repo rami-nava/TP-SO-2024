@@ -10,9 +10,12 @@ static char *path_dial_fs;
 static int tamanio_bloque;
 static int cantidad_bloques;
 static int tamanio_archivo_bloques;
+t_log *dialfs_logger;
 
 void main_dialfs(t_interfaz *interfaz_hilo)
 {
+    dialfs_logger = log_create("/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/dialfs.log", "dialfs.log", 1, LOG_LEVEL_INFO); 
+
     char *nombre = interfaz_hilo->nombre_interfaz;
     t_config *config = interfaz_hilo->config_interfaz;
 
@@ -24,7 +27,7 @@ void main_dialfs(t_interfaz *interfaz_hilo)
     tamanio_bloque = config_get_int_value(config, "BLOCK_SIZE");
     cantidad_bloques = config_get_int_value(config, "BLOCK_COUNT");
 
-    log_info(io_logger, "Iniciando interfaz DIALFS: %s", nombre);
+    log_info(dialfs_logger, "Iniciando interfaz DIALFS: %s", nombre);
 
     tamanio_archivo_bloques = tamanio_bloque * cantidad_bloques;
 
@@ -35,9 +38,9 @@ void main_dialfs(t_interfaz *interfaz_hilo)
 
     crear_archivo_de_bloque(path_dial_fs, tamanio_archivo_bloques);
 
-    //recibir_peticiones_de_kernel();
+    recibir_peticiones_de_kernel();
 }
-/*
+
 void recibir_peticiones_de_kernel()
 {
     while (1)
@@ -50,7 +53,7 @@ void recibir_peticiones_de_kernel()
         case CREAR_ARCHIVO:
             char* nombre = sacar_cadena_de_paquete(&stream);
             int pid = sacar_entero_de_paquete(&stream);
-            log_info(io_logger, "PID: %d - Crear Archivo: %s", pid, nombre);
+            log_info(dialfs_logger, "PID: %d - Crear Archivo: %s", pid, nombre);
             crear_archivo(nombre);
             break;
         case LEER_ARCHIVO:
@@ -96,14 +99,9 @@ void crear_archivo(char *nombre_archivo)
         config_set_value(archivo_nuevo, "BLOQUE_INICIAL", "");
         config_set_value(archivo_nuevo, "TAMANIO_ARCHIVO", "0");
         config_save_in_file(archivo_nuevo, path_archivo);
-        log_info(io_logger, "Creamos el config y lo guardamos en disco\n");
+        log_info(dialfs_logger, "Creamos el config y lo guardamos en disco\n");
 
         ocupar_un_bloque_del_fs();
-
-        t_paquete *paquete = crear_paquete(ARCHIVO_CREADO);
-        agregar_entero_a_paquete(paquete, direccion);
-        enviar_paquete(paquete, socket_kernel);
-        eliminar_paquete(paquete);
 
         config_destroy(archivo_nuevo);
         free(path_archivo);

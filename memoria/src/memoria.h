@@ -87,6 +87,10 @@ void leer_instrucciones_desde_archivo(t_proceso_en_memoria* proceso, FILE* archi
 void desocupar_marco(int nro_marco);
 void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid);
 
+/// @brief PETICIONES DE IO ///
+char* realizar_lectura(uint32_t direccion_fisica, uint32_t tamanio_lectura);
+void realizar_escritura(uint32_t direccion_fisica, char* texto_a_guardar);
+
 /// @brief ESPACIO USUARIO ///
 void creacion_espacio_usuario();
 void escribir(int* valor, uint32_t direccion_fisica, uint32_t direccion_logica, int pid, int socket_cpu);

@@ -42,7 +42,7 @@ static int buscar_comando(char *instruccion);
 static void execute();
 static void check_interrupt();
 static void liberar_memoria();
-static void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char * parm1, char * parm2, char * parm3);
+static void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char* parm1, char* parm2, char* parm3, char* parm4, char* parm5);
 static void set(char* registro, char* valor);
 static void sum(char* registro_destino, char* registro_origen);
 static void sub(char* registro_destino, char* registro_origen); 
@@ -50,6 +50,11 @@ static void jnz(char* registro, char* numero_instruccion);
 static void io_gen_sleep(char* interfaz, char* unidades_trabajo);
 static void io_stdin_read(char* interfaz, char* direccion_fisica, char* tamanio_registro);
 static void io_stdout_write(char* interfaz, char* direccion_fisica, char* tamanio_registro);
+static void io_fs_create(char* interfaz, char* nombre);
+static void io_fs_delete(char* interfaz, char* nombre);
+static void io_fs_truncate(char* interfaz, char* nombre, char* tamanio);
+static void io_fs_write(char* interfaz, char* nombre, char* direccion, char* tamanio, char* offset);
+static void io_fs_read(char* interfaz, char* nombre, char* direccion, char* tamanio, char* offset);
 static void wait_c(char* recurso);
 static void signal_c(char* recurso);
 static void exit_c();
@@ -65,8 +70,6 @@ void ciclo_de_instruccion(){
 // ------- Funciones del ciclo ------- //
 static void fetch() { 
     log_info(cpu_logger,"PID: %d - FETCH - Program Counter: %d",contexto_ejecucion->pid, contexto_ejecucion->PC);
-
-    //le mando el program pointer a la memoria para que me pase la instruccion a la que apunta
     pedir_instruccion();
     recibir_instruccion();
     contexto_ejecucion->PC +=1;
@@ -94,7 +97,7 @@ static void recibir_instruccion()
 }
 
 static void decode(){
-    elementos_instrucciones = string_n_split(instruccion_a_ejecutar, 7, " "); 
+    elementos_instrucciones = string_n_split(instruccion_a_ejecutar, 6, " "); 
     cantidad_parametros = string_array_size(elementos_instrucciones) - 1;
     instruccion_actual = buscar_comando(elementos_instrucciones[0]);
 }
@@ -140,10 +143,10 @@ static void execute() {
             signal_c(elementos_instrucciones[1]);
             break;
         case RESIZE:
-            //resize(elementosInstruccion[1]);
+            resize(elementos_instrucciones[1]);
             break;
         case COPY_STRING:
-            //copy_string(elementosInstruccion[1]);
+            copy_string(elementos_instrucciones[1]);
             break;
         case IO_GEN_SLEEP:
             io_gen_sleep(elementos_instrucciones[1], elementos_instrucciones[2]);
@@ -155,19 +158,19 @@ static void execute() {
             io_stdout_write(elementos_instrucciones[1], elementos_instrucciones[2], elementos_instrucciones[3]);
             break;
         case IO_FS_CREATE:
-            //io_fs_create(elementosInstruccion[1], elementosInstruccion[2]);
+            io_fs_create(elementos_instrucciones[1], elementos_instrucciones[2]);
             break;
         case IO_FS_DELETE:
-            //io_fs_delete(elementosInstruccion[1], elementosInstruccion[2]);
+            io_fs_delete(elementos_instrucciones[1], elementos_instrucciones[2]);
             break;
         case IO_FS_TRUNCATE:
-            //io_fs_truncate(elementosInstruccion[1], elementosInstruccion[2], elementosInstruccion[3]);
+            io_fs_truncate(elementos_instrucciones[1], elementos_instrucciones[2], elementos_instrucciones[3]);
             break;
         case IO_FS_WRITE:
-            //io_fs_truncate(elementosInstruccion[1], elementosInstruccion[2], elementosInstruccion[3], elementosInstruccion[4], elementosInstruccion[5]);
+            io_fs_write(elementos_instrucciones[1], elementos_instrucciones[2], elementos_instrucciones[3], elementos_instrucciones[4], elementos_instrucciones[5]);
             break;
         case IO_FS_READ:
-            //io_fs_truncate(elementosInstruccion[1], elementosInstruccion[2], elementosInstruccion[3], elementosInstruccion[4], elementosInstruccion[5]);
+            io_fs_read(elementos_instrucciones[1], elementos_instrucciones[2], elementos_instrucciones[3], elementos_instrucciones[4], elementos_instrucciones[5]);
             break;
         case EXIT:
             exit_c();
@@ -191,13 +194,13 @@ static void check_interrupt(){
 
         if(tipo_interrupcion == 1){
             log_info(cpu_logger, "Recibi una interrupcion de Fin de Quantum\n");
-            modificar_motivo (FIN_QUANTUM, 0, "", "", "");
+            modificar_motivo (FIN_QUANTUM, 0, "", "", "", "", "");
         }else if(tipo_interrupcion == 2){
             log_info(cpu_logger, "Recibi una interrupcion de Error de IO\n");
-            modificar_motivo (EXIT, 1, "Error IO", "", "");
+            modificar_motivo (EXIT, 1, "Error IO", "", "", "", "");
         }else if(tipo_interrupcion == 3){
             log_info(cpu_logger,"Recibi una interrupcion de finalizacion del proceso PID: %d\n", contexto_ejecucion->pid);
-            modificar_motivo (EXIT, 1, "Pedido de finalizacion", "", "");
+            modificar_motivo (EXIT, 1, "Pedido de finalizacion", "", "", "", "");
         }else{
             perror("Recibi un codigo de interrupcion desconocido");
         }
@@ -230,7 +233,8 @@ void atender_interrupt(void * socket_servidor_interrupt){
 
 }
 // ------- Funciones del SO ------- //
-static void set(char* registro, char* valor){ 
+static void set(char* registro, char* valor)
+{ 
     setear_registro(registro, valor);
 }
 
@@ -267,42 +271,58 @@ static void jnz(char* registro, char* numero_instruccion){
     }
 }
 
-static void io_gen_sleep(char* interfaz, char* unidades_trabajo){
-    modificar_motivo(IO_GEN_SLEEP, 2, interfaz, unidades_trabajo, "");
-    enviar_contexto(socket_cliente_dispatch);
+static void io_gen_sleep(char* interfaz, char* unidades_trabajo)
+{
+    modificar_motivo(IO_GEN_SLEEP, 2, interfaz, unidades_trabajo, "", "", "");
 }
 
-static void io_stdin_read(char* interfaz, char* direccion_fisica, char* tamanio_registro){
-    modificar_motivo(IO_STDIN_READ, 2, interfaz, direccion_fisica, tamanio_registro);
-    enviar_contexto(socket_cliente_dispatch);
+static void io_stdin_read(char* interfaz, char* direccion_fisica, char* tamanio_registro)
+{
+    modificar_motivo(IO_STDIN_READ, 3, interfaz, direccion_fisica, tamanio_registro, "", "");
 }
 
-static void io_stdout_write(char* interfaz, char* direccion_fisica, char* tamanio_registro){
-    modificar_motivo(IO_STDOUT_WRITE, 2, interfaz, direccion_fisica, tamanio_registro);
-    enviar_contexto(socket_cliente_dispatch);
+static void io_stdout_write(char* interfaz, char* direccion_fisica, char* tamanio_registro)
+{
+    modificar_motivo(IO_STDOUT_WRITE, 3, interfaz, direccion_fisica, tamanio_registro, "", "");
 }
 
-static void wait_c(char* recurso){
-    modificar_motivo (WAIT, 1, recurso, "", "");
-    enviar_contexto(socket_cliente_dispatch);
-
-    pthread_mutex_lock(&seguir_ejecutando_mutex);
-    seguir_ejecutando = false;
-    pthread_mutex_unlock(&seguir_ejecutando_mutex);
+static void io_fs_create(char* interfaz, char* nombre_archivo)
+{
+    modificar_motivo(IO_FS_CREATE, 2, interfaz, nombre_archivo, "", "", "");
 }
 
-static void signal_c(char* recurso){
-    modificar_motivo (SIGNAL, 1, recurso, "", "");
-    enviar_contexto(socket_cliente_dispatch);
+static void io_fs_delete(char* interfaz, char* nombre_archivo)
+{
+    modificar_motivo(IO_FS_DELETE, 2, interfaz, nombre_archivo, "", "", "");
+}
 
-    pthread_mutex_lock(&seguir_ejecutando_mutex);
-    seguir_ejecutando = false;
-    pthread_mutex_unlock(&seguir_ejecutando_mutex);
+static void io_fs_truncate(char* interfaz, char* nombre_archivo, char* tamanio_registro)
+{
+    modificar_motivo(IO_FS_TRUNCATE, 3, interfaz, nombre_archivo, tamanio_registro, "", "");
+}
+
+static void io_fs_read(char* interfaz, char* nombre_archivo, char* registro_direccion, char* tamanio_registro, char* registro_puntero_archivo)
+{
+    modificar_motivo(IO_FS_READ, 5, interfaz, nombre_archivo, registro_direccion, tamanio_registro, registro_puntero_archivo);
+}
+
+static void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_direccion, char* tamanio_registro, char* registro_puntero_archivo)
+{
+    modificar_motivo(IO_FS_WRITE, 5, interfaz, nombre_archivo, registro_direccion, tamanio_registro, registro_puntero_archivo);
+}
+
+static void wait_c(char* recurso)
+{
+    modificar_motivo (WAIT, 1, recurso, "", "", "", "");
+}
+
+static void signal_c(char* recurso)
+{
+    modificar_motivo (SIGNAL, 1, recurso, "", "", "", "");
 }
 
 static void exit_c() {
-    modificar_motivo (EXIT, 1, "SUCCESS", "", "");
-    enviar_contexto(socket_cliente_dispatch);
+    modificar_motivo (EXIT, 1, "SUCCESS", "", "", "", "");
 }
 
 
@@ -376,12 +396,15 @@ int buscar_registro(char *registro)
     return valor;
 }
 
-static void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char * parm1, char * parm2, char * parm3) { // agregar mas params para las nuevas instrucciones
-    char * (parametros[3]) = { parm1, parm2, parm3 };
+static void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char* parm1, char* parm2, char* parm3, char* parm4, char* parm5) { 
+    char* (parametros[5]) = { parm1, parm2, parm3, parm4, parm5 };
     contexto_ejecucion->motivo_desalojo->comando = comando;
+
     for (int i = 0; i < cantidad_parametros; i++)
         contexto_ejecucion->motivo_desalojo->parametros[i] = string_duplicate(parametros[i]);
     contexto_ejecucion->motivo_desalojo->cantidad_parametros = cantidad_parametros;
+
+    enviar_contexto(socket_cliente_dispatch);
 }
 
 static void liberar_memoria() {

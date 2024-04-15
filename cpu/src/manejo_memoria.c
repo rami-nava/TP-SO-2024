@@ -113,11 +113,21 @@ static int numero_marco_pagina()
     eliminar_paquete(paquete);
 }
 
-/// FUNCIONES DE CPU Y KERNEL ///
+//================================================== INSTRUCCIONES =================================================================================
+void resize(char *tamanio)
+{
+    int tamanio_proceso = atoi(tamanio);
+    //TODO
+}
+
+void copy_string(char* tamanio)
+{
+    int tamanio_proceso = atoi(tamanio);
+    //TODO
+}
 
 void mov_in(char *registro, char *direccion_logica)
 {
-
     uint32_t direccion_fisica = traducir_de_logica_a_fisica(atoi(direccion_logica));
 
     if (direccion_fisica != UINT32_MAX)

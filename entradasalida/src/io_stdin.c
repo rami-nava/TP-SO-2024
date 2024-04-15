@@ -10,9 +10,12 @@ static char *ip_memoria;
 static char *puerto_memoria;
 static int socket_kernel;
 static int socket_memoria;
+t_log* stdin_logger;
 
 void main_stdin(t_interfaz* interfaz_hilo) 
 {
+    stdin_logger = log_create("/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/stdin.log", "stdin.log", 1, LOG_LEVEL_INFO);
+    
     char* nombre = interfaz_hilo->nombre_interfaz;
     t_config* config = interfaz_hilo->config_interfaz;
     
@@ -21,7 +24,7 @@ void main_stdin(t_interfaz* interfaz_hilo)
     ip_memoria = config_get_string_value(config, "IP_MEMORIA");
     puerto_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
     
-    log_info(io_logger, "Iniciando interfaz STDIN: %s", nombre);
+    log_info(stdin_logger, "Iniciando interfaz STDIN: %s", nombre);
     
     socket_kernel = crear_conexion(ip_kernel, puerto_kernel);
     socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
@@ -46,15 +49,16 @@ static void realizar_escritura()
             
             eliminar_paquete(paquete);
 
-            log_info(io_logger, "PID: %d - Operacion: IO_STDIN_READ\n", proceso_conectado);
+            log_info(stdin_logger, "PID: %d - Operacion: IO_STDIN_READ\n", proceso_conectado);
 
             guardar_escritura(direccion_fisica, tamanio_registro);
 
-            send(socket_kernel, &proceso_conectado, sizeof(int), 0); //Le avisa a kernel que el texto fue guardado en memoria
+            //Le avisa a kernel que el texto fue guardado en memoria
+            send(socket_kernel, &proceso_conectado, sizeof(int), 0); 
         } 
         else { 
             eliminar_paquete(paquete);
-            log_error(io_logger, "El paquete no es de tipo STDIN_READ");
+            log_error(stdin_logger, "El paquete no es de tipo STDIN_READ");
         }
 
     }
@@ -74,11 +78,13 @@ static void guardar_escritura(uint32_t direccion_fisica, uint32_t tamanio_regist
         free(leer_linea);
     }
 
-    t_paquete* paquete = crear_paquete(HACER_LECTURA);
+    //IO solicita que memoria guarde el texto en la direccion especificada
+    t_paquete* paquete = crear_paquete(REALIZAR_ESCRITURA);
+    agregar_entero_sin_signo_a_paquete(paquete,direccion_fisica);
     agregar_cadena_a_paquete(paquete, texto_a_guardar);
-    agregar_entero_a_paquete(paquete,direccion_fisica);
     enviar_paquete(paquete, socket_memoria);
     
+    //Memoria confirma que guardo el texto en la direccion especificada
     int escritura_guardada = 0;
-    recv(socket_memoria, &escritura_guardada, sizeof(int), 0); //Memoria confirma que guardo el texto en la direccion especificada
+    recv(socket_memoria, &escritura_guardada, sizeof(int), 0); 
 }

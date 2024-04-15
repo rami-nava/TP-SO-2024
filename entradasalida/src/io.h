@@ -21,7 +21,6 @@
 #include "contexto.h"
 #include "operaciones.h"
 
-extern t_log *io_logger;
 extern t_list* interfaces;
 
 //STRUCTS//

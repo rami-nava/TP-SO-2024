@@ -5,19 +5,22 @@ static char *ip_kernel;
 static char *puerto_kernel;
 static int socket_kernel;
 static int tiempo_unidad_de_trabajo;
+t_log* generica_logger;
 
 static void realizar_sleep();
 
 void main_generica(t_interfaz* interfaz){
+
+    generica_logger = log_create("/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/generica.log", "generica.log", 1, LOG_LEVEL_INFO);
+
     char* nombre_interfaz = interfaz->nombre_interfaz;
     t_config* config_interfaz = interfaz->config_interfaz;
-    
 
     ip_kernel = config_get_string_value(config_interfaz, "IP_KERNEL");
     puerto_kernel = config_get_string_value(config_interfaz, "PUERTO_KERNEL");
     tiempo_unidad_de_trabajo = config_get_int_value(config_interfaz, "TIEMPO_UNIDAD_TRABAJO");
 
-    log_info(io_logger, "Iniciando interfaz generica: %s\n", nombre_interfaz);
+    log_info(generica_logger, "Iniciando interfaz generica: %s\n", nombre_interfaz);
 
     socket_kernel = crear_conexion(ip_kernel, puerto_kernel);
 
@@ -44,7 +47,7 @@ void realizar_sleep()
 
         eliminar_paquete(paquete);
 
-        log_info(io_logger, "PID: %d - Operacion: IO_GEN_SLEEP\n", proceso_conectado);
+        log_info(generica_logger, "PID: %d - Operacion: IO_GEN_SLEEP\n", proceso_conectado);
 
         usleep(tiempo_unidad_de_trabajo * cantidad_tiempo * 1000);
 

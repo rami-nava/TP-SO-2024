@@ -1,16 +1,14 @@
 #include "io.h"
 
-t_interfaz* interfaz;
-t_config* config; 
-
 //static void existe_interfaz(char* nombre);
 static t_interfaz* crear_interfaz(char* nombre, t_config* config);
 static void iniciar_hilo_de_interfaz(void (*funcion_de_hilo)(t_interfaz*), t_interfaz* interfaz); 
 
 void iniciar_interfaz(char* nombre, char* path_config) {
-    config = config_create(path_config); 
 
-    interfaz = crear_interfaz(nombre, config);
+    t_config* config = config_create(path_config); 
+
+    t_interfaz* interfaz = crear_interfaz(nombre, config);
 
     if(config == NULL) {
         perror("Error al leer el archivo de configuración");
@@ -28,7 +26,7 @@ void iniciar_interfaz(char* nombre, char* path_config) {
     } else if (strcmp(tipo_interfaz, "DIALFS") == 0) {
         main_dialfs(interfaz);
     } else {
-        log_error(io_logger, "Tipo de interfaz invalido. Debe ser STDIN, STDOUT, GENERICA o DIALFS");
+        perror("Tipo de interfaz invalido. Debe ser STDIN, STDOUT, GENERICA o DIALFS");
         abort();
     }
 }

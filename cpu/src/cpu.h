@@ -48,6 +48,8 @@ void atender_dispatch();
 void atender_interrupt(void * socket_servidor_interrupt);
 void mov_in(char* registro, char* direccion_logica);
 void mov_out(char* direccion_logica, char* registro);
+void resize(char* tamanio);
+void copy_string(char* tamanio);
 void setear_registro(char* registro, char* valor);
 bool no_es_bloqueante(codigo_instrucciones instruccion_actual);
 void ciclo_de_instruccion();

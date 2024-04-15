@@ -82,7 +82,24 @@ static void manejo_conexiones(void* conexion)
 			send(cliente, &ok_finalizacion, sizeof(int), 0);
 			log_info(memoria_logger,"Estructuras eliminadas en memoria exitosamente\n");
 			break;
+		case REALIZAR_LECTURA:
+			uint32_t direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t tamanio_lectura = sacar_entero_sin_signo_de_paquete(&stream);
 
+			char* lectura = realizar_lectura(direccion_fisica, tamanio_lectura);
+
+			t_paquete* paquete = crear_paquete(DEVOLVER_LECTURA);
+			agregar_cadena_a_paquete(paquete, lectura);
+			enviar_paquete(paquete, cliente);
+			break;
+		case REALIZAR_ESCRITURA:
+			uint32_t direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+			char* texto_a_guardar = sacar_cadena_de_paquete(&stream);
+			realizar_escritura(direccion_fisica, texto_a_guardar);
+
+			int escritura_guardada = 1;
+			send(cliente, &escritura_guardada, sizeof(int), 0);
+			break;
 		default:
 			break;
 		}
