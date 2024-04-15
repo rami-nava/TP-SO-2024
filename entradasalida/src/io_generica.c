@@ -49,8 +49,8 @@ void realizar_sleep()
         usleep(tiempo_unidad_de_trabajo * cantidad_tiempo * 1000);
 
         printf("Estuvo buena la siesta\n");
-        int termino_de_mimir = 1;
-        send(socket_kernel, &termino_de_mimir, sizeof(int), 0);
+
+        send(socket_kernel, &proceso_conectado, sizeof(int), 0);
         } else {
             eliminar_paquete(paquete);
         }

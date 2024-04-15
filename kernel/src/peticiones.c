@@ -144,13 +144,13 @@ static void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz){
 }
 
 static void esperar_io(t_interfaz* interfaz){
-    int termina_io = 0;
+    int pid_io = 0;
     pthread_mutex_lock(&interfaz->comunicacion_interfaz_mutex); //Evita que varios hilos conectados a la misma IO lean el mismo mensaje y ignoren otros
-    recv(interfaz->socket_conectado, &termina_io, sizeof(int), 0); 
+    recv(interfaz->socket_conectado, &pid_io, sizeof(int), 0); 
     pthread_mutex_unlock(&interfaz->comunicacion_interfaz_mutex);
     
-    //Sale de Blocked
-    ingresar_a_READY(desencolar(cola_BLOCKED)); //En realidad habria que buscar el proceso que se acaba de desbloquear
+    //Sale de Blocked e ingresa a READY
+    ingresar_a_READY(buscar_pcb_de_lista(cola_BLOCKED, pid_io)); 
 
     printf("Se volvio de IO \n");
 }

@@ -42,7 +42,7 @@ static void agregar_interfaz(op_code tipo, void* stream, int socket_cliente_io)
     switch(tipo) {
         case INTERFAZ_GENERICA:
             list_add(interfaces_genericas, interfaz_nueva);
-            log_info(kernel_logger, "Se agrego interfaz generica: %s \n", interfaz_nueva->nombre);
+            log_info(kernel_logger, "Se agrego interfaz GENERICA: %s \n", interfaz_nueva->nombre);
             break;
         case INTERFAZ_STDIN:
             list_add(interfaces_stdin, interfaz_nueva);

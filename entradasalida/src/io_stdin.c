@@ -49,6 +49,8 @@ static void realizar_escritura()
             log_info(io_logger, "PID: %d - Operacion: IO_STDIN_READ\n", proceso_conectado);
 
             guardar_escritura(direccion_fisica, tamanio_registro);
+
+            send(socket_kernel, &proceso_conectado, sizeof(int), 0); //Le avisa a kernel que el texto fue guardado en memoria
         } 
         else { 
             eliminar_paquete(paquete);
@@ -79,6 +81,4 @@ static void guardar_escritura(uint32_t direccion_fisica, uint32_t tamanio_regist
     
     int escritura_guardada = 0;
     recv(socket_memoria, &escritura_guardada, sizeof(int), 0); //Memoria confirma que guardo el texto en la direccion especificada
-
-    send(socket_kernel, &escritura_guardada, sizeof(int), 0); //Le avisa a kernel que el texto fue guardado en memoria
 }

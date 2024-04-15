@@ -61,9 +61,8 @@ static void solicitar_informacion_memoria ()
 
             //Mostrar el resultado?
             printf("Lectura realizada: %s\n", lectura);
-
-            int lectura_realizada = 1;
-            send(socket_kernel, &lectura_realizada, sizeof(int), 0); //Le avisa a Kernel que ya se realizo la lectura, y ya se mostro por pantalla
+            
+            send(socket_kernel, &proceso_conectado, sizeof(int), 0); //Le avisa a Kernel que ya se realizo la lectura, y ya se mostro por pantalla
         } 
         else { 
             eliminar_paquete(paquete);
