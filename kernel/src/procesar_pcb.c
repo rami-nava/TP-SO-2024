@@ -68,6 +68,8 @@ static int incrementar_pid() {
 //==================================================== PROCESAR_PCB ====================================================================================
 t_contexto* enviar_a_cpu(t_pcb* proceso) {
     if (contexto_ejecucion != NULL) liberar_memoria_contexto();
+
+    (printf("enviando a ejecutar el proceso %d\n", proceso->pid));
 	
     iniciar_contexto();
 

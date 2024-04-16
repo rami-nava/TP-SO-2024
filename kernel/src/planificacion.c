@@ -100,7 +100,7 @@ void ingresar_a_READY(t_pcb *pcb)
 
     sem_post(&hay_procesos_ready);
 
-    log_ingreso_a_ready();
+    //log_ingreso_a_ready();
 }
 
 void ingresar_de_BLOCKED_a_READY(int pid_pcb){
@@ -124,12 +124,12 @@ void ingresar_a_BLOCKED(t_pcb *pcb, char* motivo)
 void cambio_de_estado (t_pcb *pcb, estado_proceso estado_nuevo) 
 {
     //Estado anterior
-    estado_proceso anterior = pcb->estado;
+    //estado_proceso anterior = pcb->estado;
 
     //Cambiar estado
-    pcb->estado = estado_nuevo;
+    //pcb->estado = estado_nuevo; estados_procesos[anterior]
 
     //Loggear cambio de estado
-    log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual: %s \n", pcb->pid, estados_procesos[anterior], estados_procesos[estado_nuevo]);
-
+    log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual: %s \n", pcb->pid, estados_procesos[pcb->estado], estados_procesos[estado_nuevo]);
+    pcb->estado = estado_nuevo;
 }

@@ -113,9 +113,9 @@ t_pcb* buscar_pcb_de_lista_y_eliminar(t_list *lista, int pid_buscado, pthread_mu
   pthread_mutex_lock(&mutex_lista);
   if(pcb_buscado != NULL){
     list_remove_element(lista, (void*)pcb_buscado);
+    pthread_mutex_unlock(&mutex_lista);
     return pcb_buscado;
   }else return NULL;
-  pthread_mutex_unlock(&mutex_lista);
 }
 
 void consola_finalizar_proceso(int pid) {

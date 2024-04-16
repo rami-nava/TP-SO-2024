@@ -27,7 +27,10 @@ void planificador_corto_plazo_segun_algoritmo() {
 }
 
 static t_pcb *proximo_a_ejecutar_FIFO_RR(){
-    return desencolar(cola_READY);
+    pthread_mutex_lock(&mutex_READY);
+    t_pcb *pcb = desencolar(cola_READY);
+    pthread_mutex_unlock(&mutex_READY);
+    return pcb;
 }
 
  //  Funciones de algoritmo RR //
