@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <math.h>
 
 #include <commons/log.h>
 #include <commons/collections/list.h>
@@ -22,6 +23,7 @@
 #include "operaciones.h"
 
 extern t_list* interfaces;
+extern t_log* dialfs_logger;
 
 //STRUCTS//
 typedef struct 
@@ -52,13 +54,21 @@ void conectarse_a_kernel(int socket, op_code codigo_operacion ,char* nombre, cha
 //.................................. METADATA .....................................................................
 void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inicial, char* nombre_archivo, char* path_dial_fs);
 void cargamos_cambios_a_metadata_reducir(int tamanio_nuevo, char* nombre_archivo, char* path_dial_fs);
-void actualizar_metadata(metadata_archivo* nueva_metadata, char* path_dial_fs);
+metadata_archivo* levantar_metadata(char* nombre_archivo, char* path_dial_fs);
 
-//..................................FUNCIONES CON ARCHIVOS.....................................................................
-void truncar_archivo(char *nombre, int tamanio_nuevo, int socket_kernel);
-void ampliar_tamanio_archivo(int tamanio_nuevo, int tamanio_actual_archivo, uint32_t bloque_inicial);
-void reducir_tamanio_archivo(int tamanio_nuevo, int tamanio_actual_archivo, uint32_t bloque_inicial);
-
+//.................................. ARCHIVOS .......................................................................
+FILE* levantar_archivo_bloque();
+void crear_archivo_de_bloque(char* path_archivo_bloques, int tamanio_archivo_bloques);
+void cargar_bitmap(int cantidad_bloques);
+void liberar_un_bloque_del_fs();
+void agregar_bloque(uint32_t bloque_a_agregar);
+void eliminar_bloque(uint32_t bloque_a_eliminar);
+uint32_t buscar_bloque_libre();
+void limpiar_posiciones(t_bitarray* un_espacio, int posicion_inicial, int tamanio_proceso);
+void ocupar_un_bloque_del_fs();
+void compactar();
+bool bloques_contiguos();
+uint32_t buscar_bloque_en_fs(uint32_t bloque_a_leer, uint32_t bloque_inicial);
 
 
 

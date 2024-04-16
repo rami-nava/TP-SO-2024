@@ -34,8 +34,8 @@ static void manejo_conexiones(void* conexion)
 		switch(paquete->codigo_operacion){	
 
 		case HANDSHAKE:
-		int entero = sacar_entero_de_paquete(&stream);
-		enviar_paquete_handshake(cliente);
+			int entero = sacar_entero_de_paquete(&stream);
+			enviar_paquete_handshake(cliente);
 		break;
 
 		case CREACION_ESTRUCTURAS_MEMORIA:
@@ -55,7 +55,7 @@ static void manejo_conexiones(void* conexion)
 			int ok_creacion = 1;
 			send(cliente, &ok_creacion, sizeof(int), 0);
 			log_info(memoria_logger,"Estructuras creadas en memoria exitosamente\n");
-			break;
+		break;
 
 		case MANDAR_INSTRUCCION:
 			//la cpu nos manda el program counter y el pid del proceso que recibio para ejecutar
@@ -70,7 +70,7 @@ static void manejo_conexiones(void* conexion)
 			t_paquete* paquete = crear_paquete(INSTRUCCION_SOLICITADA); 
 			agregar_cadena_a_paquete(paquete, instruccion_pedida); 
 			enviar_paquete(paquete, cliente);
-			break;
+		break;
 
 		case FINALIZAR_EN_MEMORIA:
 			int pid = sacar_entero_de_paquete(&stream);
@@ -81,29 +81,24 @@ static void manejo_conexiones(void* conexion)
 			int ok_finalizacion = 1;
 			send(cliente, &ok_finalizacion, sizeof(int), 0);
 			log_info(memoria_logger,"Estructuras eliminadas en memoria exitosamente\n");
-			break;
+		break;
 
 		//INSTRUCCIONES DE IO
 		case REALIZAR_LECTURA:
-			uint32_t direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t direccion_fisica_lectura = sacar_entero_sin_signo_de_paquete(&stream);
 			uint32_t tamanio_lectura = sacar_entero_sin_signo_de_paquete(&stream);
 
-			char* lectura = realizar_lectura(direccion_fisica, tamanio_lectura);
-
-			t_paquete* paquete = crear_paquete(DEVOLVER_LECTURA);
-			agregar_cadena_a_paquete(paquete, lectura);
-			enviar_paquete(paquete, cliente);
+			realizar_lectura(direccion_fisica_lectura, tamanio_lectura, cliente);
 			break;
 		case REALIZAR_ESCRITURA:
-			uint32_t direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t direccion_fisica_escritura = sacar_entero_sin_signo_de_paquete(&stream);
 			char* texto_a_guardar = sacar_cadena_de_paquete(&stream);
-			realizar_escritura(direccion_fisica, texto_a_guardar);
+			realizar_escritura(direccion_fisica_escritura, texto_a_guardar);
 
 			int escritura_guardada = 1;
 			send(cliente, &escritura_guardada, sizeof(int), 0);
 			break;
 		
-		//INSTRUCCIONES DE CPU
 		case PEDIDO_MOV_IN:
 			break;
 		case PEDIDO_MOV_OUT:

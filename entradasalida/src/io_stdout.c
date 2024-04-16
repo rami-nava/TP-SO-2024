@@ -1,9 +1,6 @@
 #include "io.h"
 
-// Funciones Locales //
-static void solicitar_informacion_memoria();
-static char* pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio); 
-
+// Variables Locales //
 static char *ip_kernel;
 static char *puerto_kernel;
 static char *ip_memoria;
@@ -13,7 +10,11 @@ static int socket_memoria;
 static int tiempo_unidad_de_trabajo;
 t_log* stdout_logger;
 
-// Funciones Globales //
+// Funciones Locales //
+static void solicitar_informacion_memoria();
+static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio); 
+static char* recibir_lectura(); 
+
 void main_stdout(t_interfaz* interfaz_hilo) 
 {
     stdout_logger = log_create("/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/stdout.log", "stdout.log", 1, LOG_LEVEL_INFO);

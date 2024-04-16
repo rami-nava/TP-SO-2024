@@ -2,7 +2,6 @@
 
 //static void existe_interfaz(char* nombre);
 static t_interfaz* crear_interfaz(char* nombre, t_config* config);
-static void iniciar_hilo_de_interfaz(void (*funcion_de_hilo)(t_interfaz*), t_interfaz* interfaz); 
 
 void iniciar_interfaz(char* nombre, char* path_config) {
 

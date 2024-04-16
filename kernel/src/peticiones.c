@@ -3,13 +3,22 @@
 static void io_gen_sleep(t_pcb *proceso, char **parametros);
 static void io_stdin_read(t_pcb *proceso, char **parametros);
 static void io_stdout_write(t_pcb *proceso, char **parametros);
+static void io_fs_read(t_pcb *proceso, char **parametros);
+static void io_fs_write(t_pcb *proceso, char **parametros);
+static void io_fs_delete(t_pcb *proceso, char **parametros);
+static void io_fs_truncate(t_pcb *proceso, char **parametros);
+static void io_fs_create(t_pcb *proceso, char **parametros);
+static void fin_quantum(t_pcb* proceso);
+static void exit_c(t_pcb* proceso, char **parametros);
+
 static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz);
 static void a_leer_de_interfaz(t_pcb * proceso, uint32_t direccion, uint32_t tamanio, t_interfaz* interfaz);
 static void a_escribir_interfaz(t_pcb * proceso, uint32_t direccion, uint32_t tamanio,t_interfaz* interfaz);
-static void exit_c(t_pcb* proceso, char **parametros);
-
-void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo);
-static void fin_quantum(t_pcb* proceso);
+static void a_crear_archivo(t_pcb * proceso, char* nombre_archivo, t_interfaz* interfaz);
+static void a_eliminar_archivo(t_pcb * proceso, char* nombre_archivo, t_interfaz* interfaz);
+static void a_truncar_archivo(t_pcb * proceso, int tamanio_archivo, char* nombre_archivo, t_interfaz* interfaz);
+static void a_leer_archivo(t_pcb * proceso, int puntero, int tamanio, int direccion, char* nombre_archivo, t_interfaz* interfaz);
+static void a_escribir_archivo(t_pcb * proceso, int puntero, int tamanio, int direccion, char* nombre_archivo, t_interfaz* interfaz);
 static void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz);
 static void esperar_io(t_interfaz* interfaz);
 
@@ -24,6 +33,21 @@ void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion
             break;
         case IO_STDOUT_WRITE:
             io_stdout_write(proceso, contexto_ejecucion->motivo_desalojo->parametros);
+            break;
+        case IO_FS_CREATE:
+            io_fs_create(proceso, contexto_ejecucion->motivo_desalojo->parametros);
+            break;
+        case IO_FS_DELETE:
+            io_fs_delete(proceso, contexto_ejecucion->motivo_desalojo->parametros);
+            break;
+        case IO_FS_TRUNCATE:
+            io_fs_truncate(proceso, contexto_ejecucion->motivo_desalojo->parametros);
+            break;
+        case IO_FS_WRITE:
+            io_fs_write(proceso, contexto_ejecucion->motivo_desalojo->parametros);
+            break;
+        case IO_FS_READ:
+            io_fs_read(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
         case WAIT:
             wait_s(proceso, contexto_ejecucion->motivo_desalojo->parametros);
@@ -94,6 +118,73 @@ static void io_stdout_write(t_pcb *proceso, char **parametros){
     }
 }
 
+static void io_fs_create(t_pcb *proceso, char **parametros){
+    char* nombre_interfaz = parametros[0];
+    char* nombre_archivo = parametros[1];
+    t_interfaz* interfaz = obtener_interfaz_por_nombre(nombre_interfaz);
+
+    bool peticion_valida = peticiones_de_io(proceso, interfaz);
+
+    if (peticion_valida) {
+        a_crear_archivo(proceso, nombre_archivo, interfaz);
+    }
+}
+
+static void io_fs_delete(t_pcb *proceso, char **parametros){
+    char* nombre_interfaz = parametros[0];
+    char* nombre_archivo = parametros[1];
+    t_interfaz* interfaz = obtener_interfaz_por_nombre(nombre_interfaz);
+
+    bool peticion_valida = peticiones_de_io(proceso, interfaz);
+
+    if (peticion_valida) {
+        a_eliminar_archivo(proceso, nombre_archivo, interfaz);
+    }
+}
+
+static void io_fs_truncate(t_pcb *proceso, char **parametros){
+    char* nombre_interfaz = parametros[0];
+    char* nombre_archivo = parametros[1];
+    int tamanio = atoi(parametros[2]);
+    t_interfaz* interfaz = obtener_interfaz_por_nombre(nombre_interfaz);
+
+    bool peticion_valida = peticiones_de_io(proceso, interfaz);
+
+    if (peticion_valida) {
+        a_truncar_archivo(proceso, tamanio, nombre_archivo, interfaz);
+    }
+}
+
+static void io_fs_read(t_pcb *proceso, char **parametros){
+    char* nombre_interfaz = parametros[0];
+    char* nombre_archivo = parametros[1];
+    int direccion = atoi(parametros[2]);
+    int tamanio = atoi(parametros[3]);
+    int puntero = atoi(parametros[4]);
+    t_interfaz* interfaz = obtener_interfaz_por_nombre(nombre_interfaz);
+
+    bool peticion_valida = peticiones_de_io(proceso, interfaz);
+
+    if (peticion_valida) {
+        a_leer_archivo(proceso, puntero, tamanio, direccion, nombre_archivo, interfaz);
+    }
+}
+
+static void io_fs_write(t_pcb *proceso, char **parametros){
+    char* nombre_interfaz = parametros[0];
+    char* nombre_archivo = parametros[1];
+    int direccion = atoi(parametros[2]);
+    int tamanio = atoi(parametros[3]);
+    int puntero = atoi(parametros[4]);
+    t_interfaz* interfaz = obtener_interfaz_por_nombre(nombre_interfaz);
+
+    bool peticion_valida = peticiones_de_io(proceso, interfaz);
+
+    if (peticion_valida) {
+        a_escribir_archivo(proceso, puntero, tamanio, direccion, nombre_archivo, interfaz);
+    }
+}
+
 static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz) 
 {  
     int socket_io = interfaz->socket_conectado;
@@ -125,6 +216,68 @@ static void a_escribir_interfaz(t_pcb * proceso, uint32_t direccion, uint32_t ta
     agregar_entero_a_paquete(paquete, proceso->pid);
     agregar_entero_sin_signo_a_paquete(paquete, direccion);
     agregar_entero_sin_signo_a_paquete(paquete, tamanio);
+    enviar_paquete(paquete, socket_io);
+
+    crear_hilo_io(proceso, interfaz);
+}
+
+static void a_crear_archivo(t_pcb * proceso, char* nombre_archivo, t_interfaz* interfaz){
+    int socket_io = interfaz->socket_conectado;
+
+    t_paquete* paquete = crear_paquete(CREAR_ARCHIVO);
+    agregar_cadena_a_paquete(paquete, nombre_archivo);
+    agregar_entero_a_paquete(paquete, proceso->pid);
+    enviar_paquete(paquete, socket_io);
+
+    crear_hilo_io(proceso, interfaz);
+}
+
+static void a_eliminar_archivo(t_pcb * proceso, char* nombre_archivo, t_interfaz* interfaz){
+    int socket_io = interfaz->socket_conectado;
+
+    t_paquete* paquete = crear_paquete(ELIMINAR_ARCHIVO);
+    agregar_cadena_a_paquete(paquete, nombre_archivo);
+    agregar_entero_a_paquete(paquete, proceso->pid);
+    enviar_paquete(paquete, socket_io);
+
+    crear_hilo_io(proceso, interfaz);
+}
+
+static void a_truncar_archivo(t_pcb * proceso, int tamanio, char* nombre_archivo, t_interfaz* interfaz){
+    int socket_io = interfaz->socket_conectado;
+
+    t_paquete* paquete = crear_paquete(TRUNCAR_ARCHIVO);
+    agregar_cadena_a_paquete(paquete, nombre_archivo);
+    agregar_entero_a_paquete(paquete, tamanio);
+    agregar_entero_a_paquete(paquete, proceso->pid);
+    enviar_paquete(paquete, socket_io);
+
+    crear_hilo_io(proceso, interfaz);
+}
+
+static void a_leer_archivo(t_pcb * proceso, int puntero, int tamanio, int direccion, char* nombre_archivo, t_interfaz* interfaz){
+    int socket_io = interfaz->socket_conectado;
+
+    t_paquete* paquete = crear_paquete(LEER_ARCHIVO);
+    agregar_cadena_a_paquete(paquete, nombre_archivo);
+    agregar_entero_a_paquete(paquete, puntero);
+    agregar_entero_a_paquete(paquete, tamanio);
+    agregar_entero_a_paquete(paquete, proceso->pid);
+    agregar_entero_a_paquete(paquete, direccion);
+    enviar_paquete(paquete, socket_io);
+
+    crear_hilo_io(proceso, interfaz);
+}
+
+static void a_escribir_archivo(t_pcb * proceso, int puntero, int tamanio, int direccion, char* nombre_archivo, t_interfaz* interfaz){
+    int socket_io = interfaz->socket_conectado;
+
+    t_paquete* paquete = crear_paquete(ESCRIBIR_ARCHIVO);
+    agregar_cadena_a_paquete(paquete, nombre_archivo);
+    agregar_entero_a_paquete(paquete, puntero);
+    agregar_entero_a_paquete(paquete, tamanio);
+    agregar_entero_a_paquete(paquete, proceso->pid);
+    agregar_entero_a_paquete(paquete, direccion);
     enviar_paquete(paquete, socket_io);
 
     crear_hilo_io(proceso, interfaz);

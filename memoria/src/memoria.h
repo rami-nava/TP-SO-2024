@@ -26,6 +26,7 @@ extern int server_fd;
 extern void* espacio_usuario; //Espacio contiguo
 extern t_list* procesos_en_memoria; //Lista de t_proceso_en_memoria con las tablas de paginas e instrucciones para cada proceso
 extern t_list* marcos; //Lista de los t_marco y su info
+extern int cantidad_marcos;
 
 
 //ESTRUCTURAS
@@ -86,7 +87,7 @@ void desocupar_marco(int nro_marco);
 void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid);
 
 /// @brief PETICIONES DE IO ///
-char* realizar_lectura(uint32_t direccion_fisica, uint32_t tamanio_lectura);
+void realizar_lectura(uint32_t direccion_fisica, uint32_t tamanio_lectura, int cliente);
 void realizar_escritura(uint32_t direccion_fisica, char* texto_a_guardar);
 
 /// @brief ESPACIO USUARIO ///

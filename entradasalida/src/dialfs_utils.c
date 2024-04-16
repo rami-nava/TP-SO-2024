@@ -10,11 +10,11 @@ void crear_archivo_de_bloque(char* path_archivo_bloques, int tamanio_archivo_blo
 
     fd = open(path_archivo_bloques, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd == -1) {
-        log_error(io_logger,"Error al abrir el Archivo de Bloques");
+        log_error(dialfs_logger,"Error al abrir el Archivo de Bloques");
     }
   
     if (ftruncate(fd, tamanio_archivo_bloques) == -1) {
-        log_error(io_logger,"Error al truncar el Archivo de Bloques");
+        log_error(dialfs_logger,"Error al truncar el Archivo de Bloques");
     }
 
     close (fd);
@@ -26,7 +26,7 @@ FILE* levantar_archivo_bloque() {
     archivo_de_bloques = fopen(path_archivo_bloques, "rb+");
 
     if (path_archivo_bloques == NULL) {
-        log_error(io_logger, "No se pudo abrir el archivo.");
+        log_error(dialfs_logger, "No se pudo abrir el archivo.");
     }
 	return archivo_de_bloques;
 }
@@ -40,7 +40,7 @@ void cargar_bitmap(int cantidad_bloques)
     int fd_bitmap = open("bitmap.dat", O_CREAT | O_RDWR, S_IRWXU); // SI NO EXISTE EL ARCHIVO LO CREA
 
     if (fd_bitmap == -1){
-        log_info(io_logger, "No se pudo abrir el archivo Bitmap");
+        log_info(dialfs_logger, "No se pudo abrir el archivo Bitmap");
     }
 
     ftruncate(fd_bitmap, bytes);  // SI EL ARCHIVO ES DE MENOS TAMAÑO QUE "bytes" ENTONCES LO EXTIENDE LLENANDOLO CON '\0'
@@ -48,7 +48,7 @@ void cargar_bitmap(int cantidad_bloques)
     bitmap = mmap(NULL, bytes, PROT_READ | PROT_WRITE, MAP_SHARED, fd_bitmap, 0);
 
     if(bitmap == MAP_FAILED){
-        log_error(io_logger, "Error al usar mmap");
+        log_error(dialfs_logger, "Error al usar mmap");
     }
 
     bitmap_bitarray = bitarray_create_with_mode((char*) bitmap, bytes , LSB_FIRST);
@@ -64,17 +64,17 @@ void cargar_bitmap(int cantidad_bloques)
          bitarray_test_bit(bitmap_bitarray, x);
          contador++;
     }
-    log_info(io_logger, "contador: %d", contador);*/
+    log_info(dialfs_logger, "contador: %d", contador);*/
     
     int sincronizacion_completada = msync(bitmap, bytes, MS_SYNC);
     if (sincronizacion_completada == -1){
-        log_error(io_logger, "Error al sincronizar el bitmap de memoria");
+        log_error(dialfs_logger, "Error al sincronizar el bitmap de memoria");
         abort();
     }
     /*
     int finMmap = munmap(bitmap, bytes);
     if (finMmap == -1){
-        log_info(io_logger, "Error al unmapear el bitmap de memoria");
+        log_info(dialfs_logger, "Error al unmapear el bitmap de memoria");
         perror("munmap");
     }
 
@@ -102,4 +102,41 @@ void limpiar_posiciones(t_bitarray* un_espacio, int posicion_inicial, int tamani
 	for (i = posicion_inicial; i < posicion_inicial + tamanio_proceso; i++) {
 		bitarray_clean_bit(un_espacio, i);
 	}
+}
+
+void agregar_bloque(uint32_t bloque_a_agregar)
+{
+// TODO
+}
+
+void eliminar_bloque(uint32_t bloque_a_eliminar)
+{
+// TODO
+}
+
+void ocupar_un_bloque_del_fs()
+{
+// TODO
+}
+
+void liberar_un_bloque_del_fs()
+{
+// TODO
+}
+
+void compactar()
+{
+// TODO
+}
+
+bool bloques_contiguos()
+{
+    //TODO
+    return true;
+}
+
+uint32_t buscar_bloque_en_fs(uint32_t bloque_objetivo, uint32_t bloque_inicial)
+{
+    //TODO
+    return 0;
 }
