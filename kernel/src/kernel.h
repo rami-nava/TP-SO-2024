@@ -60,10 +60,6 @@ extern t_list *cola_READY;
 extern t_list *cola_BLOCKED;
 extern t_list *cola_PROCESOS_DEL_SISTEMA;
 
-//extern t_list *cola_BLOCKED;
-//extern t_list *cola_EXEC;
-//extern t_list *cola_EXIT;
-
 extern t_list* interfaces_genericas;
 extern t_list* interfaces_stdin;
 extern t_list* interfaces_stdout;
@@ -124,11 +120,12 @@ void cambio_de_estado (t_pcb *pcb, estado_proceso estado_nuevo);
 void ingresar_a_READY(t_pcb *pcb);
 void ingresar_a_NEW(t_pcb *pcb);
 void ingresar_a_BLOCKED(t_pcb *pcb, char* motivo);
+void ingresar_de_BLOCKED_a_READY(int pid_pcb);
 void desalojo(int tipo_interrupcion);
 void* comenzar_reloj_RR();
 void log_ingreso_a_ready();
 void mandar_a_EXIT(t_pcb* proceso, char* motivo);
-int buscar_pcb_en_cola(t_list* cola, int pid);
+void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb);
 
 ////======================================== MEMORIA ===========================================================================================================
 void enviar_pcb_a_memoria(t_pcb *, int, op_code);
@@ -171,7 +168,8 @@ void detener_planificacion();
 void consola_ejecutar_script(char *path);
 void consola_iniciar_proceso(char *path);
 void detener_planificacion();
-t_pcb* buscar_pcb_de_lista(t_list *lista, int pid_buscado);
+t_pcb* buscar_pcb_en_lista (t_list* lista, int pid);
+t_pcb* buscar_pcb_de_lista_y_eliminar(t_list *lista, int pid_buscado, pthread_mutex_t mutex_cola);
 void mostrar_lista_pcb(t_list *cola, char *nombre_cola, pthread_mutex_t mutex_cola);
 
 ////======================================== IO ===========================================================================================================

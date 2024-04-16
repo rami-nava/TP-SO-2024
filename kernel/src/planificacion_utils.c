@@ -1,6 +1,7 @@
 #include "kernel.h"
 
 int quantum;
+
 //==================================================== ENCOLAR Y DESENCOLAR ====================================================================================
 void encolar(t_list *cola, t_pcb *pcb){
     list_add(cola, (void *)pcb);
@@ -28,9 +29,25 @@ void desalojo(int tipo_interrupcion){
     enviar_paquete(paquete, socket_cpu_interrupt);
 }
 
+void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb){
+    t_pcb* pcb_asociado = NULL;  
+
+    //lo busco y lo mato de la cola ready
+    pcb_asociado = buscar_pcb_de_lista_y_eliminar(cola_READY, pcb->pid, mutex_READY); 
+
+    //si no esta en la cola ready lo busco en la blocked
+    if (pcb_asociado == NULL) {
+        pcb_asociado = buscar_pcb_de_lista_y_eliminar(cola_BLOCKED, pcb->pid, mutex_BLOCKED);
+    }
+
+    if(!(pcb_asociado != NULL && pcb_asociado->pid == pcb->pid)) printf("EL proceso ya fue eliminado del sistema\n");
+}
+
 void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo) 
 {
-    cambio_de_estado (pcb_asociado, SALIDA); 
+    cambio_de_estado (pcb_asociado, SALIDA);
+
+    sacar_proceso_de_cola_estado_donde_esta(pcb_asociado);
 
     //Avisas pq finalizo el proceso
     loggear_finalizacion_proceso(pcb_asociado, motivo); 

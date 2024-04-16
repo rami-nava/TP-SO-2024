@@ -302,10 +302,8 @@ static void esperar_io(t_interfaz* interfaz){
     recv(interfaz->socket_conectado, &pid_io, sizeof(int), 0); 
     pthread_mutex_unlock(&interfaz->comunicacion_interfaz_mutex);
     
-    //Sale de Blocked e ingresa a READY
-    ingresar_a_READY(buscar_pcb_de_lista(cola_BLOCKED, pid_io)); 
-
-    printf("Se volvio de IO \n");
+    //el proceso pasa de blocked a ready
+    ingresar_de_BLOCKED_a_READY(pid_io); 
 }
 
 static void exit_c(t_pcb* proceso, char **parametros){   

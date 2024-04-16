@@ -10,6 +10,8 @@ char **nombres_recursos;
 
 static int indice_recurso(char *recurso_buscado);
 static void eliminar_recurso_proceso(t_list* recursos, char* recurso);
+static t_list* obtener_lista_recurso_buscado(int indice);
+static void eliminar_proceso_colas_bloqueo(t_pcb* proceso);
 //===========================================================================================================
 
 void crear_colas_bloqueo()
@@ -25,6 +27,7 @@ void crear_colas_bloqueo()
     char **cantidad_instancias_recursos = config_valores_kernel.instancias_recursos;
     nombres_recursos = config_valores_kernel.recursos;
 
+    //array con los recursos que tengo y la cantidad de cada uno
     recursos_existentes = string_array_size(cantidad_instancias_recursos);
 
     instancias_del_recurso = malloc(recursos_existentes * sizeof(int));
@@ -76,19 +79,20 @@ void wait_s(t_pcb *proceso, char **parametros){
 
     log_info(kernel_logger,"PID: %d - Wait: %s - Instancias: %d\n",proceso->pid, recurso, instancias); 
 
+    //si no hay instancias disponibles
     if (instancias < 0){
         /*voy a agarrar la cola de bloqueados del recurso que me piden. Como la lista_recursos es una lista
         de punteros a otras colas, lo que voy a hacer es buscar dentro de esa lista, el indice del recurso
         que me pasan por parametro y agarrar la cola del recurso al que nos estamos refiriendo*/
-        t_list *cola_bloqueados_recurso = (t_list *)list_get(lista_recursos, indice_pedido);
-
-        //bloqueamos el proceso en la cola de bloqueados del recursos
-        list_add(cola_bloqueados_recurso, (void *)proceso);
+        list_add(obtener_lista_recurso_buscado(indice_pedido), (void *)proceso);
 
         ingresar_a_BLOCKED(proceso, recurso);
     }else{
+
+        //si hay instancias disponibles
         list_add(proceso->recursos_asignados, (void*)string_duplicate (recurso));
     
+        //el proceso va de exec a ready
         ingresar_a_READY(proceso);
     }
 }
@@ -99,8 +103,7 @@ void signal_s(t_pcb *proceso, char **parametros)
     int indice_pedido = indice_recurso(recurso);
 
      // si el recurso no existe, mando el proceso a exit
-    if (indice_pedido == -1)
-    {
+    if (indice_pedido == -1){
         //en exit esta el signal y si recibo un recurso invalido, se hace un loop
         mandar_a_EXIT(proceso, "Error de signal, el recurso solicitado no existe"); 
         return;
@@ -117,27 +120,69 @@ void signal_s(t_pcb *proceso, char **parametros)
 
     eliminar_recurso_proceso(proceso->recursos_asignados,recurso); 
 
+    t_list *cola_bloqueados_recurso = obtener_lista_recurso_buscado(indice_pedido);
+
     //lo saco de la cola de bloqueados del recurso
-    list_remove_element((t_list *)list_get(lista_recursos, indice_pedido), (void *)proceso);
+    list_remove_element(cola_bloqueados_recurso, (void *)proceso);
 
     /*aca vemos que pasa si hay procesos esperando a que ese recurso se libere. Si esta en negativo, es que
     hay un proceso esperando en la cola de bloqueados*/
-    if (instancias <= 0)
-    {
-        t_list *cola_bloqueados_recurso = (t_list *)list_get(lista_recursos, indice_pedido);
-
+    if (instancias <= 0){
+        
         //Nos llega por parametro la cola del recurso y de ahi vamos a sacar nuestro proceso
         if(!list_is_empty(cola_bloqueados_recurso)){
         t_pcb *pcb_desbloqueado = desencolar(cola_bloqueados_recurso);
 
         list_add(pcb_desbloqueado->recursos_asignados, (void*)string_duplicate (recurso));
 
-        ingresar_a_READY(pcb_desbloqueado);
+        //el proceso pasa de blocked a ready
+        ingresar_de_BLOCKED_a_READY(pcb_desbloqueado->pid);
         }
     }
 
     //si llega como instruccion algo distinto de EXIT, el proceso sigue su ejecucion 
     if (strncmp (parametros[2], "EXIT", 4)) volver_a_CPU(proceso);
+    else{
+        (printf("el proceso que hizo signal ya finalizo\n"));
+        eliminar_proceso_colas_bloqueo(proceso);
+    }
+}
+
+static void eliminar_proceso_colas_bloqueo(t_pcb* proceso){
+
+    /*si el proceso hizo un wait pero nunca le di el recurso, aun asi tengo que sacarlo de la cola
+    de bloqueados del recurso y sumarle una instancia disponible al recurso. Entonces lo busco en todas las colas*/
+    for(int i = 0 ; i < list_size(lista_recursos); i++){
+        //busco en todas las colas de bloqueo de recursos si esta el proceso y si esta lo elimino
+        if(buscar_pcb_en_lista(obtener_lista_recurso_buscado(i), proceso->pid) != NULL){
+            list_remove_element(obtener_lista_recurso_buscado(i), (void*)proceso);
+
+            char* nombre_recurso_pedido = nombres_recursos[i];
+            int indice_pedido = indice_recurso(nombre_recurso_pedido);
+
+            int instancias = instancias_del_recurso[indice_pedido];
+            instancias++;
+            instancias_del_recurso[indice_pedido] = instancias;
+        }
+    }
+}
+
+t_pcb* buscar_pcb_en_lista (t_list* lista, int pid){
+    int elementos = list_size(lista);
+	for (int i = 0; i < elementos; i++)
+	{
+		t_pcb *pcb = list_get(lista, i);
+		if (pid == pcb->pid)
+		{
+            return pcb;
+		}
+	}
+    return NULL;
+}
+
+static t_list* obtener_lista_recurso_buscado(int indice){
+    t_list *lista_buscada = (t_list *)list_get(lista_recursos, indice);
+    return lista_buscada;
 }
 
 static int indice_recurso(char *recurso_buscado)

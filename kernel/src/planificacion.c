@@ -32,7 +32,10 @@ void planificador_largo_plazo(){
 
         t_pcb *pcb = siguiente_proceso_a_ready();
         
-        ingresar_a_READY(pcb); 
+        if(pcb != NULL){
+            //el proceso pasa de new a ready
+            ingresar_a_READY(pcb); 
+        }else printf("no hay procesos nuevos para ejecutar\n");
     }
 } 
 
@@ -78,10 +81,13 @@ void ingresar_a_NEW(t_pcb *pcb)
 
 static t_pcb *siguiente_proceso_a_ready()
 {
-    pthread_mutex_lock(&mutex_NEW);
-    t_pcb *pcb = desencolar(cola_NEW);
-    pthread_mutex_unlock(&mutex_NEW);
-    return pcb;
+    if(list_size(cola_NEW) > 0){
+        pthread_mutex_lock(&mutex_NEW);
+        t_pcb *pcb = desencolar(cola_NEW);
+        pthread_mutex_unlock(&mutex_NEW);
+        return pcb;
+    }
+    return NULL;
 }
 
 void ingresar_a_READY(t_pcb *pcb)
@@ -95,6 +101,12 @@ void ingresar_a_READY(t_pcb *pcb)
     sem_post(&hay_procesos_ready);
 
     log_ingreso_a_ready();
+}
+
+void ingresar_de_BLOCKED_a_READY(int pid_pcb){
+
+    t_pcb* pcb_desbloqueado = buscar_pcb_de_lista_y_eliminar(cola_BLOCKED, pid_pcb, mutex_BLOCKED);
+    ingresar_a_READY(pcb_desbloqueado); 
 }
 
 void ingresar_a_BLOCKED(t_pcb *pcb, char* motivo)

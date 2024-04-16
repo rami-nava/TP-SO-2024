@@ -105,20 +105,17 @@ void mostrar_lista_pcb(t_list *cola, char *nombre_cola, pthread_mutex_t mutex_co
   }
 }
 
-
-t_pcb* buscar_pcb_de_lista(t_list *lista, int pid_buscado)
+//funcion sicario, te busca y te mata
+t_pcb* buscar_pcb_de_lista_y_eliminar(t_list *lista, int pid_buscado, pthread_mutex_t mutex_lista)
 {
-	int elementos = list_size(lista);
-	for (int i = 0; i < elementos; i++)
-	{
-		t_pcb *pcb = list_get(lista, i);
-		if (pid_buscado == pcb->pid)
-		{
-			list_remove_element(lista, (void*)pcb);
-            return pcb;
-		}
-	}
-    return NULL;
+  t_pcb* pcb_buscado = buscar_pcb_en_lista(lista, pid_buscado);
+
+  pthread_mutex_lock(&mutex_lista);
+  if(pcb_buscado != NULL){
+    list_remove_element(lista, (void*)pcb_buscado);
+    return pcb_buscado;
+  }else return NULL;
+  pthread_mutex_unlock(&mutex_lista);
 }
 
 void consola_finalizar_proceso(int pid) {
@@ -127,9 +124,8 @@ void consola_finalizar_proceso(int pid) {
 
   t_pcb* pcb_asociado = NULL;  
 
-  pthread_mutex_lock(&mutex_PROCESOS_DEL_SISTEMA);
-  pcb_asociado = buscar_pcb_de_lista(cola_PROCESOS_DEL_SISTEMA,pid);
-  pthread_mutex_unlock(&mutex_PROCESOS_DEL_SISTEMA);
+  //saco el proceso de los procesos del sistema
+  pcb_asociado = buscar_pcb_de_lista_y_eliminar(cola_PROCESOS_DEL_SISTEMA,pid, mutex_PROCESOS_DEL_SISTEMA);
 
   //veo si existe en el sistema
   if(pcb_asociado != NULL){
