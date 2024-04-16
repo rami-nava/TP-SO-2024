@@ -21,8 +21,11 @@ extern t_log* memoria_logger;
 extern t_config* config;
 extern int socket_memoria;
 extern int server_fd;
-extern void* espacio_usuario;
-extern t_list* procesos_en_memoria;
+
+
+extern void* espacio_usuario; //Espacio contiguo
+extern t_list* procesos_en_memoria; //Lista de t_proceso_en_memoria con las tablas de paginas e instrucciones para cada proceso
+extern t_list* marcos; //Lista de los t_marco y su info
 
 
 //ESTRUCTURAS
@@ -38,8 +41,8 @@ typedef struct
 	int retardo_respuesta;
 	char* algoritmo_reemplazo;
 } arch_config;
-
 extern arch_config config_valores_memoria;
+
 
 typedef struct {
 	int pid;
@@ -56,12 +59,7 @@ typedef struct {
 	int cantidad_bytes_libres;
 } t_marco;
 
-typedef struct {
-    t_marco* marcos;
-	int cantidad_marcos;
-} t_memoria_principal;
 
-extern t_memoria_principal memoria;
 typedef struct 
 {
 	int pid;
@@ -69,9 +67,9 @@ typedef struct
 	t_list* instrucciones;                              
 } t_proceso_en_memoria;
 
-t_list* procesos_en_memoria;
-void* espacio_usuario;
-t_list* marcos;
+
+
+
 
 //======================================================= FUNCIONES =========================================================================================================
 /// UTILS ///

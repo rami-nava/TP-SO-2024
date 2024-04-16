@@ -12,6 +12,8 @@
 #include "socket.h"
 #include "operaciones.h"
 #include "contexto.h"
+#include "stack.h"
+
 
 // Estructuras //
 typedef struct  
@@ -25,7 +27,8 @@ typedef struct
    char* algoritmo_tlb;
 } arch_config;
 
-extern arch_config config_valores_cpu;
+extern arch_config config_valores_cpu; //PUEDE QUE ESTO AL FINAL NO SE USA? se declara en cpu_utils puede confudirse lo mismo el t_config, y lo mismo pasa en la memoria.
+
 
 //Variables
 extern t_config* config;
@@ -56,6 +59,36 @@ void ciclo_de_instruccion();
 int buscar_registro(char*registro);
 void inicializar_semaforos();
 void realizar_handshake();
+
+
+
+//TLB
+
+/* La idea es:
+   cada vez que la cpu necesita traducir una DL = (PAG-DESP)
+   CONSULTA A TLB -> TLB HIT : -CPU OBTIENE MARCO, CALCULA DF Y ACCEDE A MEMORIA 
+                               -TLB AJUSTA LISTAS SEGUN ALGORITMO
+                  -> TLB MISS : -CPU OBTIENE -1, PIDE A MEMORIA MARCO, CALCULA DF, ACCEDE A MEMORIA
+                                -PIDE A TLB AGREGAR LA ENTRADA (PID-PAG-MARCO)
+                                -TLB AJUSTA LISTAS SEGUN ALGORITMO
+*/
+
+/*
+typedef struct {
+	int pid;
+   int pagina;
+   int marco; 
+} t_entrada;
+
+
+
+void crear_tlb(char * algoritmo_sustitucion, char * cantidad_entradas);
+
+int consultar_tlb(int pid, int pagina); //HIT: marco - MISS: -1
+void agregar_entrada_tlb(int pid, int pagina, int marco); 
+void imprimir_tlb(t_list *tlb);
+*/
+
 
 
 #endif 
