@@ -65,6 +65,7 @@ extern t_list* interfaces_stdin;
 extern t_list* interfaces_stdout;
 extern t_list* interfaces_dialfs;
 
+extern pthread_mutex_t mutex_INTERFAZ_GENERICA;
 
 //==============================================================================================================================
 

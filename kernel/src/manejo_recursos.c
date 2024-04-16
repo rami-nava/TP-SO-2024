@@ -150,6 +150,7 @@ void signal_s(t_pcb *proceso, char **parametros)
 
 static void eliminar_proceso_colas_bloqueo(t_pcb* proceso){
 
+    printf("eliminar proceso de la colas de bloqueo\n");
     /*si el proceso hizo un wait pero nunca le di el recurso, aun asi tengo que sacarlo de la cola
     de bloqueados del recurso y sumarle una instancia disponible al recurso. Entonces lo busco en todas las colas*/
     for(int i = 0 ; i < list_size(lista_recursos); i++){

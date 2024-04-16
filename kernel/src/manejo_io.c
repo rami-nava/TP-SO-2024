@@ -1,5 +1,7 @@
 #include "kernel.h"
 
+pthread_mutex_t mutex_INTERFAZ_GENERICA;
+
 static void agregar_interfaz(op_code tipo, void* stream, int socket_cliente_io); 
 
 void servidor_kernel_io(){
@@ -41,7 +43,9 @@ static void agregar_interfaz(op_code tipo, void* stream, int socket_cliente_io)
 
     switch(tipo) {
         case INTERFAZ_GENERICA:
+            pthread_mutex_lock(&mutex_INTERFAZ_GENERICA);
             list_add(interfaces_genericas, interfaz_nueva);
+            pthread_mutex_unlock(&mutex_INTERFAZ_GENERICA);
             log_info(kernel_logger, "Se agrego interfaz GENERICA: %s \n", interfaz_nueva->nombre);
             break;
         case INTERFAZ_STDIN:
@@ -87,9 +91,16 @@ bool peticiones_de_io(t_pcb *proceso, t_interfaz* interfaz)
 
 t_interfaz* obtener_interfaz_por_nombre(char* nombre_interfaz) {
 
+    pthread_mutex_lock(&mutex_INTERFAZ_GENERICA);
+    int tamanio_lista_generica = list_size(interfaces_genericas);
+    pthread_mutex_unlock(&mutex_INTERFAZ_GENERICA);
+
     // INTERFACES GENERICAS
-    for (int i = 0; i < list_size(interfaces_genericas); i++) {
+    for (int i = 0; i < tamanio_lista_generica; i++) {
+    pthread_mutex_lock(&mutex_INTERFAZ_GENERICA);
     t_interfaz* interfaz_nueva = list_get(interfaces_genericas, i);
+    pthread_mutex_unlock(&mutex_INTERFAZ_GENERICA);
+    
     if (strcmp(nombre_interfaz, interfaz_nueva->nombre) == 0) {
         return interfaz_nueva;
             }   
