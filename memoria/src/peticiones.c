@@ -56,7 +56,6 @@ static void manejo_conexiones(void* conexion)
 			send(cliente, &ok_creacion, sizeof(int), 0);
 			log_info(memoria_logger,"Estructuras creadas en memoria exitosamente\n");
 		break;
-
 		case MANDAR_INSTRUCCION:
 			//la cpu nos manda el program counter y el pid del proceso que recibio para ejecutar
 			posicion_pedida = sacar_entero_de_paquete(&stream);
@@ -71,7 +70,6 @@ static void manejo_conexiones(void* conexion)
 			agregar_cadena_a_paquete(paquete, instruccion_pedida); 
 			enviar_paquete(paquete, cliente);
 		break;
-
 		case FINALIZAR_EN_MEMORIA:
 			int pid = sacar_entero_de_paquete(&stream);
 			log_info(memoria_logger,"Recibi pedido de eliminacion de estructuras en memoria\n");
@@ -82,7 +80,6 @@ static void manejo_conexiones(void* conexion)
 			send(cliente, &ok_finalizacion, sizeof(int), 0);
 			log_info(memoria_logger,"Estructuras eliminadas en memoria exitosamente\n");
 		break;
-
 		//INSTRUCCIONES DE IO
 		case REALIZAR_LECTURA:
 			uint32_t direccion_fisica_lectura = sacar_entero_sin_signo_de_paquete(&stream);
@@ -104,6 +101,13 @@ static void manejo_conexiones(void* conexion)
 		case PEDIDO_MOV_OUT:
 			break;
 		case PEDIDO_RESIZE:
+			uint32_t process_id = sacar_entero_de_paquete(&stream);
+			uint32_t tamanio = sacar_entero_de_paquete(&stream);
+			
+			int out_of_memory = resize(process_id, tamanio);
+
+			//if(out_of_memory)
+				//send(cliente, ); //DEVOLVER A CPU EL OUT_OF_MEMORY (ENTERO :) )
 			break;
 		case PEDIDO_COPY_STRING:
 			break;
@@ -120,4 +124,39 @@ static void manejo_conexiones(void* conexion)
 		}
 		eliminar_paquete(paquete);
 	}
+}
+
+int resize(uint32_t pid, uint32_t tamanio){
+	int cantidad_marcos_necesarios = cantidad_de_marcos_necesarios(tamanio);
+	int cantidad_marcos_libres = cantidad_de_marcos_libres();
+
+	if(cantidad_marcos_libres >= cantidad_marcos_necesarios){
+		asignar_marcos_a_proceso(pid, cantidad_de_marcos_necesarios);
+		return 0;
+	}
+	else{
+		return 1; //OUT OF MEMORY
+	}
+}
+
+int cantidad_de_marcos_libres(){
+	t_marco* marco_obtenido = malloc(sizeof(t_marco));
+	int contador=0;
+	
+	for(int i = 0; i<list_size(marcos); i++){
+		marco_obtenido = list_get(marcos,i);
+		if(marco_obtenido->libre == 1){
+			contador++;
+		}
+	}
+	free(marco_obtenido);
+	return contador;
+}
+
+int cantidad_de_marcos_necesarios(int tamanio){
+	return (int)ceil(tamanio/config_valores_memoria.tam_pagina); //PROBAR CASTEO
+}
+
+void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos){
+	//TODO
 }

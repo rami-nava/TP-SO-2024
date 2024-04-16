@@ -117,7 +117,18 @@ static int numero_marco_pagina()
 void resize(char *tamanio)
 {
     int tamanio_proceso = atoi(tamanio);
-    //TODO
+    int out_of_memory = -1;
+    
+    t_paquete *paquete = crear_paquete(READ);
+    agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
+    agregar_entero_a_paquete(paquete, tamanio_proceso);
+    enviar_paquete(paquete, socket_cliente_memoria);
+
+    recv(socket_cliente_memoria, &out_of_memory, sizeof(int), MSG_WAITALL);
+    //TESTEAR RESPUESTA SI ES OUT_OF_MEMORY DEBERIA SER 1 SINO 0
+    if(out_of_memory){
+        //DEVOLVER CONTEXTO DE EJECUCION A KERNEL
+    }
 }
 
 void copy_string(char* tamanio)

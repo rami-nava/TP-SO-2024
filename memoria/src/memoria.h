@@ -97,6 +97,8 @@ uint32_t leer(uint32_t direccion_fisica, uint32_t direccion_logica, int pid);
 void escribir_en_memoria(void* contenido, size_t tamanio_contenido, uint32_t direccion_fisica);
 void* leer_en_memoria(size_t tamanio_contenido, uint32_t direccion_fisica);
 void enviar_valor_de_lectura(uint32_t valor, int socket_cpu);
+int cantidad_de_marcos_libres();
+int cantidad_de_marcos_necesarios();
 
 /// @brief  TABLAS DE PAGINAS ///
 void crear_estructuras_memoria(int pid, FILE* archivo);
@@ -105,6 +107,9 @@ void inicializar_la_tabla_de_paginas(int tamanio_memoria, int tamanio_pagina);
 void escribir_en_memoria_principal(int nro_pagina, int posicion_swap, int pid);
 void enviar_pedido_pagina_para_escritura(int pid, int pag_pf);
 t_pagina* buscar_pagina(int pid, int num_pagina);
+
+//INTRUCCIONES CPU
+int resize(uint32_t pid, uint32_t tamanio);
 
 #endif
 

@@ -93,7 +93,9 @@ typedef enum {
 	IO_FS_WRITE,
 	IO_FS_READ,
 	FIN_QUANTUM,
-	EXIT
+	EXIT,
+	//DELVOLVER CONTEXTO A LA CPU --> CASO OUTOFMEMORY
+	//OUT_OF_MEMORY
 } codigo_instrucciones;
 
 typedef struct{
