@@ -106,9 +106,11 @@ int resize(uint32_t pid, uint32_t tamanio);
 // FUNCIONES MARCOS/PAGINAS ///
 int cantidad_de_marcos_libres();
 int cantidad_de_marcos_necesarios(int tamanio);
+void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos);
+
 
 /*
-void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos);
+
 int cantidad_de_marcos_del_proceso(t_proceso_en_memoria* proceso);
 t_proceso_en_memoria* obtener_proceso_en_memoria(uint32_t pid);
 */

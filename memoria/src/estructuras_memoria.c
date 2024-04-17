@@ -73,6 +73,8 @@ int cantidad_de_marcos_necesarios(int tamanio){
 	return (int) ceil(tamanio/config_valores_memoria.tam_pagina); //PROBAR CASTEO
 }
 
+void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos) {
+}
 
 /*
 void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos) {
