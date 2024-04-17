@@ -44,12 +44,13 @@ typedef struct
 } arch_config;
 extern arch_config config_valores_memoria;
 
+//TODO cambiar todos los ints por uint32_T y poner nombres regulares no: numero_de_pagina y en el otro nro_pag
 
 typedef struct {
 	int pid;
     int numero_de_pagina;
     int marco; 
-	//bool cargada_en_memoria;
+	bool cargada_en_memoria;
 } t_pagina;
 
 typedef struct {
@@ -83,8 +84,7 @@ void finalizar_en_memoria(int pid);
 void enviar_paquete_handshake(int socket_cliente);
 char* buscar_instruccion_proceso(uint32_t PC, int pid);
 void leer_instrucciones_desde_archivo(t_proceso_en_memoria* proceso, FILE* archivo);
-void desocupar_marco(int nro_marco);
-void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid);
+
 
 /// @brief PETICIONES DE IO ///
 void realizar_lectura(uint32_t direccion_fisica, uint32_t tamanio_lectura, int cliente);
@@ -92,24 +92,26 @@ void realizar_escritura(uint32_t direccion_fisica, char* texto_a_guardar);
 
 /// @brief ESPACIO USUARIO ///
 void creacion_espacio_usuario();
-void escribir(int* valor, uint32_t direccion_fisica, uint32_t direccion_logica, int pid, int socket_cpu);
-uint32_t leer(uint32_t direccion_fisica, uint32_t direccion_logica, int pid);
-void escribir_en_memoria(void* contenido, size_t tamanio_contenido, uint32_t direccion_fisica);
-void* leer_en_memoria(size_t tamanio_contenido, uint32_t direccion_fisica);
-void enviar_valor_de_lectura(uint32_t valor, int socket_cpu);
-int cantidad_de_marcos_libres();
-int cantidad_de_marcos_necesarios();
 
-/// @brief  TABLAS DE PAGINAS ///
+
+/// @brief  PROCESOS EN MEMORIA - MARCOS ///
 void crear_estructuras_memoria(int pid, FILE* archivo);
-int buscar_marco(int pid, int num_pagina);
-void inicializar_la_tabla_de_paginas(int tamanio_memoria, int tamanio_pagina);
-void escribir_en_memoria_principal(int nro_pagina, int posicion_swap, int pid);
-void enviar_pedido_pagina_para_escritura(int pid, int pag_pf);
-t_pagina* buscar_pagina(int pid, int num_pagina);
+void crear_marcos_memoria();
 
-//INTRUCCIONES CPU
+
+//INTRUCCIONES CPU ///
 int resize(uint32_t pid, uint32_t tamanio);
+
+
+// FUNCIONES MARCOS/PAGINAS ///
+int cantidad_de_marcos_libres();
+int cantidad_de_marcos_necesarios(int tamanio);
+
+/*
+void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos);
+int cantidad_de_marcos_del_proceso(t_proceso_en_memoria* proceso);
+t_proceso_en_memoria* obtener_proceso_en_memoria(uint32_t pid);
+*/
 
 #endif
 
