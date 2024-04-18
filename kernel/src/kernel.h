@@ -46,6 +46,7 @@ extern pthread_mutex_t mutex_NEW;
 extern pthread_mutex_t mutex_READY;
 extern pthread_mutex_t mutex_BLOCKED;
 extern pthread_mutex_t mutex_FIN_QUANTUM;
+extern pthread_mutex_t mutex_PATOVA;
 extern pthread_mutex_t mutex_PROCESOS_DEL_SISTEMA;
 extern pthread_mutex_t mutex_exec;
 extern pthread_mutex_t mutex_exit;

@@ -74,9 +74,9 @@ t_contexto* enviar_a_cpu(t_pcb* proceso) {
     asignar_PBC_a_contexto(proceso);
     
     enviar_contexto(socket_cpu_dispatch);
-    recibir_contexto(socket_cpu_dispatch); 
-
+    
     pthread_mutex_lock(&mutex_FIN_QUANTUM);
+    recibir_contexto(socket_cpu_dispatch); 
     actualizar_PCB(proceso);
     pthread_mutex_unlock(&mutex_FIN_QUANTUM);
 

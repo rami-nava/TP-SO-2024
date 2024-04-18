@@ -1,6 +1,7 @@
 #include "kernel.h"
 
 pthread_mutex_t mutex_FIN_QUANTUM;
+pthread_mutex_t mutex_PATOVA;
 
 //=====================================================================================================================================
 static void io_gen_sleep(t_pcb *proceso, char **parametros);
@@ -73,7 +74,7 @@ void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion
 
 static void fin_quantum(t_pcb* proceso){
     pthread_mutex_lock(&mutex_FIN_QUANTUM);
-    printf("Fin de quantum del proceso %d\n", proceso->pid);
+    log_info(kernel_logger, "Fin de quantum del proceso %d\n", proceso->pid);
     ingresar_a_READY(proceso);
     pthread_mutex_unlock(&mutex_FIN_QUANTUM);
 }
@@ -296,7 +297,9 @@ static void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz){
     strcat(motivo, "INTERFAZ ");
     strcat(motivo, interfaz->tipo_interfaz);
 
+    pthread_mutex_lock(&mutex_PATOVA);
     ingresar_a_BLOCKED(proceso, motivo);
+    pthread_mutex_unlock(&mutex_PATOVA);
 
     pthread_t hilo_manejo_io;
     pthread_create(&hilo_manejo_io, NULL, (void* ) esperar_io, interfaz);
@@ -308,9 +311,11 @@ static void esperar_io(t_interfaz* interfaz){
     pthread_mutex_lock(&interfaz->comunicacion_interfaz_mutex); //Evita que varios hilos conectados a la misma IO lean el mismo mensaje y ignoren otros
     recv(interfaz->socket_conectado, &pid_io, sizeof(int), 0); 
     pthread_mutex_unlock(&interfaz->comunicacion_interfaz_mutex);
-    
+
     //el proceso pasa de blocked a ready
-    ingresar_de_BLOCKED_a_READY(pid_io); 
+    pthread_mutex_lock(&mutex_PATOVA);
+    ingresar_de_BLOCKED_a_READY(pid_io);
+    pthread_mutex_unlock(&mutex_PATOVA); 
 }
 
 static void exit_c(t_pcb* proceso, char **parametros){   

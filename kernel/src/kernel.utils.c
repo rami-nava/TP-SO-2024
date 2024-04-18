@@ -35,6 +35,7 @@ void inicializar_semaforos(){
     pthread_mutex_init(&mutex_READY,NULL); 
     pthread_mutex_init(&mutex_BLOCKED,NULL); 
     pthread_mutex_init(&mutex_FIN_QUANTUM,NULL); 
+    pthread_mutex_init(&mutex_PATOVA,NULL); 
     pthread_mutex_init(&mutex_PROCESOS_DEL_SISTEMA,NULL);
     pthread_mutex_init(&mutex_corriendo, NULL);
     pthread_cond_init(&cond_corriendo, NULL);

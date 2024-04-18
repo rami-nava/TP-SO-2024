@@ -14,10 +14,8 @@ static t_list* obtener_lista_recurso_buscado(int indice);
 static void eliminar_proceso_colas_bloqueo(t_pcb* proceso);
 //===========================================================================================================
 
-void crear_colas_bloqueo()
-{
+void crear_colas_bloqueo(){
     lista_recursos = list_create();
-
     instancias_del_recurso = NULL;
 
     //por si alguno hace signal de mas
@@ -58,9 +56,7 @@ void crear_colas_bloqueo()
 }
 
 void wait_s(t_pcb *proceso, char **parametros){
-
     char *recurso = parametros[0];
-
     int indice_pedido = indice_recurso(recurso);
 
     //si el recurso no existe, mando el proceso a exit
@@ -97,8 +93,7 @@ void wait_s(t_pcb *proceso, char **parametros){
     }
 }
 
-void signal_s(t_pcb *proceso, char **parametros)
-{
+void signal_s(t_pcb *proceso, char **parametros){
     char *recurso = parametros[0];
     int indice_pedido = indice_recurso(recurso);
 
@@ -143,14 +138,11 @@ void signal_s(t_pcb *proceso, char **parametros)
     //si llega como instruccion algo distinto de EXIT, el proceso sigue su ejecucion 
     if (strncmp (parametros[2], "EXIT", 4)) volver_a_CPU(proceso);
     else{
-        (printf("el proceso que hizo signal ya finalizo\n"));
         eliminar_proceso_colas_bloqueo(proceso);
     }
 }
 
 static void eliminar_proceso_colas_bloqueo(t_pcb* proceso){
-
-    printf("eliminar proceso de la colas de bloqueo\n");
     /*si el proceso hizo un wait pero nunca le di el recurso, aun asi tengo que sacarlo de la cola
     de bloqueados del recurso y sumarle una instancia disponible al recurso. Entonces lo busco en todas las colas*/
     for(int i = 0 ; i < list_size(lista_recursos); i++){
