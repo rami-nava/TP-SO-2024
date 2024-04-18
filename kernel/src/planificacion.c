@@ -51,23 +51,25 @@ void planificador_corto_plazo(t_pcb *(*proximo_a_ejecutar)()){
 
         //Obtener el proceso a ejecutar
         t_pcb *proceso = proximo_a_ejecutar();
-        
-        //Loggear estado 
-        cambio_de_estado(proceso, EXEC);
-        
-        if(!strcmp(config_valores_kernel.algoritmo, "RR"))
-        {
-            pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
-            proceso_en_ejecucion_RR = true;
-            pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
-        }
 
-        //Enviamos el proceso a ejecutar a la CPU
-        contexto_ejecucion = enviar_a_cpu(proceso);
+        if(proceso != NULL){
+            estado_proceso anterior = proceso->estado;
+            proceso->estado = EXEC;
+            loggear_cambio_de_estado(proceso->pid, anterior, proceso->estado);
+            
+            if(!strcmp(config_valores_kernel.algoritmo, "RR"))
+            {
+                pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
+                proceso_en_ejecucion_RR = true;
+                pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
+            }
 
-        //Recibimos el contexto de ejecucion de la CPU
-        recibir_contexto_actualizado(proceso, contexto_ejecucion);
+            //Enviamos el proceso a ejecutar a la CPU
+            contexto_ejecucion = enviar_a_cpu(proceso);
 
+            //Recibimos el contexto de ejecucion de la CPU
+            recibir_contexto_actualizado(proceso, contexto_ejecucion);
+        } else printf("nada para ejecutar");
     }
 }
 
@@ -92,7 +94,10 @@ static t_pcb *siguiente_proceso_a_ready()
 
 void ingresar_a_READY(t_pcb *pcb)
 {
-    cambio_de_estado(pcb, READY);
+    //no lo saco de ninguna lista porque no tenemos lista exec
+    estado_proceso anterior = pcb->estado;
+    pcb->estado = READY;
+    loggear_cambio_de_estado(pcb->pid, anterior, pcb->estado);
 
     pthread_mutex_lock(&mutex_READY);
     encolar(cola_READY, pcb);    
@@ -100,18 +105,21 @@ void ingresar_a_READY(t_pcb *pcb)
 
     sem_post(&hay_procesos_ready);
 
-    //log_ingreso_a_ready();
+    log_ingreso_a_ready();
 }
 
 void ingresar_de_BLOCKED_a_READY(int pid_pcb){
-
+    //lo saco de la lista blocked
     t_pcb* pcb_desbloqueado = buscar_pcb_de_lista_y_eliminar(cola_BLOCKED, pid_pcb, mutex_BLOCKED);
     ingresar_a_READY(pcb_desbloqueado); 
 }
 
 void ingresar_a_BLOCKED(t_pcb *pcb, char* motivo)
 {
-    cambio_de_estado(pcb, BLOCKED);
+    //no lo saco de ninguna lista porque no tenemos lista exec
+    estado_proceso anterior = pcb->estado;
+    pcb->estado = BLOCKED;
+    loggear_cambio_de_estado(pcb->pid, anterior, pcb->estado); 
 
     pthread_mutex_lock(&mutex_BLOCKED);
     encolar(cola_BLOCKED, pcb); 
@@ -121,15 +129,6 @@ void ingresar_a_BLOCKED(t_pcb *pcb, char* motivo)
 }
 
 //=====================================================LOGS MINIMOS Y OBLIGATORIOS==================================================================================//
-void cambio_de_estado (t_pcb *pcb, estado_proceso estado_nuevo) 
-{
-    //Estado anterior
-    //estado_proceso anterior = pcb->estado;
-
-    //Cambiar estado
-    //pcb->estado = estado_nuevo; estados_procesos[anterior]
-
-    //Loggear cambio de estado
-    log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual: %s \n", pcb->pid, estados_procesos[pcb->estado], estados_procesos[estado_nuevo]);
-    pcb->estado = estado_nuevo;
+void loggear_cambio_de_estado(int pid, estado_proceso anterior, estado_proceso actual){
+    log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual: %s", pid, estados_procesos[anterior], estados_procesos[actual]);
 }

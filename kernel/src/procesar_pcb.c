@@ -68,18 +68,17 @@ static int incrementar_pid() {
 //==================================================== PROCESAR_PCB ====================================================================================
 t_contexto* enviar_a_cpu(t_pcb* proceso) {
     if (contexto_ejecucion != NULL) liberar_memoria_contexto();
-
-    (printf("enviando a ejecutar el proceso %d\n", proceso->pid));
 	
     iniciar_contexto();
 
     asignar_PBC_a_contexto(proceso);
     
     enviar_contexto(socket_cpu_dispatch);
-
     recibir_contexto(socket_cpu_dispatch); 
 
+    pthread_mutex_lock(&mutex_FIN_QUANTUM);
     actualizar_PCB(proceso);
+    pthread_mutex_unlock(&mutex_FIN_QUANTUM);
 
     return contexto_ejecucion;
  

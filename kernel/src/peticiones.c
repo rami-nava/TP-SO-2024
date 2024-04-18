@@ -1,5 +1,8 @@
 #include "kernel.h"
 
+pthread_mutex_t mutex_FIN_QUANTUM;
+
+//=====================================================================================================================================
 static void io_gen_sleep(t_pcb *proceso, char **parametros);
 static void io_stdin_read(t_pcb *proceso, char **parametros);
 static void io_stdout_write(t_pcb *proceso, char **parametros);
@@ -22,6 +25,7 @@ static void a_escribir_archivo(t_pcb * proceso, int puntero, int tamanio, int di
 static void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz);
 static void esperar_io(t_interfaz* interfaz);
 
+//======================================================================================================================================
 
 void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion){
     switch (contexto_ejecucion->motivo_desalojo->comando){
@@ -68,7 +72,10 @@ void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion
 }
 
 static void fin_quantum(t_pcb* proceso){
+    pthread_mutex_lock(&mutex_FIN_QUANTUM);
+    printf("Fin de quantum del proceso %d\n", proceso->pid);
     ingresar_a_READY(proceso);
+    pthread_mutex_unlock(&mutex_FIN_QUANTUM);
 }
 
 void volver_a_CPU(t_pcb* proceso) {

@@ -1,6 +1,7 @@
 #include "kernel.h"
 
 int quantum;
+char* pids; 
 
 //==================================================== ENCOLAR Y DESENCOLAR ====================================================================================
 void encolar(t_list *cola, t_pcb *pcb){
@@ -12,12 +13,12 @@ t_pcb *desencolar(t_list *cola){
 }
 
 void detener_planificacion() {
-          pthread_mutex_lock(&mutex_corriendo);
-        while (corriendo == 0) { // Mientras no se detenga
-           
-            pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
-        }
-        pthread_mutex_unlock(&mutex_corriendo);
+    pthread_mutex_lock(&mutex_corriendo);
+    while (corriendo == 0) { // Mientras no se detenga
+        
+        pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
+    }
+    pthread_mutex_unlock(&mutex_corriendo);
 }
 
 void desalojo(int tipo_interrupcion){
@@ -45,7 +46,9 @@ void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb){
 
 void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo) 
 {
-    cambio_de_estado (pcb_asociado, SALIDA);
+    estado_proceso anterior = pcb_asociado->estado;
+    pcb_asociado->estado = SALIDA;
+    loggear_cambio_de_estado(pcb_asociado->pid, anterior, pcb_asociado->estado);
 
     sacar_proceso_de_cola_estado_donde_esta(pcb_asociado);
 
@@ -65,9 +68,29 @@ void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo)
     sem_post(&grado_multiprogramacion);
 }
 
+void agregar_PID(void *valor){
+    t_pcb *pcb = (t_pcb *)valor;
+    char *pid = string_itoa(pcb->pid);
+    
+    string_append_with_format(&pids, " %s ", pid);
+
+    free (pid);
+}
+
+void listar_PIDS(t_list *cola) {
+    list_iterate(cola, agregar_PID);
+}
+
 void log_ingreso_a_ready() 
 {
+    pthread_mutex_lock(&mutex_READY);
     if(list_size(cola_READY) > 0){
-        mostrar_lista_pcb(cola_READY, "READY", mutex_READY);
+        pids = string_new();
+        listar_PIDS(cola_READY);
+
+        log_info(kernel_logger, "Cola Ready %s: [%s] \n", config_valores_kernel.algoritmo, pids);
+
+        free(pids);
     }
+    pthread_mutex_unlock(&mutex_READY);
 }

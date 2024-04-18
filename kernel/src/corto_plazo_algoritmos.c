@@ -27,10 +27,15 @@ void planificador_corto_plazo_segun_algoritmo() {
 }
 
 static t_pcb *proximo_a_ejecutar_FIFO_RR(){
-    pthread_mutex_lock(&mutex_READY);
-    t_pcb *pcb = desencolar(cola_READY);
-    pthread_mutex_unlock(&mutex_READY);
-    return pcb;
+    if(list_size(cola_READY) > 0){
+        pthread_mutex_lock(&mutex_READY);
+        t_pcb *pcb = desencolar(cola_READY);
+        pthread_mutex_unlock(&mutex_READY);
+        return pcb;
+    }else{
+        printf("No hay procesos esperando en la cola ready\n");
+        return NULL;
+    } 
 }
 
  //  Funciones de algoritmo RR //
@@ -43,7 +48,7 @@ static t_pcb *proximo_a_ejecutar_FIFO_RR(){
     pthread_detach(thread_reloj_RR); //Para que kernel siga ejecutando a la par de este hilo
 }
 
- void* comenzar_reloj_RR(){
+void* comenzar_reloj_RR(){
     t_temporal* reloj;
 
     while(1)
@@ -53,7 +58,7 @@ static t_pcb *proximo_a_ejecutar_FIFO_RR(){
         {
         pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
             reloj = temporal_create();
-            log_info(kernel_logger,"Comienza el quantum de: %d", quantum);
+            log_info(kernel_logger,"Comienza el quantum de: %d\n", quantum);
 
             while(reloj != NULL) //se creo correctamente
             {
@@ -70,7 +75,7 @@ static t_pcb *proximo_a_ejecutar_FIFO_RR(){
                 else if (temporal_gettime(reloj) >= quantum)
                 {
                     pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
-                    log_info(kernel_logger, "PID:  - Desalojado por fin de Quantum\n"); //PID FALTANTE! :(
+                    //log_info(kernel_logger, "Desalojando por fin de Quantum\n"); //PID FALTANTE! :(
                     desalojo(1); //Interrumpo la ejecucion por fin de quantum
                     temporal_destroy(reloj);
                     reloj = NULL;

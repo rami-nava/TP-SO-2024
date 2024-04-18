@@ -193,7 +193,7 @@ static void check_interrupt(){
         pthread_mutex_lock(&interrupcion_mutex);
 
         if(tipo_interrupcion == 1){
-            log_info(cpu_logger, "Recibi una interrupcion de Fin de Quantum\n");
+            log_info(cpu_logger, "Recibi una interrupcion de Fin de Quantum del proceso PID: %d\n", contexto_ejecucion->pid);
             modificar_motivo (FIN_QUANTUM, 0, "", "", "", "", "");
         }else if(tipo_interrupcion == 2){
             log_info(cpu_logger, "Recibi una interrupcion de Error de IO\n");
@@ -204,8 +204,6 @@ static void check_interrupt(){
         }else{
             perror("Recibi un codigo de interrupcion desconocido");
         }
-
-        enviar_contexto(socket_cliente_dispatch);
     }
     pthread_mutex_unlock(&interrupcion_mutex);
 }
