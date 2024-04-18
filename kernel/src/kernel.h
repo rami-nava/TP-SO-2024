@@ -175,7 +175,7 @@ void consola_iniciar_proceso(char *path);
 void detener_planificacion();
 t_pcb* buscar_pcb_en_lista (t_list* lista, int pid);
 t_pcb* buscar_pcb_de_lista_y_eliminar(t_list *lista, int pid_buscado, pthread_mutex_t mutex_cola);
-void mostrar_lista_pcb(t_list *cola, char *nombre_cola, pthread_mutex_t mutex_cola);
+void mostrar_lista_pids(t_list *cola, char *nombre_cola, pthread_mutex_t mutex_cola);
 
 ////======================================== IO ===========================================================================================================
 void servidor_kernel_io();
@@ -183,5 +183,8 @@ void atender_io(int socket);
 bool peticiones_de_io(t_pcb *proceso, t_interfaz* interfaz);
 bool admite_operacion_interfaz(t_interfaz* interfaz, codigo_instrucciones operacion);
 t_interfaz* obtener_interfaz_por_nombre(char* nombre_interfaz);
+void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz);
+void esperar_io(t_interfaz* interfaz);
+
 
 #endif

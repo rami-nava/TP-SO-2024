@@ -135,8 +135,13 @@ bool bloques_contiguos()
     return true;
 }
 
-uint32_t buscar_bloque_en_fs(uint32_t bloque_objetivo, uint32_t bloque_inicial)
+uint32_t buscar_bloque_en_fs(uint32_t cantidad_bloques, uint32_t bloque_inicial)
 {
     //TODO
+    for(int i = bloque_inicial; i < cantidad_bloques; i++){
+        if (bitarray_test_bit(bitmap_bitarray, i) == true){
+            return i;
+        }
+    }
     return 0;
 }

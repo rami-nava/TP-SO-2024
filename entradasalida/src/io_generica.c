@@ -11,10 +11,15 @@ static void realizar_sleep();
 
 void main_generica(t_interfaz* interfaz){
 
-    generica_logger = log_create("/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/generica.log", "generica.log", 1, LOG_LEVEL_INFO);
-
     char* nombre_interfaz = interfaz->nombre_interfaz;
     t_config* config_interfaz = interfaz->config_interfaz;
+
+    char path[70] = "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/";
+
+    strcat(path, nombre_interfaz);
+    strcat(path, ".log");
+
+    generica_logger = log_create(path, nombre_interfaz, 1, LOG_LEVEL_INFO);
 
     ip_kernel = config_get_string_value(config_interfaz, "IP_KERNEL");
     puerto_kernel = config_get_string_value(config_interfaz, "PUERTO_KERNEL");

@@ -13,14 +13,19 @@ t_log* stdout_logger;
 // Funciones Locales //
 static void solicitar_informacion_memoria();
 static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio); 
-static char* recibir_lectura(); 
+static void* recibir_lectura(uint32_t tamanio); 
 
 void main_stdout(t_interfaz* interfaz_hilo) 
 {
-    stdout_logger = log_create("/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/stdout.log", "stdout.log", 1, LOG_LEVEL_INFO);
-
     char* nombre = interfaz_hilo->nombre_interfaz;
     t_config* config = interfaz_hilo->config_interfaz;
+
+    char path[70] = "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/";
+
+    strcat(path, nombre);
+    strcat(path, ".log");
+
+    stdout_logger = log_create(path, nombre, 1, LOG_LEVEL_INFO);
     
     ip_kernel = config_get_string_value(config, "IP_KERNEL");
     puerto_kernel = config_get_string_value(config, "PUERTO_KERNEL");
@@ -64,10 +69,14 @@ static void solicitar_informacion_memoria ()
             pedir_lectura(direccion_fisica, tamanio);
 
             //Recibe la lectura de la memoria
-            char* lectura = recibir_lectura();
+            char* lectura = malloc(sizeof(tamanio));
+
+            lectura = recibir_lectura(tamanio);
 
             //Mostramos por pantalla la lectura
             printf("Lectura realizada: %s\n", lectura);
+
+            free(lectura);
             
             //Le avisa a Kernel que ya se realizo la lectura, y ya se mostro por pantalla
             send(socket_kernel, &proceso_conectado, sizeof(int), 0); 
@@ -88,7 +97,7 @@ static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio)
     enviar_paquete(paquete, socket_memoria);
 }
 
-static char* recibir_lectura() 
+static void* recibir_lectura(uint32_t tamanio) 
 {
     while (1)
     {
@@ -96,7 +105,7 @@ static char* recibir_lectura()
         void* stream = paquete->buffer->stream;
 
         if(paquete->codigo_operacion == DEVOLVER_LECTURA){
-            char* texto_leido = sacar_cadena_de_paquete(&stream);
+            void* texto_leido = sacar_bytes_de_paquete(&stream, tamanio);
 
             return texto_leido;
         } else

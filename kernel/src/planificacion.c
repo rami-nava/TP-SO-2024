@@ -14,9 +14,6 @@ t_list *cola_NEW;
 t_list *cola_READY;
 t_list *cola_BLOCKED;
 
-char *estados_procesos[5] = {"NEW", "READY", "EXEC", "BLOCK", "SALIDA"};
-
-
 static t_pcb *siguiente_proceso_a_ready();
 //========================================================================================================================================
 
@@ -128,7 +125,27 @@ void ingresar_a_BLOCKED(t_pcb *pcb, char* motivo)
     loggear_motivo_bloqueo(pcb, motivo);
 }
 
-//=====================================================LOGS MINIMOS Y OBLIGATORIOS==================================================================================//
-void loggear_cambio_de_estado(int pid, estado_proceso anterior, estado_proceso actual){
-    log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual: %s", pid, estados_procesos[anterior], estados_procesos[actual]);
+void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo) 
+{
+    estado_proceso anterior = pcb_asociado->estado;
+    pcb_asociado->estado = SALIDA;
+    loggear_cambio_de_estado(pcb_asociado->pid, anterior, pcb_asociado->estado);
+
+    sacar_proceso_de_cola_estado_donde_esta(pcb_asociado);
+
+    //Avisas pq finalizo el proceso
+    loggear_finalizacion_proceso(pcb_asociado, motivo); 
+    
+    //si es un error de signal, no quiero mandarlo a liberar un recurso que no existe porque entra en un bucle
+    if(strcmp(motivo, "Error de signal, el recurso solicitado no existe") != 0){
+        if(!list_is_empty(pcb_asociado->recursos_asignados)) {
+            liberar_recursos_asignados(pcb_asociado);
+        }
+    }
+
+    //Liberamos memoria
+    liberar_PCB(pcb_asociado);
+
+    sem_post(&grado_multiprogramacion);
 }
+

@@ -89,28 +89,27 @@ static void manejo_conexiones(void* conexion)
 			break;
 		case REALIZAR_ESCRITURA:
 			uint32_t direccion_fisica_escritura = sacar_entero_sin_signo_de_paquete(&stream);
-			char* texto_a_guardar = sacar_cadena_de_paquete(&stream);
-			realizar_escritura(direccion_fisica_escritura, texto_a_guardar);
+			uint32_t tamanio_escritura = sacar_entero_sin_signo_de_paquete(&stream);
+			void* texto_a_guardar = sacar_bytes_de_paquete(&stream, tamanio_escritura);
+			realizar_escritura(direccion_fisica_escritura, texto_a_guardar, tamanio_escritura);
 
 			int escritura_guardada = 1;
 			send(cliente, &escritura_guardada, sizeof(int), 0);
 			break;
+		case LEER_CONTENIDO_EN_MEMORIA:
+			uint32_t cantidad_bytes_a_leer = sacar_entero_de_paquete(&stream);
+			uint32_t direccion_fisica_fs_write = sacar_entero_sin_signo_de_paquete(&stream);
+			realizar_lectura(direccion_fisica_fs_write, cantidad_bytes_a_leer, cliente);
+			break;
+		case ESCRIBIR_CONTENIDO_EN_MEMORIA:
+			uint32_t cantidad_bytes_a_escribir = sacar_entero_de_paquete(&stream);
+			void* contenido = sacar_bytes_de_paquete(&stream, cantidad_bytes_a_escribir);
+			uint32_t direccion_fisica_fs_read = sacar_entero_sin_signo_de_paquete(&stream);
+			realizar_escritura(direccion_fisica_fs_read, contenido, cantidad_bytes_a_escribir);
+			break;
 
 		case PEDIDO_COPY_STRING:
 			break;
-			
-		case PEDIDO_IO_STDIN_READ:
-			break;
-
-		case PEDIDO_IO_STDOUT_WRITE:
-			break;
-
-		case PEDIDO_IO_FS_WRITE:
-			break;
-			
-		case PEDIDO_IO_FS_READ:
-			break;
-		
 		//INSTRUCCIONES DE CPU
 		case PEDIDO_MOV_IN:
 			break;

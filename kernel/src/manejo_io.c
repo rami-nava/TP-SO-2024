@@ -149,3 +149,32 @@ bool admite_operacion_interfaz(t_interfaz* interfaz, codigo_instrucciones operac
     }
     return false;
 }
+
+void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz){
+    char motivo[20] = "";
+
+    strcat(motivo, "INTERFAZ ");
+    strcat(motivo, interfaz->tipo_interfaz);
+
+    pthread_mutex_lock(&mutex_PATOVA);
+    ingresar_a_BLOCKED(proceso, motivo);
+    pthread_mutex_unlock(&mutex_PATOVA);
+
+    pthread_t hilo_manejo_io;
+    pthread_create(&hilo_manejo_io, NULL, (void* ) esperar_io, interfaz);
+    pthread_detach(hilo_manejo_io);
+}
+
+void esperar_io(t_interfaz* interfaz)
+{
+    int pid_io = 0;
+    //Evita que varios hilos conectados a la misma IO lean el mismo mensaje y ignoren otros
+    pthread_mutex_lock(&interfaz->comunicacion_interfaz_mutex); 
+    recv(interfaz->socket_conectado, &pid_io, sizeof(int), 0); 
+    pthread_mutex_unlock(&interfaz->comunicacion_interfaz_mutex);
+
+    //el proceso pasa de blocked a ready
+    pthread_mutex_lock(&mutex_PATOVA);
+    ingresar_de_BLOCKED_a_READY(pid_io);
+    pthread_mutex_unlock(&mutex_PATOVA); 
+}

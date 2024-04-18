@@ -13,18 +13,23 @@ static int socket_memoria;
 t_log* stdin_logger;
 
 void main_stdin(t_interfaz* interfaz_hilo) 
-{
-    stdin_logger = log_create("/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/stdin.log", "stdin.log", 1, LOG_LEVEL_INFO);
-    
+{    
     char* nombre = interfaz_hilo->nombre_interfaz;
     t_config* config = interfaz_hilo->config_interfaz;
-    
+
+    char path[70] = "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/";
+
+    strcat(path, nombre);
+    strcat(path, ".log");
+
+    stdin_logger = log_create(path, nombre, 1, LOG_LEVEL_INFO);
+
     ip_kernel = config_get_string_value(config, "IP_KERNEL");
     puerto_kernel = config_get_string_value(config, "PUERTO_KERNEL");
     ip_memoria = config_get_string_value(config, "IP_MEMORIA");
     puerto_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
     
-    log_info(stdin_logger, "Iniciando interfaz STDIN: %s", nombre);
+    log_info(stdin_logger, "Iniciando interfaz STDIN: %s\n", nombre);
     
     socket_kernel = crear_conexion(ip_kernel, puerto_kernel);
     socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
@@ -77,11 +82,14 @@ static void guardar_escritura(uint32_t direccion_fisica, uint32_t tamanio_regist
         texto_a_guardar[tamanio_registro] = '\0';
         free(leer_linea);
     }
-
+    
+    log_info(stdin_logger, "Guardando texto en memoria: %s\n", texto_a_guardar);
+    
     //IO solicita que memoria guarde el texto en la direccion especificada
     t_paquete* paquete = crear_paquete(REALIZAR_ESCRITURA);
     agregar_entero_sin_signo_a_paquete(paquete,direccion_fisica);
-    agregar_cadena_a_paquete(paquete, texto_a_guardar);
+    agregar_entero_a_paquete(paquete, tamanio_registro);
+    agregar_bytes_a_paquete(paquete, texto_a_guardar, tamanio_registro);
     enviar_paquete(paquete, socket_memoria);
     
     //Memoria confirma que guardo el texto en la direccion especificada

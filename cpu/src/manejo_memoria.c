@@ -185,7 +185,6 @@ static uint32_t recibir_valor_a_insertar()
 
 void mov_out(char *direccion_logica, char *registro)
 {
-
     uint32_t valor = buscar_registro(registro);
 
     uint32_t direccion_fisica = traducir_de_logica_a_fisica(atoi(direccion_logica));

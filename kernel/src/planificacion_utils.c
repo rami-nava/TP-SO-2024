@@ -3,6 +3,8 @@
 int quantum;
 char* pids; 
 
+char *estados_procesos[5] = {"NEW", "READY", "EXEC", "BLOCK", "SALIDA"};
+
 //==================================================== ENCOLAR Y DESENCOLAR ====================================================================================
 void encolar(t_list *cola, t_pcb *pcb){
     list_add(cola, (void *)pcb);
@@ -10,6 +12,17 @@ void encolar(t_list *cola, t_pcb *pcb){
 
 t_pcb *desencolar(t_list *cola){
     return (t_pcb *)list_remove(cola, 0);
+}
+
+t_pcb* buscar_pcb_de_lista_y_eliminar(t_list *lista, int pid_buscado, pthread_mutex_t mutex_lista)
+{
+  pthread_mutex_lock(&mutex_lista);
+  t_pcb* pcb_buscado = buscar_pcb_en_lista(lista, pid_buscado);
+  if(pcb_buscado != NULL){
+    list_remove_element(lista, (void*)pcb_buscado);
+    pthread_mutex_unlock(&mutex_lista);
+    return pcb_buscado;
+  }else return NULL;
 }
 
 void detener_planificacion() {
@@ -44,30 +57,7 @@ void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb){
     if(!(pcb_asociado != NULL && pcb_asociado->pid == pcb->pid)) printf("EL proceso ya fue eliminado del sistema\n");
 }
 
-void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo) 
-{
-    estado_proceso anterior = pcb_asociado->estado;
-    pcb_asociado->estado = SALIDA;
-    loggear_cambio_de_estado(pcb_asociado->pid, anterior, pcb_asociado->estado);
-
-    sacar_proceso_de_cola_estado_donde_esta(pcb_asociado);
-
-    //Avisas pq finalizo el proceso
-    loggear_finalizacion_proceso(pcb_asociado, motivo); 
-    
-    //si es un error de signal, no quiero mandarlo a liberar un recurso que no existe porque entra en un bucle
-    if(strcmp(motivo, "Error de signal, el recurso solicitado no existe") != 0){
-        if(!list_is_empty(pcb_asociado->recursos_asignados)) {
-            liberar_recursos_asignados(pcb_asociado);
-        }
-    }
-
-    //Liberamos memoria
-    liberar_PCB(pcb_asociado);
-
-    sem_post(&grado_multiprogramacion);
-}
-
+//=====================================================LOGS MINIMOS Y OBLIGATORIOS==================================================================================//
 void agregar_PID(void *valor){
     t_pcb *pcb = (t_pcb *)valor;
     char *pid = string_itoa(pcb->pid);
@@ -79,6 +69,49 @@ void agregar_PID(void *valor){
 
 void listar_PIDS(t_list *cola) {
     list_iterate(cola, agregar_PID);
+}
+
+void mostrar_lista_pids(t_list *cola, char *nombre_cola, pthread_mutex_t mutex_cola)
+{
+  char *string_pid = NULL;
+  char *pids_para_mostrar = NULL;
+
+  pthread_mutex_lock(&mutex_cola);
+  int tam_cola = list_size(cola);
+  pthread_mutex_unlock(&mutex_cola);
+
+  if (tam_cola == 0) {
+    log_info(kernel_logger, "esta vacia la cola %s", nombre_cola);
+  }else{ 
+    pids_para_mostrar = string_new();
+    for (int i = 0; i < tam_cola; i++){
+      pthread_mutex_lock(&mutex_cola);
+
+      //Acceso al elemento en el indice i, guardo en pcb local
+      t_pcb *pcb = list_get(cola, i);
+      string_pid = string_itoa(pcb->pid);
+
+      pthread_mutex_unlock(&mutex_cola);
+
+      // Junto los pids
+      string_append(&pids_para_mostrar, string_pid);
+
+      free(string_pid);
+
+      // Separo los PIDs con comas
+      if (i < tam_cola - 1) string_append(&pids_para_mostrar, ", ");
+    }
+      // Mostramos la lista con los pids en la cola 
+    log_info(kernel_logger, "Cola %s: [%s]\n", nombre_cola, pids_para_mostrar);
+  }
+
+  if (pids_para_mostrar != NULL) {
+    free(pids_para_mostrar);  
+  }
+}
+
+void loggear_cambio_de_estado(int pid, estado_proceso anterior, estado_proceso actual){
+    log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual: %s", pid, estados_procesos[anterior], estados_procesos[actual]);
 }
 
 void log_ingreso_a_ready() 
@@ -93,4 +126,12 @@ void log_ingreso_a_ready()
         free(pids);
     }
     pthread_mutex_unlock(&mutex_READY);
+}
+
+void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo) {
+    log_info(kernel_logger,"PID: %d - Bloqueado por: %s\n", proceso->pid, motivo); 
+}
+
+void loggear_finalizacion_proceso(t_pcb* proceso, char* motivo) {
+    log_info(kernel_logger,"Finaliza el proceso %d - Motivo: %s\n", proceso->pid, motivo); 
 }
