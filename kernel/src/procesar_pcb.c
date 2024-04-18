@@ -32,7 +32,7 @@ t_pcb* crear_pcb(char* path)
     nuevo_pcb->EDX = 0;
     nuevo_pcb->SI = 0;
     nuevo_pcb->DI = 0;
-    nuevo_pcb->quantum = config_valores_kernel.quantum;
+    nuevo_pcb->quantum = 0;
 
     ingresar_a_NEW(nuevo_pcb);
     enviar_creacion_estructuras_memoria(nuevo_pcb->pid, path);
@@ -97,6 +97,7 @@ void actualizar_PCB(t_pcb* proceso){
     proceso->EDX = contexto_ejecucion->EDX;
     proceso->SI = contexto_ejecucion->SI;
     proceso->DI = contexto_ejecucion->DI;
+    proceso->quantum = contexto_ejecucion->quantum;
 }
 
 void asignar_PBC_a_contexto(t_pcb* proceso){
@@ -113,6 +114,7 @@ void asignar_PBC_a_contexto(t_pcb* proceso){
     contexto_ejecucion->EDX = proceso->EDX;
     contexto_ejecucion->SI = proceso->SI;
     contexto_ejecucion->DI = proceso->DI;
+    contexto_ejecucion->quantum = proceso->quantum;
 }
 
 void agregar_proceso_a_lista_procesos_del_sistema(t_pcb *proceso){

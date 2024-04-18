@@ -1,8 +1,14 @@
 #include "kernel.h"
 
 pthread_mutex_t proceso_en_ejecucion_RR_mutex;
+sem_t ciclo_actual_quantum_sem;
+sem_t exit_sem;
+
+static int quantum_total;
+int ciclo_actual_quantum = 0;
 
 static t_pcb *proximo_a_ejecutar_FIFO_RR();
+static t_pcb *proximo_a_ejecutar_VRR();
 
 void planificador_corto_plazo_segun_algoritmo() {
     char *algoritmo = config_valores_kernel.algoritmo;
@@ -17,7 +23,7 @@ void planificador_corto_plazo_segun_algoritmo() {
     }
     else if (!strcmp(algoritmo, "VRR"))
     {
-        //planificador_corto_plazo(proximo_a_ejecutar_VRR);
+        planificador_corto_plazo(proximo_a_ejecutar_VRR);
     }
     else
     {
@@ -38,9 +44,16 @@ static t_pcb *proximo_a_ejecutar_FIFO_RR(){
     } 
 }
 
+static t_pcb *proximo_a_ejecutar_VRR(){
+    if(list_size(cola_AUX_VRR) > 0){
+        return desencolar(cola_AUX_VRR);
+    }else{
+        return desencolar(cola_READY);
+    }
+}
+
  //  Funciones de algoritmo RR //
  void inicializar_reloj_RR(){
-    quantum = config_valores_kernel.quantum;
     log_info(kernel_logger, "Se inicializo el hilo para control de quantum");
 
     pthread_t thread_reloj_RR;
@@ -53,29 +66,41 @@ void* comenzar_reloj_RR(){
 
     while(1)
     {
+        quantum_total = config_valores_kernel.quantum;
         pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
         if(proceso_en_ejecucion_RR)
         {
         pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
             reloj = temporal_create();
-            log_info(kernel_logger,"Comienza el quantum de: %d\n", quantum);
-
+            if(proceso_en_ejecucion->quantum != 0){
+                quantum_total -= proceso_en_ejecucion->quantum;
+                log_info(kernel_logger,"Quantum a finalizar: %d", quantum_total);
+            }else{
+                log_info(kernel_logger,"Comienza el quantum de: %d", quantum_total);
+            }
             while(reloj != NULL) //se creo correctamente
             {
                 pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
-                if(!proceso_en_ejecucion_RR) //hace falta un mutex aca?
+                if(!proceso_en_ejecucion_RR) 
                 {
                 pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
                     //Hubo salida por I/O o Exit
+
+                    if(contexto_ejecucion->motivo_desalojo->comando == EXIT){
+                        ciclo_actual_quantum = temporal_gettime(reloj);
+                        sem_post(&ciclo_actual_quantum_sem); //Si no es exit no habria que hacer post
+                        sem_post(&exit_sem); //Para evitar condiciones de carrera y se pueda reiniciar el quantum
+                    }
+
                     log_info(kernel_logger, "Salida por I/O o Exit");
                     temporal_destroy(reloj);
                     reloj = NULL;
                 pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
                 }
-                else if (temporal_gettime(reloj) >= quantum)
+                else if (temporal_gettime(reloj) >= quantum_total)
                 {
                     pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
-                    //log_info(kernel_logger, "Desalojando por fin de Quantum\n"); //PID FALTANTE! :(
+                    log_info(kernel_logger, "PID: %d - Desalojado por fin de Quantum\n",proceso_en_ejecucion->pid);
                     desalojo(1); //Interrumpo la ejecucion por fin de quantum
                     temporal_destroy(reloj);
                     reloj = NULL;

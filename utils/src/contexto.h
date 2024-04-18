@@ -24,6 +24,7 @@ typedef struct {
     uint32_t EDX;
     uint32_t SI;
     uint32_t DI;
+    int quantum;
 } t_contexto;
 
 extern t_contexto* contexto_ejecucion;

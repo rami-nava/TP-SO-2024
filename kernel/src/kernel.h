@@ -26,7 +26,8 @@
 extern t_log *kernel_logger;
 extern t_config *config;
 extern int corriendo;
-extern int quantum;
+extern t_pcb* proceso_en_ejecucion;
+extern int ciclo_actual_quantum;
 extern bool proceso_en_ejecucion_RR;
 extern char* pids;
 
@@ -40,6 +41,8 @@ extern sem_t mutex_pid;
 extern sem_t hay_procesos_nuevos;
 extern sem_t hay_procesos_ready;
 extern sem_t grado_multiprogramacion;
+extern sem_t ciclo_actual_quantum_sem;
+extern sem_t exit_sem;
 
 
 extern pthread_mutex_t mutex_NEW;
@@ -48,6 +51,7 @@ extern pthread_mutex_t mutex_BLOCKED;
 extern pthread_mutex_t mutex_FIN_QUANTUM;
 extern pthread_mutex_t mutex_PATOVA;
 extern pthread_mutex_t mutex_PROCESOS_DEL_SISTEMA;
+extern pthread_mutex_t mutex_AUX_VRR;
 extern pthread_mutex_t mutex_exec;
 extern pthread_mutex_t mutex_exit;
 extern pthread_mutex_t mutex_recursos;
@@ -62,6 +66,7 @@ extern t_list *cola_NEW;
 extern t_list *cola_READY;
 extern t_list *cola_BLOCKED;
 extern t_list *cola_PROCESOS_DEL_SISTEMA;
+extern t_list *cola_AUX_VRR;
 
 extern t_list* interfaces_genericas;
 extern t_list* interfaces_stdin;
@@ -126,9 +131,11 @@ void ingresar_a_READY(t_pcb *pcb);
 void ingresar_a_NEW(t_pcb *pcb);
 void ingresar_a_BLOCKED(t_pcb *pcb, char* motivo);
 void ingresar_de_BLOCKED_a_READY(int pid_pcb);
+void ingresar_a_AUX_VRR(t_pcb *pcb);
 void desalojo(int tipo_interrupcion);
 void* comenzar_reloj_RR();
 void log_ingreso_a_ready();
+void log_ingreso_a_aux_vrr();
 void mandar_a_EXIT(t_pcb* proceso, char* motivo);
 void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb);
 

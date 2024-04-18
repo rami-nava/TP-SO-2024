@@ -151,11 +151,18 @@ bool admite_operacion_interfaz(t_interfaz* interfaz, codigo_instrucciones operac
 }
 
 void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz){
-    char motivo[20] = "";
+    char motivo[35] = "";
 
     strcat(motivo, "INTERFAZ ");
     strcat(motivo, interfaz->tipo_interfaz);
+    strcat(motivo, ": ");
+    strcat(motivo, interfaz->nombre);
 
+    if(!strcmp(config_valores_kernel.algoritmo, "VRR")){
+        sem_wait(&ciclo_actual_quantum_sem);
+        proceso->quantum = ciclo_actual_quantum;
+    }
+    
     pthread_mutex_lock(&mutex_PATOVA);
     ingresar_a_BLOCKED(proceso, motivo);
     pthread_mutex_unlock(&mutex_PATOVA);

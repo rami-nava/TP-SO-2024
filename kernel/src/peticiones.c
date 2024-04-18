@@ -27,12 +27,21 @@ static void a_leer_o_escribir_archivo(op_code codigo, t_pcb * proceso, uint32_t 
 void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion){
     switch (contexto_ejecucion->motivo_desalojo->comando){
         case IO_GEN_SLEEP:
+            pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
+            proceso_en_ejecucion_RR = false;
+            pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
             io_gen_sleep(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
         case IO_STDIN_READ:
+            pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
+            proceso_en_ejecucion_RR = false;
+            pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
             io_stdin_read(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
         case IO_STDOUT_WRITE:
+            pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
+            proceso_en_ejecucion_RR = false;
+            pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
             io_stdout_write(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
         case IO_FS_CREATE:
@@ -57,9 +66,16 @@ void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion
             signal_s(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;        
         case EXIT:
+            pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
+            proceso_en_ejecucion_RR = false;
+            pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
+            sem_wait(&exit_sem);
             exit_c(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
         case FIN_QUANTUM:
+            pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
+            proceso_en_ejecucion_RR = false;
+            pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
             fin_quantum(proceso);
             break;
     default:
@@ -71,6 +87,7 @@ void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion
 static void fin_quantum(t_pcb* proceso){
     pthread_mutex_lock(&mutex_FIN_QUANTUM);
     log_info(kernel_logger, "Fin de quantum del proceso %d\n", proceso->pid);
+    proceso->quantum = 0;
     ingresar_a_READY(proceso);
     pthread_mutex_unlock(&mutex_FIN_QUANTUM);
 }

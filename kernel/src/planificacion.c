@@ -9,10 +9,14 @@ sem_t grado_multiprogramacion;
 pthread_mutex_t mutex_NEW;
 pthread_mutex_t mutex_READY; 
 pthread_mutex_t mutex_BLOCKED; 
+pthread_mutex_t mutex_AUX_VRR;
 
 t_list *cola_NEW;
 t_list *cola_READY;
 t_list *cola_BLOCKED;
+t_list *cola_AUX_VRR;
+
+t_pcb* proceso_en_ejecucion;
 
 static t_pcb *siguiente_proceso_a_ready();
 //========================================================================================================================================
@@ -47,14 +51,14 @@ void planificador_corto_plazo(t_pcb *(*proximo_a_ejecutar)()){
         detener_planificacion();
 
         //Obtener el proceso a ejecutar
-        t_pcb *proceso = proximo_a_ejecutar();
+        proceso_en_ejecucion = proximo_a_ejecutar();
 
-        if(proceso != NULL){
-            estado_proceso anterior = proceso->estado;
-            proceso->estado = EXEC;
-            loggear_cambio_de_estado(proceso->pid, anterior, proceso->estado);
+        if(proceso_en_ejecucion != NULL){
+            estado_proceso anterior = proceso_en_ejecucion->estado;
+            proceso_en_ejecucion->estado = EXEC;
+            loggear_cambio_de_estado(proceso_en_ejecucion->pid, anterior, proceso_en_ejecucion->estado);
             
-            if(!strcmp(config_valores_kernel.algoritmo, "RR"))
+            if(!strcmp(config_valores_kernel.algoritmo, "RR") || !strcmp(config_valores_kernel.algoritmo, "VRR"))
             {
                 pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
                 proceso_en_ejecucion_RR = true;
@@ -62,10 +66,10 @@ void planificador_corto_plazo(t_pcb *(*proximo_a_ejecutar)()){
             }
 
             //Enviamos el proceso a ejecutar a la CPU
-            contexto_ejecucion = enviar_a_cpu(proceso);
+            contexto_ejecucion = enviar_a_cpu(proceso_en_ejecucion);
 
             //Recibimos el contexto de ejecucion de la CPU
-            recibir_contexto_actualizado(proceso, contexto_ejecucion);
+            recibir_contexto_actualizado(proceso_en_ejecucion, contexto_ejecucion);
         } else printf("nada para ejecutar");
     }
 }
@@ -91,6 +95,11 @@ static t_pcb *siguiente_proceso_a_ready()
 
 void ingresar_a_READY(t_pcb *pcb)
 {
+    if(!strcmp(config_valores_kernel.algoritmo, "VRR") && pcb->quantum != 0){
+        ingresar_a_AUX_VRR(pcb);
+        return;
+    }
+
     //no lo saco de ninguna lista porque no tenemos lista exec
     estado_proceso anterior = pcb->estado;
     pcb->estado = READY;
@@ -100,9 +109,25 @@ void ingresar_a_READY(t_pcb *pcb)
     encolar(cola_READY, pcb);    
     pthread_mutex_unlock(&mutex_READY);
 
+    log_ingreso_a_ready();
+
+    sem_post(&hay_procesos_ready);
+}
+
+void ingresar_a_AUX_VRR(t_pcb *pcb)
+{
+    //no lo saco de ninguna lista porque no tenemos lista exec
+    estado_proceso anterior = pcb->estado;
+    pcb->estado = READY;
+    loggear_cambio_de_estado(pcb->pid, anterior, pcb->estado);
+
+    pthread_mutex_lock(&mutex_AUX_VRR);
+    encolar(cola_AUX_VRR, pcb);    
+    pthread_mutex_unlock(&mutex_AUX_VRR);
+
     sem_post(&hay_procesos_ready);
 
-    log_ingreso_a_ready();
+    log_ingreso_a_aux_vrr();
 }
 
 void ingresar_de_BLOCKED_a_READY(int pid_pcb){

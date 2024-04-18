@@ -47,7 +47,7 @@ void enviar_contexto(int socket_cliente)
         agregar_cadena_a_paquete(paquete, contexto_ejecucion->motivo_desalojo->parametros[i]);
     }
     agregar_entero_a_paquete(paquete, contexto_ejecucion->motivo_desalojo->comando);
-
+    agregar_entero_a_paquete(paquete, contexto_ejecucion->quantum);
     enviar_paquete(paquete, socket_cliente);
 }
 
@@ -77,6 +77,7 @@ void recibir_contexto(int socket_cliente)
         contexto_ejecucion->motivo_desalojo->parametros[i] = sacar_cadena_de_paquete(&stream);
     }
     contexto_ejecucion->motivo_desalojo->comando = sacar_entero_de_paquete(&stream);
+    contexto_ejecucion->quantum = sacar_entero_de_paquete(&stream);
     eliminar_paquete(paquete);
 }
 
@@ -103,6 +104,7 @@ void recibir_contexto_cpu(t_paquete* paquete, void* stream)
         contexto_ejecucion->motivo_desalojo->parametros[i] = sacar_cadena_de_paquete(&stream);
     }
     contexto_ejecucion->motivo_desalojo->comando = sacar_entero_de_paquete(&stream);
+    contexto_ejecucion->quantum = sacar_entero_de_paquete(&stream);
     eliminar_paquete(paquete);
 }
 //================================== LIBERAR MEMORIA ================================================================

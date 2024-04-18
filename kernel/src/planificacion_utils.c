@@ -128,6 +128,20 @@ void log_ingreso_a_ready()
     pthread_mutex_unlock(&mutex_READY);
 }
 
+void log_ingreso_a_aux_vrr() 
+{
+    pthread_mutex_lock(&mutex_AUX_VRR);
+    if(list_size(cola_AUX_VRR) > 0){
+        pids = string_new();
+        listar_PIDS(cola_AUX_VRR);
+
+        log_info(kernel_logger, "Cola Auxiliar %s: [%s] \n", config_valores_kernel.algoritmo, pids);
+
+        free(pids);
+    }
+    pthread_mutex_unlock(&mutex_AUX_VRR);
+}
+
 void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo) {
     log_info(kernel_logger,"PID: %d - Bloqueado por: %s\n", proceso->pid, motivo); 
 }
