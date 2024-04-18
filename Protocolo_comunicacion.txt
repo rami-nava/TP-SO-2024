@@ -1,0 +1,9 @@
+Memoria - make start
+CPU - make start
+Kernel - make start
+EntradaSalida - make - cd bin/ - ./entradasalida nombre "path"
+
+Le mandas instrucciones al Kernel con:
+INICIAR_PROCESO "path"
+o
+EJECUTAR_SCRIPT "path"

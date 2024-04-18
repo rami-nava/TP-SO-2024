@@ -64,6 +64,7 @@ static void realizar_escritura()
         else { 
             eliminar_paquete(paquete);
             log_error(stdin_logger, "El paquete no es de tipo STDIN_READ");
+            abort();
         }
 
     }

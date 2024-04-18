@@ -60,7 +60,9 @@ void realizar_sleep()
 
         send(socket_kernel, &proceso_conectado, sizeof(int), 0);
         } else {
+            log_error(generica_logger, "Recibio una operacion desconocida");
             eliminar_paquete(paquete);
+            abort();
         }
     }
 }

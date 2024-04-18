@@ -1,0 +1,6 @@
+DETENER_PLANIFICACION
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/DEADLOCK_A.txt" 
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/DEADLOCK_B.txt" 
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/DEADLOCK_C.txt"
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/DEADLOCK_D.txt" 
+INICIAR_PLANIFICACION

@@ -84,6 +84,7 @@ static void solicitar_informacion_memoria ()
         else { 
             eliminar_paquete(paquete);
             log_error(stdout_logger, "El paquete no es de tipo STDOUT_WRITE");
+            abort();
         }
     }
     
