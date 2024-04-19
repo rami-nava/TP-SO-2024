@@ -69,7 +69,10 @@ void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion
             pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
             proceso_en_ejecucion_RR = false;
             pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
-            sem_wait(&exit_sem);
+            if(!strcmp(config_valores_kernel.algoritmo, "RR") || !strcmp(config_valores_kernel.algoritmo, "VRR"))
+            {
+                sem_wait(&exit_sem);
+            }
             exit_c(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
         case FIN_QUANTUM:

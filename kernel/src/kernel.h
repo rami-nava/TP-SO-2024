@@ -99,6 +99,8 @@ typedef struct
     char* nombre;
     char* tipo_interfaz;
     pthread_mutex_t comunicacion_interfaz_mutex;
+    pthread_mutex_t cola_bloqueado_mutex;
+    t_list* cola_bloqueados;
 } t_interfaz;    
 
 extern t_interfaz interfaz;
@@ -129,13 +131,16 @@ void cambio_de_estado (t_pcb *pcb, estado_proceso estado_nuevo);
 void loggear_cambio_de_estado(int pid, estado_proceso anterior, estado_proceso actual);
 void ingresar_a_READY(t_pcb *pcb);
 void ingresar_a_NEW(t_pcb *pcb);
-void ingresar_a_BLOCKED(t_pcb *pcb, char* motivo);
-void ingresar_de_BLOCKED_a_READY(int pid_pcb);
+void ingresar_a_BLOCKED_IO(t_list* cola, t_pcb *pcb, char* motivo, pthread_mutex_t cola_bloqueado_mutex);
+void ingresar_a_BLOCKED_recursos(t_pcb *pcb, char* motivo);
+void ingresar_de_BLOCKED_a_READY_IO(t_list* cola, pthread_mutex_t mutex_cola_io);
+void ingresar_de_BLOCKED_a_READY_recursos(t_pcb* pcb_desbloqueado);
 void ingresar_a_AUX_VRR(t_pcb *pcb);
 void desalojo(int tipo_interrupcion);
 void* comenzar_reloj_RR();
 void log_ingreso_a_ready();
 void log_ingreso_a_aux_vrr();
+void logear_cola_io_bloqueados(t_interfaz* interfaz);
 void mandar_a_EXIT(t_pcb* proceso, char* motivo);
 void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb);
 

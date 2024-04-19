@@ -40,6 +40,8 @@ static void agregar_interfaz(op_code tipo, void* stream, int socket_cliente_io)
     interfaz_nueva->tipo_interfaz = sacar_cadena_de_paquete(&stream);
     interfaz_nueva->socket_conectado = socket_cliente_io;
     pthread_mutex_init(&interfaz_nueva->comunicacion_interfaz_mutex, NULL);
+    pthread_mutex_init(&interfaz_nueva->cola_bloqueado_mutex, NULL);
+    interfaz_nueva->cola_bloqueados = list_create();
 
     switch(tipo) {
         case INTERFAZ_GENERICA:
@@ -163,25 +165,24 @@ void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz){
         proceso->quantum = ciclo_actual_quantum;
     }
     
-    pthread_mutex_lock(&mutex_PATOVA);
-    ingresar_a_BLOCKED(proceso, motivo);
-    pthread_mutex_unlock(&mutex_PATOVA);
+    ingresar_a_BLOCKED_IO(interfaz->cola_bloqueados ,proceso, motivo, interfaz->cola_bloqueado_mutex);
+    logear_cola_io_bloqueados(interfaz);
 
     pthread_t hilo_manejo_io;
     pthread_create(&hilo_manejo_io, NULL, (void* ) esperar_io, interfaz);
     pthread_detach(hilo_manejo_io);
+
 }
 
 void esperar_io(t_interfaz* interfaz)
 {
-    int pid_io = 0;
-    //Evita que varios hilos conectados a la misma IO lean el mismo mensaje y ignoren otros
-    pthread_mutex_lock(&interfaz->comunicacion_interfaz_mutex); 
-    recv(interfaz->socket_conectado, &pid_io, sizeof(int), 0); 
+    int termine_io = 0;
+    //Evita que varios hilos conectados a la misma IO lean el mismo mensaje y ignoren otros 
+    pthread_mutex_lock(&interfaz->comunicacion_interfaz_mutex);
+    recv(interfaz->socket_conectado, &termine_io, sizeof(int), 0); 
     pthread_mutex_unlock(&interfaz->comunicacion_interfaz_mutex);
 
     //el proceso pasa de blocked a ready
-    pthread_mutex_lock(&mutex_PATOVA);
-    ingresar_de_BLOCKED_a_READY(pid_io);
-    pthread_mutex_unlock(&mutex_PATOVA); 
+    ingresar_de_BLOCKED_a_READY_IO(interfaz->cola_bloqueados, interfaz->cola_bloqueado_mutex);
+    logear_cola_io_bloqueados(interfaz);
 }

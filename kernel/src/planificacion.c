@@ -130,22 +130,41 @@ void ingresar_a_AUX_VRR(t_pcb *pcb)
     log_ingreso_a_aux_vrr();
 }
 
-void ingresar_de_BLOCKED_a_READY(int pid_pcb){
+void ingresar_de_BLOCKED_a_READY_IO(t_list* cola, pthread_mutex_t cola_bloqueado_mutex){
     //lo saco de la lista blocked
-    t_pcb* pcb_desbloqueado = buscar_pcb_de_lista_y_eliminar(cola_BLOCKED, pid_pcb, mutex_BLOCKED);
-    ingresar_a_READY(pcb_desbloqueado); 
+    detener_planificacion();
+    pthread_mutex_lock(&cola_bloqueado_mutex);
+    t_pcb* proceso_desbloqueado = desencolar(cola);
+    pthread_mutex_unlock(&cola_bloqueado_mutex);
+    ingresar_a_READY(proceso_desbloqueado); 
 }
 
-void ingresar_a_BLOCKED(t_pcb *pcb, char* motivo)
+void ingresar_de_BLOCKED_a_READY_recursos(t_pcb* pcb_desbloqueado){
+    detener_planificacion();
+    ingresar_a_READY(pcb_desbloqueado);
+}
+
+void ingresar_a_BLOCKED_recursos(t_pcb *pcb, char* motivo)
 {
     //no lo saco de ninguna lista porque no tenemos lista exec
     estado_proceso anterior = pcb->estado;
     pcb->estado = BLOCKED;
     loggear_cambio_de_estado(pcb->pid, anterior, pcb->estado); 
 
-    pthread_mutex_lock(&mutex_BLOCKED);
-    encolar(cola_BLOCKED, pcb); 
-    pthread_mutex_unlock(&mutex_BLOCKED);
+    loggear_motivo_bloqueo(pcb, motivo);
+}
+
+
+void ingresar_a_BLOCKED_IO(t_list* cola, t_pcb *pcb, char* motivo, pthread_mutex_t cola_bloqueado_mutex)
+{
+    //no lo saco de ninguna lista porque no tenemos lista exec
+    estado_proceso anterior = pcb->estado;
+    pcb->estado = BLOCKED;
+    loggear_cambio_de_estado(pcb->pid, anterior, pcb->estado); 
+
+    pthread_mutex_lock(&cola_bloqueado_mutex);
+    encolar(cola, pcb); 
+    pthread_mutex_unlock(&cola_bloqueado_mutex);
 
     loggear_motivo_bloqueo(pcb, motivo);
 }

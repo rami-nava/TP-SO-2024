@@ -82,7 +82,7 @@ void wait_s(t_pcb *proceso, char **parametros){
         que me pasan por parametro y agarrar la cola del recurso al que nos estamos refiriendo*/
         list_add(obtener_lista_recurso_buscado(indice_pedido), (void *)proceso);
 
-        ingresar_a_BLOCKED(proceso, recurso);
+        ingresar_a_BLOCKED_recursos(proceso, recurso); 
     }else{
 
         //si hay instancias disponibles
@@ -131,7 +131,7 @@ void signal_s(t_pcb *proceso, char **parametros){
         list_add(pcb_desbloqueado->recursos_asignados, (void*)string_duplicate (recurso));
 
         //el proceso pasa de blocked a ready
-        ingresar_de_BLOCKED_a_READY(pcb_desbloqueado->pid);
+        ingresar_de_BLOCKED_a_READY_recursos(pcb_desbloqueado);
         }
     }
 

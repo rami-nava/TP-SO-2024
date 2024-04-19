@@ -149,3 +149,16 @@ void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo) {
 void loggear_finalizacion_proceso(t_pcb* proceso, char* motivo) {
     log_info(kernel_logger,"Finaliza el proceso %d - Motivo: %s\n", proceso->pid, motivo); 
 }
+
+void logear_cola_io_bloqueados(t_interfaz* interfaz){
+  
+  //No hace falt aun mutex para esta lista, ya que se la llama siempre dentro de un mutex
+  if(list_size(interfaz->cola_bloqueados) > 0){
+        pids = string_new();
+        listar_PIDS(interfaz->cola_bloqueados);
+
+        log_info(kernel_logger, "Cola Bloqueados Interfaz %s, %s: [%s] \n", interfaz->tipo_interfaz, interfaz->nombre, pids);
+
+        free(pids);
+    }
+}
