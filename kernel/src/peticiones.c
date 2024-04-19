@@ -75,6 +75,12 @@ void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion
             }
             exit_c(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
+        case EXIT_MAS_FIN_QUANTUM: //No necesita un sem, ya que el reloj se destruye anteriormente
+            pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
+            proceso_en_ejecucion_RR = false;
+            pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
+            exit_c(proceso, contexto_ejecucion->motivo_desalojo->parametros);
+            break;
         case FIN_QUANTUM:
             pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
             proceso_en_ejecucion_RR = false;

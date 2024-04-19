@@ -58,6 +58,7 @@ static void io_fs_read(char* interfaz, char* nombre, char* direccion, char* tama
 static void wait_c(char* recurso);
 static void signal_c(char* recurso);
 static void exit_c();
+static bool hay_que_devolver_contexto();
 
 void ciclo_de_instruccion(){
     fetch();
@@ -193,8 +194,12 @@ static void check_interrupt(){
         pthread_mutex_lock(&interrupcion_mutex);
 
         if(tipo_interrupcion == 1){
-            log_info(cpu_logger, "Recibi una interrupcion de Fin de Quantum del proceso PID: %d\n", contexto_ejecucion->pid);
-            modificar_motivo (FIN_QUANTUM, 0, "", "", "", "", "");
+            if(contexto_ejecucion->motivo_desalojo->comando != EXIT){ //De esta forma si hay un FQ cuando hay un EXIT se ejecuta el EXIT
+                log_info(cpu_logger, "Recibi una interrupcion de Fin de Quantum del proceso PID: %d\n", contexto_ejecucion->pid);
+                modificar_motivo (FIN_QUANTUM, 0, "", "", "", "", "");
+            }else{
+                modificar_motivo(EXIT_MAS_FIN_QUANTUM, 1,"SUCCESS","","","","");
+            }
         }else if(tipo_interrupcion == 2){
             log_info(cpu_logger, "Recibi una interrupcion de Error de IO\n");
             modificar_motivo (EXIT, 1, "Error IO", "", "", "", "");
@@ -206,6 +211,9 @@ static void check_interrupt(){
         }
     }
     pthread_mutex_unlock(&interrupcion_mutex);
+
+    if(hay_que_devolver_contexto())
+        enviar_contexto(socket_cliente_dispatch);
 }
 
 void atender_interrupt(void * socket_servidor_interrupt){
@@ -401,8 +409,6 @@ static void modificar_motivo (codigo_instrucciones comando, int cantidad_paramet
     for (int i = 0; i < cantidad_parametros; i++)
         contexto_ejecucion->motivo_desalojo->parametros[i] = string_duplicate(parametros[i]);
     contexto_ejecucion->motivo_desalojo->cantidad_parametros = cantidad_parametros;
-
-    enviar_contexto(socket_cliente_dispatch);
 }
 
 static void liberar_memoria() {
@@ -410,6 +416,14 @@ static void liberar_memoria() {
     free(elementos_instrucciones);
 }
 
+
+static bool hay_que_devolver_contexto(){
+    int operacion = contexto_ejecucion->motivo_desalojo->comando;
+
+    return operacion == EXIT || operacion == IO_GEN_SLEEP || operacion == IO_STDIN_READ || operacion == IO_STDOUT_WRITE ||
+    operacion == IO_FS_CREATE || operacion == IO_FS_DELETE || operacion == IO_FS_READ || operacion == IO_FS_TRUNCATE ||
+    operacion == IO_FS_WRITE || operacion == WAIT || operacion == SIGNAL || operacion == FIN_QUANTUM || operacion == EXIT_MAS_FIN_QUANTUM;
+}
 
 
 

@@ -89,6 +89,7 @@ typedef enum {
 	IO_FS_READ,
 	FIN_QUANTUM,
 	EXIT,
+	EXIT_MAS_FIN_QUANTUM
 	//DELVOLVER CONTEXTO A LA CPU --> CASO OUTOFMEMORY
 	//OUT_OF_MEMORY
 } codigo_instrucciones;

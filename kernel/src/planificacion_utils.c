@@ -57,6 +57,14 @@ void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb){
     if(!(pcb_asociado != NULL && pcb_asociado->pid == pcb->pid)) printf("EL proceso ya fue eliminado del sistema\n");
 }
 
+bool ocurrio_IO(t_contexto* contexto_ejecucion){
+  codigo_instrucciones operacion = contexto_ejecucion->motivo_desalojo->comando;
+  
+  return operacion == IO_GEN_SLEEP || operacion == IO_STDIN_READ || operacion == IO_STDOUT_WRITE ||
+  operacion == IO_FS_CREATE || operacion == IO_FS_DELETE || operacion == IO_FS_TRUNCATE || 
+  operacion == IO_FS_WRITE || operacion == IO_FS_READ;
+}
+
 //=====================================================LOGS MINIMOS Y OBLIGATORIOS==================================================================================//
 void agregar_PID(void *valor){
     t_pcb *pcb = (t_pcb *)valor;

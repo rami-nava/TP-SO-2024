@@ -86,15 +86,18 @@ void* comenzar_reloj_RR(){
                 pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
                     //Hubo salida por I/O o Exit
 
-                    if(contexto_ejecucion->motivo_desalojo->comando == EXIT){
+                     if(!strcmp(config_valores_kernel.algoritmo, "VRR") && ocurrio_IO(contexto_ejecucion)){
                         ciclo_actual_quantum = temporal_gettime(reloj);
                         sem_post(&ciclo_actual_quantum_sem); //Si no es exit no habria que hacer post
-                        sem_post(&exit_sem); //Para evitar condiciones de carrera y se pueda reiniciar el quantum
                     }
 
                     log_info(kernel_logger, "Salida por I/O o Exit");
                     temporal_destroy(reloj);
                     reloj = NULL;
+
+                    if(contexto_ejecucion->motivo_desalojo->comando == EXIT){
+                        sem_post(&exit_sem); //Para evitar condiciones de carrera y se pueda reiniciar el quantum
+                    }
                 pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
                 }
                 else if (temporal_gettime(reloj) >= quantum_total)

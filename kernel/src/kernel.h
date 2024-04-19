@@ -143,6 +143,7 @@ void log_ingreso_a_aux_vrr();
 void logear_cola_io_bloqueados(t_interfaz* interfaz);
 void mandar_a_EXIT(t_pcb* proceso, char* motivo);
 void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb);
+bool ocurrio_IO(t_contexto* contexto_ejecucion);
 
 ////======================================== MEMORIA ===========================================================================================================
 void enviar_pcb_a_memoria(t_pcb *, int, op_code);
