@@ -74,7 +74,9 @@ extern t_list* interfaces_stdout;
 extern t_list* interfaces_dialfs;
 
 extern pthread_mutex_t mutex_INTERFAZ_GENERICA;
-
+extern pthread_mutex_t mutex_INTERFAZ_STDIN;
+extern pthread_mutex_t mutex_INTERFAZ_STDOUT;
+extern pthread_mutex_t mutex_INTERFAZ_DIALFS;
 //==============================================================================================================================
 
 typedef struct
