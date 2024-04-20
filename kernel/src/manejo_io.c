@@ -1,6 +1,9 @@
 #include "kernel.h"
 
 pthread_mutex_t mutex_INTERFAZ_GENERICA;
+pthread_mutex_t mutex_INTERFAZ_STDIN;
+pthread_mutex_t mutex_INTERFAZ_STDOUT;
+pthread_mutex_t mutex_INTERFAZ_DIALFS;
 
 static void agregar_interfaz(op_code tipo, void* stream, int socket_cliente_io); 
 
@@ -51,21 +54,28 @@ static void agregar_interfaz(op_code tipo, void* stream, int socket_cliente_io)
             log_info(kernel_logger, "Se agrego interfaz GENERICA: %s \n", interfaz_nueva->nombre);
             break;
         case INTERFAZ_STDIN:
+            pthread_mutex_lock(&mutex_INTERFAZ_STDIN);
             list_add(interfaces_stdin, interfaz_nueva);
+            pthread_mutex_unlock(&mutex_INTERFAZ_STDIN);
             log_info(kernel_logger, "Se agrego interfaz STDIN: %s \n", interfaz_nueva->nombre);
             break;
         case INTERFAZ_STDOUT:
+            pthread_mutex_lock(&mutex_INTERFAZ_STDOUT);
             list_add(interfaces_stdout, interfaz_nueva);
+            pthread_mutex_unlock(&mutex_INTERFAZ_STDOUT);
             log_info(kernel_logger, "Se agrego interfaz STDOUT: %s \n", interfaz_nueva->nombre);
             break;
         case INTERFAZ_DIALFS:
+            pthread_mutex_lock(&mutex_INTERFAZ_DIALFS);
             list_add(interfaces_dialfs, interfaz_nueva);
+            pthread_mutex_unlock(&mutex_INTERFAZ_DIALFS);
             log_info(kernel_logger, "Se agrego interfaz DIALFS: %s \n", interfaz_nueva->nombre);
             break;
         default:
             break;
     }
 }
+
 
 bool peticiones_de_io(t_pcb *proceso, t_interfaz* interfaz) 
 {
@@ -109,24 +119,45 @@ t_interfaz* obtener_interfaz_por_nombre(char* nombre_interfaz) {
         }
     
     // INTERFACES STDIN
-    for (int i = 0; i < list_size(interfaces_stdin); i++) {
+    pthread_mutex_lock(&mutex_INTERFAZ_STDIN);
+    int tamanio_lista_stdin = list_size(interfaces_stdin);
+    pthread_mutex_unlock(&mutex_INTERFAZ_STDIN);
+
+    for (int i = 0; i < tamanio_lista_stdin; i++) {
+    pthread_mutex_lock(&mutex_INTERFAZ_STDIN);
     t_interfaz* interfaz_nueva = list_get(interfaces_stdin, i);
+    pthread_mutex_unlock(&mutex_INTERFAZ_STDIN);
+
     if (strcmp(nombre_interfaz, interfaz_nueva->nombre) == 0) {
         return interfaz_nueva;
             }
         }
 
     // INTERFACES STDOUT
-    for (int i = 0; i < list_size(interfaces_stdout); i++) {
+    pthread_mutex_lock(&mutex_INTERFAZ_STDOUT);
+    int tamanio_lista_stdout = list_size(interfaces_stdout);
+    pthread_mutex_unlock(&mutex_INTERFAZ_STDOUT);
+
+    for (int i = 0; i < tamanio_lista_stdout; i++) {
+    pthread_mutex_lock(&mutex_INTERFAZ_STDOUT);
     t_interfaz* interfaz_nueva = list_get(interfaces_stdout, i);
+    pthread_mutex_unlock(&mutex_INTERFAZ_STDOUT);
+
     if (strcmp(nombre_interfaz, interfaz_nueva->nombre) == 0) {
         return interfaz_nueva;
             }
         }
 
-    // INTERFACES DIALFS;
-    for (int i = 0; i < list_size(interfaces_dialfs); i++) {
+    // INTERFACES DIALFS
+    pthread_mutex_lock(&mutex_INTERFAZ_DIALFS);
+    int tamanio_lista_dialfs = list_size(interfaces_dialfs);
+    pthread_mutex_unlock(&mutex_INTERFAZ_DIALFS);
+
+    for (int i = 0; i < tamanio_lista_dialfs; i++) {
+    pthread_mutex_lock(&mutex_INTERFAZ_DIALFS);
     t_interfaz* interfaz_nueva = list_get(interfaces_dialfs, i);
+    pthread_mutex_unlock(&mutex_INTERFAZ_DIALFS);
+
     if (strcmp(nombre_interfaz, interfaz_nueva->nombre) == 0) {
         return interfaz_nueva;
             }
