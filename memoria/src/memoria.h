@@ -98,6 +98,7 @@ void creacion_espacio_usuario();
 void crear_estructuras_memoria(int pid, FILE* archivo);
 void crear_marcos_memoria();
 t_proceso_en_memoria* obtener_proceso_en_memoria(uint32_t pid);
+uint32_t tamanio_actual_proceso_en_memoria(uint32_t pid);
 void quitar_marcos_a_proceso(uint32_t pid, uint32_t cantidad_marcos_a_sacar);
 void liberar_marco(int marco_a_liberar);
 void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos_necesarios);
@@ -120,5 +121,3 @@ int cantidad_de_marcos_del_proceso(t_proceso_en_memoria* proceso);
 */
 
 #endif
-
-
