@@ -121,9 +121,14 @@ static void manejo_conexiones(void* conexion)
 			uint32_t process_id = sacar_entero_de_paquete(&stream);
 			uint32_t tamanio = sacar_entero_de_paquete(&stream);
 			
-			int out_of_memory = resize(process_id, tamanio);
+			int hay_out_of_memory = out_of_memory(process_id, tamanio); //NOMBRE: out_of_memory
 
-			//if(out_of_memory) {send(cliente, blablabla)}; //DEVOLVER A CPU EL OUT_OF_MEMORY (ENTERO :) )
+			if(hay_out_of_memory) {
+				send(cliente, &hay_out_of_memory, sizeof(int), 0);
+			} //DEVOLVER A CPU EL OUT_OF_MEMORY (ENTERO :) )
+			else{
+				resize(process_id, tamanio);	
+			}
 			break;
 
 		default:
@@ -133,19 +138,35 @@ static void manejo_conexiones(void* conexion)
 	}
 }
 
-int resize(uint32_t pid, uint32_t tamanio){ //SOLO FUNCIONA PARA EXTENDER EL TAMAÑO POR AHORA
+int out_of_memory(uint32_t pid, uint32_t tamanio){ //SOLO FUNCIONA PARA EXTENDER EL TAMAÑO POR AHORA
 	int cantidad_marcos_necesarios = cantidad_de_marcos_necesarios(tamanio);
 	int cantidad_marcos_libres = cantidad_de_marcos_libres();
 
-	//TODO RESIZE PARA COMPRIMIR TAMAÑO
-
-	if(cantidad_marcos_libres >= cantidad_marcos_necesarios){
-		asignar_marcos_a_proceso(pid, cantidad_de_marcos_necesarios); //cant_m_nec equivale a la cant_pags
+	if(cantidad_marcos_libres >= cantidad_marcos_necesarios)
 		return 0;
-	}
-	else{
+	else
 		return 1; //OUT OF MEMORY
+}
+
+void resize(uint32_t pid, uint32_t tamanio){
+	uint32_t tamanio_actual = tamanio_actual_proceso_en_memoria(pid);
+	uint32_t tamanio_reducido;
+	int cantidad_paginas_a_sacar;
+	int cantidad_marcos_necesarios = cantidad_de_marcos_necesarios(tamanio);
+
+	//TODO RESIZE PARA COMPRIMIR TAMAÑO
+	if(tamanio<tamanio_actual){
+		tamanio_reducido = tamanio_actual-tamanio;
+		cantidad_paginas_a_sacar = tamanio_reducido/config_valores_memoria.tam_pagina;
+
+		quitar_marcos_a_proceso(pid, cantidad_paginas_a_sacar);
+	}else{
+		asignar_marcos_a_proceso(pid, cantidad_de_marcos_necesarios); //cant_m_nec equivale a la cant_pags
 	}
 }
 
-
+uint32_t tamanio_actual_proceso_en_memoria(uint32_t pid){
+	t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
+	uint32_t tamanio_actual = list_size(proceso->paginas_en_memoria) * config_valores_memoria.tam_pagina;
+	return tamanio_actual;
+}

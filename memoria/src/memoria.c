@@ -13,11 +13,11 @@ int main(void) {
 
     cargar_configuracion("/home/utnso/tp-2024-1c-SegmenFault/memoria/cfg/memoria.config");
 
-    creacion_espacio_usuario();
-
     procesos_en_memoria = list_create();
 
 	cantidad_marcos = config_valores_memoria.tam_memoria / config_valores_memoria.tam_pagina;
+
+    creacion_espacio_usuario();
 
     server_memoria = iniciar_servidor(config_valores_memoria.ip_memoria,config_valores_memoria.puerto_escucha);
 

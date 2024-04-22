@@ -55,7 +55,6 @@ void crear_marcos_memoria() {
 
 
 int cantidad_de_marcos_libres(){
-	
 	t_marco* marco_obtenido = malloc(sizeof(t_marco));
 	int contador=0;
 	
@@ -73,7 +72,82 @@ int cantidad_de_marcos_necesarios(int tamanio){
 	return (int) ceil(tamanio/config_valores_memoria.tam_pagina); //PROBAR CASTEO
 }
 
-void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos) {
+void quitar_marcos_a_proceso(uint32_t pid, uint32_t cantidad_marcos_a_liberar){
+	t_proceso_en_memoria *proceso = obtener_proceso_en_memoria(pid);
+	t_pagina *pagina_removida = malloc(sizeof(t_pagina));
+
+	for(int i = 0; i<cantidad_marcos_a_liberar; i++){
+		pagina_removida = list_remove(proceso->paginas_en_memoria, list_size(proceso->paginas_en_memoria));
+		liberar_marco(pagina_removida->marco);
+	}
+
+	free(pagina_removida);
+}
+
+void liberar_marco(int marco_a_liberar){
+	t_marco *marco = malloc(sizeof(t_marco));
+
+	marco = list_get(marcos, marco_a_liberar); //LIST_GET SACA AL MARCO DE LA LISTA DE MARCOS?
+	marco->nro_pag = -1;
+	marco->libre = 1;
+	marco->pid_proceso = -1;
+    marco->cantidad_bytes_libres = config_valores_memoria.tam_pagina;
+}
+
+void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos_necesarios) {
+	//PRIMERO DEBERIA BUSCAR MARCOS LIBRES
+	//SEGUNDO AL MARCO LIBRE ASIGNARLE EL PID DEL PROCESO Y MARCARLO COMO OCUPADO 
+	//AL PROCESO AGREGARLE UNA PAGINA Y A ESA PAGINA ASIGNARLE EL MARCO Y EL PID
+	//SEGUIR RECORRIENDO LA LISTA DE MARCOS LIBRES MIENTRAS CONTADOR SEA MENOR A CANT_MARCOS_NECESARIOS
+	t_marco* marco_obtenido = malloc(sizeof(t_marco));
+	int contador=0;
+
+	for(int i = 0; i<list_size(marcos); i++){
+		if(contador<cantidad_de_marcos_necesarios){
+			marco_obtenido = list_get(marcos,i);
+			if(marco_obtenido->libre == 1){ //SI EL MARCO QUE SE OBTIENE ESTA LIBRE
+				asignar_proceso_a_marco(pid, marco_obtenido);
+				contador++;
+			}
+		}
+	}
+
+	free(marco_obtenido);
+}
+
+void asignar_proceso_a_marco(uint32_t pid, t_marco* marco){
+	t_proceso_en_memoria *proceso = obtener_proceso_en_memoria(pid);
+	agregar_pagina_a_proceso(proceso, marco);
+	
+	marco->pid_proceso = pid;
+	marco->nro_pag = list_size(proceso->paginas_en_memoria);
+	marco->libre = 0;
+
+	//FALTA LA CANTIDAD DE BYTES LIBRES
+}
+
+t_proceso_en_memoria* obtener_proceso_en_memoria(uint32_t pid) { //Busca en los procesos cuyas instrucciones ya fueron cargadas
+
+    for (int i = 0; i < list_size(procesos_en_memoria); i++) {
+        t_proceso_en_memoria* proceso = (t_proceso_en_memoria*) list_get(procesos_en_memoria, i);
+        if (proceso->pid == pid) {
+            return proceso; 
+        }
+    }
+
+    return -1; 
+}
+
+void agregar_pagina_a_proceso(t_proceso_en_memoria* proceso, t_marco* marco){
+	t_pagina *pagina_nueva = malloc(sizeof(t_pagina));
+
+	pagina_nueva->pid = proceso->pid;
+	pagina_nueva->marco = marco->nro_marco;
+	pagina_nueva->numero_de_pagina = list_size(proceso->paginas_en_memoria) + 1;
+	pagina_nueva->cargada_en_memoria = 1;
+
+	list_add(proceso->paginas_en_memoria, pagina_nueva);
+	free(pagina_nueva);
 }
 
 /*
@@ -128,20 +202,4 @@ int cantidad_de_marcos_del_proceso(t_proceso_en_memoria* proceso) { //Equivale a
 
     return cantidad_marcos; 
 }
-
-
-
-t_proceso_en_memoria* obtener_proceso_en_memoria(uint32_t pid) { //Busca en los procesos cuyas instrucciones ya fueron cargadas
-
-    for (int i = 0; i < list_size(procesos_en_memoria); i++) {
-        t_proceso_en_memoria* proceso = (t_proceso_en_memoria*) list_get(procesos_en_memoria, i);
-        if (proceso->pid == pid) {
-            return proceso; 
-        }
-    }
-
-    return -1; 
-
-}
-
 */

@@ -97,10 +97,15 @@ void creacion_espacio_usuario();
 /// @brief  PROCESOS EN MEMORIA - MARCOS ///
 void crear_estructuras_memoria(int pid, FILE* archivo);
 void crear_marcos_memoria();
+t_proceso_en_memoria* obtener_proceso_en_memoria(uint32_t pid);
+void quitar_marcos_a_proceso(uint32_t pid, uint32_t cantidad_marcos_a_sacar);
+void liberar_marco(int marco_a_liberar);
+void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos_necesarios);
 
 
 //INTRUCCIONES CPU ///
-int resize(uint32_t pid, uint32_t tamanio);
+int out_of_memory(process_id, tamanio);
+void resize(uint32_t pid, uint32_t tamanio);
 
 
 // FUNCIONES MARCOS/PAGINAS ///
@@ -112,7 +117,6 @@ void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos);
 /*
 
 int cantidad_de_marcos_del_proceso(t_proceso_en_memoria* proceso);
-t_proceso_en_memoria* obtener_proceso_en_memoria(uint32_t pid);
 */
 
 #endif
