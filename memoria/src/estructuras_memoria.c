@@ -127,15 +127,12 @@ void asignar_proceso_a_marco(uint32_t pid, t_marco* marco){
 }
 
 t_proceso_en_memoria* obtener_proceso_en_memoria(uint32_t pid) { //Busca en los procesos cuyas instrucciones ya fueron cargadas
-
     for (int i = 0; i < list_size(procesos_en_memoria); i++) {
         t_proceso_en_memoria* proceso = (t_proceso_en_memoria*) list_get(procesos_en_memoria, i);
         if (proceso->pid == pid) {
             return proceso; 
         }
     }
-
-    return -1; 
 }
 
 void agregar_pagina_a_proceso(t_proceso_en_memoria* proceso, t_marco* marco){

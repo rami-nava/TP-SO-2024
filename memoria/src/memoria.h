@@ -92,6 +92,9 @@ void realizar_escritura(uint32_t direccion_fisica, char* texto_a_guardar, uint32
 
 /// @brief ESPACIO USUARIO ///
 void creacion_espacio_usuario();
+void escribir_memoria(uint32_t dir_fisica, uint32_t valor);
+t_marco *marco_desde_df(uint32_t dir_fisica);
+uint32_t leer_memoria(uint32_t dir_fisica);
 
 
 /// @brief  PROCESOS EN MEMORIA - MARCOS ///
@@ -102,10 +105,12 @@ uint32_t tamanio_actual_proceso_en_memoria(uint32_t pid);
 void quitar_marcos_a_proceso(uint32_t pid, uint32_t cantidad_marcos_a_sacar);
 void liberar_marco(int marco_a_liberar);
 void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos_necesarios);
+void asignar_proceso_a_marco(uint32_t pid, t_marco* marco);
+void agregar_pagina_a_proceso(t_proceso_en_memoria* proceso, t_marco* marco);
 
 
 //INTRUCCIONES CPU ///
-int out_of_memory(process_id, tamanio);
+int out_of_memory(uint32_t process_id, uint32_t tamanio);
 void resize(uint32_t pid, uint32_t tamanio);
 
 
