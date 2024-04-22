@@ -61,17 +61,12 @@ typedef struct {
 	int cantidad_bytes_libres;
 } t_marco;
 
-
 typedef struct 
 {
 	int pid;
 	t_list* paginas_en_memoria;
 	t_list* instrucciones;                              
 } t_proceso_en_memoria;
-
-
-
-
 
 //======================================================= FUNCIONES =========================================================================================================
 /// UTILS ///
@@ -88,7 +83,7 @@ void leer_instrucciones_desde_archivo(t_proceso_en_memoria* proceso, FILE* archi
 
 /// @brief PETICIONES DE IO ///
 void realizar_lectura(uint32_t direccion_fisica, uint32_t tamanio_lectura, int cliente);
-void realizar_escritura(uint32_t direccion_fisica, char* texto_a_guardar, uint32_t tamanio_a_guardar);
+void realizar_escritura(uint32_t direccion_fisica, void* texto_a_guardar, uint32_t tamanio_a_guardar, int cliente);
 
 /// @brief ESPACIO USUARIO ///
 void creacion_espacio_usuario();

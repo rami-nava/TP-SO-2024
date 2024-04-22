@@ -4,11 +4,7 @@ void* espacio_usuario;
 t_list* procesos_en_memoria;
 t_list* marcos;
 
-
-
 //============================================ ESPACIO DE USUARIO ===========================================================
-
-
 void creacion_espacio_usuario(){
 	espacio_usuario = malloc(config_valores_memoria.tam_memoria);
 
@@ -39,7 +35,7 @@ void crear_estructuras_memoria(int pid, FILE* archivo){
 
 void crear_marcos_memoria() {
 	for(int i = 0; i < cantidad_marcos; i++) {
-		t_marco* marco = malloc(sizeof(* marco)); //No deberia ser sizeof t_marco
+		t_marco* marco = malloc(sizeof(* marco)); //No deberia ser sizeof t_marco??????????????????????
 
 		marco->nro_pag = -1;
 		marco->nro_marco = i;
@@ -52,7 +48,6 @@ void crear_marcos_memoria() {
 
 
 //============================================ FUNCIONES DE LOGICA DE MARCOS/PAGINAS =============================================
-
 
 int cantidad_de_marcos_libres(){
 	t_marco* marco_obtenido = malloc(sizeof(t_marco));
@@ -145,6 +140,19 @@ void agregar_pagina_a_proceso(t_proceso_en_memoria* proceso, t_marco* marco){
 
 	list_add(proceso->paginas_en_memoria, pagina_nueva);
 	free(pagina_nueva);
+}
+
+uint32_t buscar_marco(uint32_t numero_pagina, int pid)
+{
+    //Obtengo el proceso por el pid
+    t_proceso_en_memoria *proceso = buscar_proceso(procesos_en_memoria, pid);
+
+    //TODO
+    uint32_t marco = 0;
+
+    log_info(memoria_logger, "PID: %d - OBTENER MARCO - Página: %d - Marco: %d \n", pid, numero_pagina, marco);
+    
+    return marco;
 }
 
 /*
