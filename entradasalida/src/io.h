@@ -57,9 +57,9 @@ void cargamos_cambios_a_metadata_reducir(int tamanio_nuevo, char* nombre_archivo
 metadata_archivo* levantar_metadata(char* nombre_archivo, char* path_dial_fs);
 
 //.................................. ARCHIVOS .......................................................................
-FILE* levantar_archivo_bloque();
+FILE* levantar_archivo_bloque(char* path_archivo_bloques);
 void crear_archivo_de_bloque(char* path_archivo_bloques, int tamanio_archivo_bloques);
-void cargar_bitmap(int cantidad_bloques);
+void cargar_bitmap(int cantidad_bloques, char* path_bitmap);
 void liberar_un_bloque_del_fs();
 void agregar_bloque(uint32_t bloque_a_agregar);
 void eliminar_bloque(uint32_t bloque_a_eliminar);

@@ -8,12 +8,10 @@ sem_t grado_multiprogramacion;
 
 pthread_mutex_t mutex_NEW;
 pthread_mutex_t mutex_READY; 
-pthread_mutex_t mutex_BLOCKED; 
 pthread_mutex_t mutex_AUX_VRR;
 
 t_list *cola_NEW;
 t_list *cola_READY;
-t_list *cola_BLOCKED;
 t_list *cola_AUX_VRR;
 
 t_pcb* proceso_en_ejecucion;
@@ -109,6 +107,11 @@ void ingresar_a_READY(t_pcb *pcb)
     encolar(cola_READY, pcb);    
     pthread_mutex_unlock(&mutex_READY);
 
+    if(!strcmp(config_valores_kernel.algoritmo, "VRR"))
+    {
+        log_ingreso_a_aux_vrr();
+    }
+
     log_ingreso_a_ready();
 
     sem_post(&hay_procesos_ready);
@@ -128,6 +131,8 @@ void ingresar_a_AUX_VRR(t_pcb *pcb)
     sem_post(&hay_procesos_ready);
 
     log_ingreso_a_aux_vrr();
+
+    log_ingreso_a_ready();
 }
 
 void ingresar_de_BLOCKED_a_READY_IO(t_list* cola, pthread_mutex_t cola_bloqueado_mutex){
@@ -157,7 +162,7 @@ void ingresar_a_BLOCKED_recursos(t_pcb *pcb, char* motivo)
 
 void ingresar_a_BLOCKED_IO(t_list* cola, t_pcb *pcb, char* motivo, pthread_mutex_t cola_bloqueado_mutex)
 {
-    //no lo saco de ninguna lista porque no tenemos lista exec
+    //Pasa de EXEC a BLOCKED
     estado_proceso anterior = pcb->estado;
     pcb->estado = BLOCKED;
     loggear_cambio_de_estado(pcb->pid, anterior, pcb->estado); 

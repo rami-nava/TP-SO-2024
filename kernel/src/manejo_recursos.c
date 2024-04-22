@@ -179,7 +179,7 @@ static void eliminar_recurso_de_proceso(t_list* recursos, char* recurso){
     
     for(int i = 0; i < cant_recursos; i++){
         if(!strcmp((char*)list_get(recursos,i), recurso)){
-            list_remove(recursos,i);
+            list_remove_and_destroy_element(recursos,i, free);
             return;
         }
     }

@@ -50,7 +50,7 @@ static void enviar_creacion_estructuras_memoria(int pid, char* path_proceso){
     enviar_paquete(paquete, socket_memoria);
 
     int respuesta = 0;
-    recv(socket_memoria, &respuesta,sizeof(int),0);
+    recv(socket_memoria, &respuesta,sizeof(int), MSG_WAITALL);
 
     if (respuesta != 1){
         log_error(kernel_logger, "No se pudieron crear estructuras en memoria");

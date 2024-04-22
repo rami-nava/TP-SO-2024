@@ -200,9 +200,6 @@ static void check_interrupt(){
             }else{
                 modificar_motivo(EXIT_MAS_FIN_QUANTUM, 1,"SUCCESS","","","","");
             }
-        }else if(tipo_interrupcion == 2){
-            log_info(cpu_logger, "Recibi una interrupcion de Error de IO\n");
-            modificar_motivo (EXIT, 1, "Error IO", "", "", "", "");
         }else if(tipo_interrupcion == 3){
             log_info(cpu_logger,"Recibi una interrupcion de finalizacion del proceso PID: %d\n", contexto_ejecucion->pid);
             modificar_motivo (EXIT, 1, "Pedido de finalizacion", "", "", "", "");
@@ -282,14 +279,22 @@ static void io_gen_sleep(char* interfaz, char* unidades_trabajo)
     modificar_motivo(IO_GEN_SLEEP, 2, interfaz, unidades_trabajo, "", "", "");
 }
 
-static void io_stdin_read(char* interfaz, char* direccion_fisica, char* tamanio_registro)
+static void io_stdin_read(char* interfaz, char* registro_direccion, char* registro)
 {
-    modificar_motivo(IO_STDIN_READ, 3, interfaz, direccion_fisica, tamanio_registro, "", "");
+    int tamanio_registro = buscar_registro(registro);
+    int direccion_logica = buscar_registro(registro_direccion);
+    uint32_t direccion_fisica = traducir_de_logica_a_fisica(direccion_logica);
+
+    modificar_motivo(IO_STDIN_READ, 3, interfaz, (char*)direccion_fisica, (char*)tamanio_registro, "", "");
 }
 
-static void io_stdout_write(char* interfaz, char* direccion_fisica, char* tamanio_registro)
+static void io_stdout_write(char* interfaz, char* registro_direccion, char* registro)
 {
-    modificar_motivo(IO_STDOUT_WRITE, 3, interfaz, direccion_fisica, tamanio_registro, "", "");
+    int tamanio_registro = buscar_registro(registro);
+    int direccion_logica = buscar_registro(registro_direccion);
+    uint32_t direccion_fisica = traducir_de_logica_a_fisica(direccion_logica);
+
+    modificar_motivo(IO_STDOUT_WRITE, 3, interfaz, (char*)direccion_fisica, (char*)tamanio_registro, "", "");
 }
 
 static void io_fs_create(char* interfaz, char* nombre_archivo)

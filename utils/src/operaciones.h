@@ -35,11 +35,6 @@ typedef enum{
 	GENERICA_IO_SLEEP,
 	STDIN_READ,
 	STDOUT_WRITE,
-	FS_CREATE,
-	FS_DELETE,
-	FS_TRUNCATE,
-	FS_WRITE,
-	FS_READ,
 	REALIZAR_LECTURA,
 	DEVOLVER_LECTURA,
 	REALIZAR_ESCRITURA,
@@ -136,12 +131,8 @@ t_paquete* crear_paquete(op_code );
 void crear_buffer(t_paquete *paquete);
 void enviar_paquete(t_paquete* , int );
 void* serializar_paquete(t_paquete* , int );
-
-//======================================================= SEND/RECV ======================================================================================================
-int enviar_datos(int , void *, uint32_t );
-int recibir_datos(int , void *, uint32_t );
-void *recibir_stream(int *size, int socket_cliente);
 t_paquete* recibir_paquete(int );
+
 //======================================================= AGREGAR_A_PAQUETE =========================================================================================================
 void agregar_entero_a_paquete(t_paquete* ,int );
 void agregar_entero_sin_signo_a_paquete(t_paquete* , uint32_t);

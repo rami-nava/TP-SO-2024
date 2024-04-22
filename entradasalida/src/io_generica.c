@@ -36,7 +36,6 @@ void main_generica(t_interfaz* interfaz){
 
 void realizar_sleep() 
 {
-
     int proceso_conectado;
     int cantidad_tiempo;
     
@@ -56,9 +55,11 @@ void realizar_sleep()
 
         usleep(tiempo_unidad_de_trabajo * cantidad_tiempo * 1000);
 
-        printf("El proceso finalizo IO\n");
+        int termino_io = 1;
+        send(socket_kernel, &termino_io, sizeof(int), 0);
 
-        send(socket_kernel, &proceso_conectado, sizeof(int), 0);
+        log_info(generica_logger, "El proceso: %d finalizo IO\n", proceso_conectado);
+
         } else {
             log_error(generica_logger, "Recibio una operacion desconocida");
             eliminar_paquete(paquete);

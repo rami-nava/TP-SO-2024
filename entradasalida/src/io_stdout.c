@@ -13,7 +13,7 @@ t_log* stdout_logger;
 // Funciones Locales //
 static void solicitar_informacion_memoria();
 static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio); 
-static void* recibir_lectura(uint32_t tamanio); 
+static char* recibir_lectura(uint32_t tamanio); 
 
 void main_stdout(t_interfaz* interfaz_hilo) 
 {
@@ -69,9 +69,7 @@ static void solicitar_informacion_memoria ()
             pedir_lectura(direccion_fisica, tamanio);
 
             //Recibe la lectura de la memoria
-            char* lectura = malloc(sizeof(tamanio));
-
-            lectura = recibir_lectura(tamanio);
+            char* lectura = recibir_lectura(tamanio);
 
             //Mostramos por pantalla la lectura
             printf("Lectura realizada: %s\n", lectura);
@@ -98,7 +96,7 @@ static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio)
     enviar_paquete(paquete, socket_memoria);
 }
 
-static void* recibir_lectura(uint32_t tamanio) 
+static char* recibir_lectura(uint32_t tamanio) 
 {
     while (1)
     {
@@ -106,7 +104,7 @@ static void* recibir_lectura(uint32_t tamanio)
         void* stream = paquete->buffer->stream;
 
         if(paquete->codigo_operacion == DEVOLVER_LECTURA){
-            void* texto_leido = sacar_bytes_de_paquete(&stream, tamanio);
+            char* texto_leido = sacar_cadena_de_paquete(&stream);
 
             return texto_leido;
         } else

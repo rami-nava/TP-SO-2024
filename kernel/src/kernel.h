@@ -47,15 +47,9 @@ extern sem_t exit_sem;
 
 extern pthread_mutex_t mutex_NEW;
 extern pthread_mutex_t mutex_READY;
-extern pthread_mutex_t mutex_BLOCKED;
 extern pthread_mutex_t mutex_FIN_QUANTUM;
-extern pthread_mutex_t mutex_PATOVA;
 extern pthread_mutex_t mutex_PROCESOS_DEL_SISTEMA;
 extern pthread_mutex_t mutex_AUX_VRR;
-extern pthread_mutex_t mutex_exec;
-extern pthread_mutex_t mutex_exit;
-extern pthread_mutex_t mutex_recursos;
-extern pthread_mutex_t mutex_colas;
 extern pthread_mutex_t mutex_corriendo;
 extern pthread_cond_t cond_corriendo;
 extern pthread_t reloj_RR;
@@ -64,7 +58,6 @@ extern pthread_mutex_t proceso_en_ejecucion_RR_mutex;
 
 extern t_list *cola_NEW;
 extern t_list *cola_READY;
-extern t_list *cola_BLOCKED;
 extern t_list *cola_PROCESOS_DEL_SISTEMA;
 extern t_list *cola_AUX_VRR;
 
@@ -112,7 +105,6 @@ extern arch_config_kernel config_valores_kernel;
 //============================================= Inicializacion =====================================================================
 void cargar_configuracion(char *);
 void manejar_conexion(int);
-void iniciar_proceso(char *, int, int);
 void inicializar_diccionarios();
 void inicializar_colas();
 void inicializar_reloj_RR();
@@ -194,11 +186,11 @@ void mostrar_lista_pids(t_list *cola, char *nombre_cola, pthread_mutex_t mutex_c
 
 ////======================================== IO ===========================================================================================================
 void servidor_kernel_io();
-void atender_io(int socket);
+void atender_io(int* socket);
 bool peticiones_de_io(t_pcb *proceso, t_interfaz* interfaz);
 bool admite_operacion_interfaz(t_interfaz* interfaz, codigo_instrucciones operacion);
 t_interfaz* obtener_interfaz_por_nombre(char* nombre_interfaz);
-void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz);
+void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion);
 void esperar_io(t_interfaz* interfaz);
 
 

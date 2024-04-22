@@ -2,7 +2,7 @@
 
 metadata_archivo* levantar_metadata (char* nombre, char* path_dial_fs) {
 
-    char* path = string_from_format ("%s/%s.txt", path_dial_fs, nombre);
+    char* path = string_from_format ("%s/%s", path_dial_fs, nombre);
 
     t_config* archivo = config_create (path);
 
@@ -20,7 +20,7 @@ void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inic
 {
 	char* puntero_auxiliar = NULL;
 
-	char* path = string_from_format ("%s/%s.txt", path_dial_fs, nombre_archivo);
+	char* path = string_from_format ("%s/%s", path_dial_fs, nombre_archivo);
     t_config * archivo = config_create (path);
 
     puntero_auxiliar = string_from_format("%d", bloque_inicial);
@@ -41,7 +41,7 @@ void cargamos_cambios_a_metadata_reducir(int tamanio_nuevo, char* nombre_archivo
 
 	char* puntero_auxiliar = NULL;
 
-    char* path = string_from_format ("%s/%s.txt", path_dial_fs, nombre_archivo);
+    char* path = string_from_format ("%s/%s", path_dial_fs, nombre_archivo);
     t_config * archivo = config_create (path);
 	
 	puntero_auxiliar = string_from_format("%d", tamanio_nuevo);

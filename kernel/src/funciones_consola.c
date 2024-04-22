@@ -63,7 +63,7 @@ void consola_iniciar_planificacion() {
 void consola_proceso_estado() {
   mostrar_lista_pids(cola_NEW, "NEW", mutex_NEW);
   mostrar_lista_pids(cola_READY, "READY", mutex_READY);
-  mostrar_lista_pids(cola_BLOCKED, "BLOCKED", mutex_BLOCKED);
+  //Ver como mostrar los bloqueados TODO
 }
 
 void consola_finalizar_proceso(int pid) {
@@ -72,12 +72,12 @@ void consola_finalizar_proceso(int pid) {
 
   t_pcb* pcb_asociado = NULL;  
 
-  //saco el proceso de los procesos del sistema
+  //Saco el proceso de los procesos del sistema
   pcb_asociado = buscar_pcb_de_lista_y_eliminar(cola_PROCESOS_DEL_SISTEMA,pid, mutex_PROCESOS_DEL_SISTEMA);
 
-  //veo si existe en el sistema
+  //Veo si existe en el sistema
   if(pcb_asociado != NULL){
-    //si existe y esta ejecutando, lo desalojo
+    //Si existe y esta ejecutando, lo desalojo
     if (pcb_asociado->estado == EXEC){
         t_paquete *paquete_fin = crear_paquete(DESALOJO);
         int interrupcion_exit = 3;

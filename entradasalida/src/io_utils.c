@@ -1,6 +1,5 @@
 #include "io.h"
 
-//static void existe_interfaz(char* nombre);
 static t_interfaz* crear_interfaz(char* nombre, t_config* config);
 
 void iniciar_interfaz(char* nombre, char* path_config) {
@@ -29,25 +28,6 @@ void iniciar_interfaz(char* nombre, char* path_config) {
         abort();
     }
 }
-
-/*static void existe_interfaz(char* nombre) {
-    
-    int tamanio_lista = list_size(interfaces);
-    t_interfaz* interfaz_lista;
-
-    //Revisamos si ya existe una interfaz con ese nombre
-    for(int i = 0; i < tamanio_lista; i++) {
-        interfaz_lista = list_get(interfaces, i);
-        if(strcmp(interfaz_lista->nombre_interfaz, nombre) == 0) {
-            printf("Ya existe una interfaz con ese nombre\n ");
-            abort();
-        }
-    }
-    
-    //Si no existe, la creamos y agregamos a la lista
-
-    list_add(interfaces, interfaz);
-}*/
 
 static t_interfaz* crear_interfaz(char* nombre, t_config* config){
     t_interfaz* interfaz_creada = malloc(sizeof(t_interfaz));

@@ -1,14 +1,22 @@
 #include "io.h"
 
 void* bitmap;
+void* archivo_de_bloques_mapeado;
 t_bitarray* bitmap_bitarray;
 FILE* archivo_de_bloques;
+
 //================================ ARCHIVOS DE BLOQUES ======================================================
-void crear_archivo_de_bloque(char* path_archivo_bloques, int tamanio_archivo_bloques)
+void crear_archivo_de_bloque(char* path_dial_fs, int tamanio_archivo_bloques)
 {
 	uint32_t fd;
+    char* path_archivo_bloques = string_from_format ("%s/bloques.dat", path_dial_fs);
+
+    printf("CREANDO ARCHIVO DE BLOQUES %s\n", path_archivo_bloques);
 
     fd = open(path_archivo_bloques, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+    
+    free(path_archivo_bloques);
+
     if (fd == -1) {
         log_error(dialfs_logger,"Error al abrir el Archivo de Bloques");
     }
@@ -17,27 +25,34 @@ void crear_archivo_de_bloque(char* path_archivo_bloques, int tamanio_archivo_blo
         log_error(dialfs_logger,"Error al truncar el Archivo de Bloques");
     }
 
+    archivo_de_bloques_mapeado = mmap(&archivo_de_bloques_mapeado, tamanio_archivo_bloques, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+
     close (fd);
 }
 
-FILE* levantar_archivo_bloque() {
+FILE* levantar_archivo_bloque(char* path_dial_fs) {
 	
-    char* path_archivo_bloques = NULL; // TODO
+    char* path_archivo_bloques = string_from_format ("%s/bloques.dat", path_dial_fs);
+
     archivo_de_bloques = fopen(path_archivo_bloques, "rb+");
 
     if (path_archivo_bloques == NULL) {
         log_error(dialfs_logger, "No se pudo abrir el archivo.");
     }
+    free(path_archivo_bloques);
+
 	return archivo_de_bloques;
 }
 
 //================================ BITMAP ======================================================
-void cargar_bitmap(int cantidad_bloques)
+void cargar_bitmap(int cantidad_bloques, char* path_dial_fs)
 {
+    char* path_bitmap = string_from_format ("%s/bitmap.dat", path_dial_fs);
     int bytes =  cantidad_bloques / 8;  // Dividis cantidad de bloques por 8 para obtener los bytes
     bool existe_bitmap = true;   // Para chequear si el bitmap existe de una ejecución previa del sistema
 
-    int fd_bitmap = open("bitmap.dat", O_CREAT | O_RDWR, S_IRWXU); // SI NO EXISTE EL ARCHIVO LO CREA
+    int fd_bitmap = open(path_bitmap, O_CREAT | O_RDWR, S_IRWXU); // SI NO EXISTE EL ARCHIVO LO CREA
+    free(path_bitmap);
 
     if (fd_bitmap == -1){
         log_info(dialfs_logger, "No se pudo abrir el archivo Bitmap");
@@ -78,9 +93,8 @@ void cargar_bitmap(int cantidad_bloques)
         perror("munmap");
     }
 
-    close(fd_bitmap);
     */
-    printf("\nSE CERRO\n"); // esto lo hice para ver si llegaba a cerrar el archivo y hacer el munmap
+    close(fd_bitmap);
 }
 
 uint32_t buscar_bloque_libre()
@@ -145,3 +159,4 @@ uint32_t buscar_bloque_en_fs(uint32_t cantidad_bloques, uint32_t bloque_inicial)
     }
     return 0;
 }
+

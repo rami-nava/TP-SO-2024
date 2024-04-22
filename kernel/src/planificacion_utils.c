@@ -51,7 +51,7 @@ void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb){
 
     //si no esta en la cola ready lo busco en la blocked
     if (pcb_asociado == NULL) {
-        pcb_asociado = buscar_pcb_de_lista_y_eliminar(cola_BLOCKED, pcb->pid, mutex_BLOCKED);
+        //TODO revisar si hace falta
     }
 
     if(!(pcb_asociado != NULL && pcb_asociado->pid == pcb->pid)) printf("EL proceso ya fue eliminado del sistema\n");
@@ -160,7 +160,7 @@ void loggear_finalizacion_proceso(t_pcb* proceso, char* motivo) {
 
 void logear_cola_io_bloqueados(t_interfaz* interfaz){
   
-  //No hace falt aun mutex para esta lista, ya que se la llama siempre dentro de un mutex
+  pthread_mutex_lock(&interfaz->cola_bloqueado_mutex);
   if(list_size(interfaz->cola_bloqueados) > 0){
         pids = string_new();
         listar_PIDS(interfaz->cola_bloqueados);
@@ -169,4 +169,6 @@ void logear_cola_io_bloqueados(t_interfaz* interfaz){
 
         free(pids);
     }
+  pthread_mutex_unlock(&interfaz->cola_bloqueado_mutex);
+
 }

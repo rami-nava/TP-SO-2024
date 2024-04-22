@@ -33,9 +33,7 @@ void cargar_configuracion(char* path) {
 void inicializar_semaforos(){   
     pthread_mutex_init(&mutex_NEW, NULL);
     pthread_mutex_init(&mutex_READY,NULL); 
-    pthread_mutex_init(&mutex_BLOCKED,NULL); 
     pthread_mutex_init(&mutex_FIN_QUANTUM,NULL); 
-    pthread_mutex_init(&mutex_PATOVA,NULL); 
     pthread_mutex_init(&mutex_PROCESOS_DEL_SISTEMA,NULL);
     pthread_mutex_init(&mutex_AUX_VRR,NULL); 
     pthread_mutex_init(&mutex_corriendo, NULL);
@@ -58,7 +56,6 @@ void inicializar_semaforos(){
 void iniciar_colas(){
     cola_NEW = list_create();
     cola_READY = list_create();
-    cola_BLOCKED = list_create();
     cola_PROCESOS_DEL_SISTEMA = list_create();
     cola_AUX_VRR = list_create();
 }

@@ -1,7 +1,6 @@
 #include "kernel.h"
 
 pthread_mutex_t mutex_FIN_QUANTUM;
-pthread_mutex_t mutex_PATOVA;
 
 //=====================================================================================================================================
 static void io_gen_sleep(t_pcb *proceso, char **parametros);
@@ -217,63 +216,52 @@ static void io_fs_write(t_pcb *proceso, char **parametros){
 
 static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz) 
 {  
-    int socket_io = interfaz->socket_conectado;
-
     t_paquete* paquete = crear_paquete(GENERICA_IO_SLEEP);
     agregar_entero_a_paquete(paquete, proceso->pid);
     agregar_entero_a_paquete(paquete, tiempo_sleep);
-    enviar_paquete(paquete, socket_io);
 
-    crear_hilo_io(proceso, interfaz);
+    crear_hilo_io(proceso, interfaz, paquete);
 }
 
-static void a_leer_o_escribir_interfaz(op_code codigo, t_pcb * proceso, uint32_t direccion, uint32_t tamanio, t_interfaz* interfaz) {
-    int socket_io = interfaz->socket_conectado;
-
+static void a_leer_o_escribir_interfaz(op_code codigo, t_pcb * proceso, uint32_t direccion, uint32_t tamanio, t_interfaz* interfaz) 
+{
     t_paquete* paquete = crear_paquete(codigo);
     agregar_entero_a_paquete(paquete, proceso->pid);
     agregar_entero_sin_signo_a_paquete(paquete, direccion);
     agregar_entero_sin_signo_a_paquete(paquete, tamanio);
-    enviar_paquete(paquete, socket_io);
 
-    crear_hilo_io(proceso, interfaz);
+    crear_hilo_io(proceso, interfaz, paquete);
 }
 
-static void a_crear_o_eliminar_archivo(op_code codigo, t_pcb * proceso, char* nombre_archivo, t_interfaz* interfaz){
-    int socket_io = interfaz->socket_conectado;
-
+static void a_crear_o_eliminar_archivo(op_code codigo, t_pcb * proceso, char* nombre_archivo, t_interfaz* interfaz)
+{
     t_paquete* paquete = crear_paquete(codigo);
     agregar_cadena_a_paquete(paquete, nombre_archivo);
     agregar_entero_a_paquete(paquete, proceso->pid);
-    enviar_paquete(paquete, socket_io);
 
-    crear_hilo_io(proceso, interfaz);
+    crear_hilo_io(proceso, interfaz, paquete);
 }
 
-static void a_truncar_archivo(t_pcb * proceso, uint32_t tamanio, char* nombre_archivo, t_interfaz* interfaz){
-    int socket_io = interfaz->socket_conectado;
-
+static void a_truncar_archivo(t_pcb * proceso, uint32_t tamanio, char* nombre_archivo, t_interfaz* interfaz)
+{
     t_paquete* paquete = crear_paquete(TRUNCAR_ARCHIVO);
     agregar_cadena_a_paquete(paquete, nombre_archivo);
     agregar_entero_sin_signo_a_paquete(paquete, tamanio);
     agregar_entero_a_paquete(paquete, proceso->pid);
-    enviar_paquete(paquete, socket_io);
 
-    crear_hilo_io(proceso, interfaz);
+    crear_hilo_io(proceso, interfaz, paquete);
 }
 
-static void a_leer_o_escribir_archivo(op_code codigo, t_pcb * proceso, uint32_t puntero, uint32_t tamanio, uint32_t direccion, char* nombre_archivo, t_interfaz* interfaz){
-    int socket_io = interfaz->socket_conectado;
-
+static void a_leer_o_escribir_archivo(op_code codigo, t_pcb * proceso, uint32_t puntero, uint32_t tamanio, uint32_t direccion, char* nombre_archivo, t_interfaz* interfaz)
+{
     t_paquete* paquete = crear_paquete(codigo);
     agregar_cadena_a_paquete(paquete, nombre_archivo);
     agregar_entero_sin_signo_a_paquete(paquete, puntero);
     agregar_entero_sin_signo_a_paquete(paquete, tamanio);
     agregar_entero_a_paquete(paquete, proceso->pid);
     agregar_entero_sin_signo_a_paquete(paquete, direccion);
-    enviar_paquete(paquete, socket_io);
 
-    crear_hilo_io(proceso, interfaz);
+    crear_hilo_io(proceso, interfaz, paquete);
 }
 
 static void exit_c(t_pcb* proceso, char **parametros){   

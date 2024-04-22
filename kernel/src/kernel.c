@@ -40,9 +40,7 @@ int main(void)
     pthread_create(&consola, NULL, (void* ) inicializar_consola_interactiva, NULL);
     pthread_create(&hilo_servidor_kernel_io, NULL, (void* ) servidor_kernel_io, NULL);
    
-    using_history(); // Inicializar la historia de comando
-  
-
+    //using_history(); // Inicializar la historia de comando
 
     pthread_detach(largo_plazo);
     pthread_detach(corto_plazo);

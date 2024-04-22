@@ -8,3 +8,6 @@ IO_GEN_SLEEP impresora1 1
 SIGNAL REC2
 SIGNAL REC1
 EXIT
+
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/DEADLOCK_A.txt"
+INICIAR_PROCESO "/home/utnso/Desktop/pruebas.txt"

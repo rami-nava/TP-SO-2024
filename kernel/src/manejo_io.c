@@ -5,17 +5,15 @@ pthread_mutex_t mutex_INTERFAZ_STDIN;
 pthread_mutex_t mutex_INTERFAZ_STDOUT;
 pthread_mutex_t mutex_INTERFAZ_DIALFS;
 
-static void agregar_interfaz(op_code tipo, void* stream, int socket_cliente_io); 
-
 void servidor_kernel_io(){
     
-    int socket_cliente_io;
      servidor_kernel = iniciar_servidor(config_valores_kernel.ip_escucha, config_valores_kernel.puerto_escucha);
+
      while(1){
+          int* socket_cliente_io = malloc(sizeof(int));
+          *socket_cliente_io = esperar_cliente(servidor_kernel);
           
-          socket_cliente_io = esperar_cliente(servidor_kernel);
-          
-          if(socket_cliente_io != -1)
+          if(*socket_cliente_io != -1)
           {
                pthread_t hilo_io;
                pthread_create(&hilo_io, NULL, (void* ) atender_io, socket_cliente_io);
@@ -25,28 +23,22 @@ void servidor_kernel_io(){
 }
 
 
-void atender_io(int socket) 
+void atender_io(int* socket_io) 
 {
+    int socket_cliente_io = *(int*)socket_io;
     while(1) {
-        t_paquete* paquete = recibir_paquete(socket);
+        t_paquete* paquete = recibir_paquete(socket_cliente_io);
         void* stream = paquete->buffer->stream;
 
-        agregar_interfaz(paquete->codigo_operacion, stream, socket); 
-        eliminar_paquete(paquete);
-    }
-}
+        t_interfaz* interfaz_nueva = malloc(sizeof(t_interfaz));
+        interfaz_nueva->nombre = sacar_cadena_de_paquete(&stream);
+        interfaz_nueva->tipo_interfaz = sacar_cadena_de_paquete(&stream);
+        interfaz_nueva->socket_conectado = socket_cliente_io;
+        pthread_mutex_init(&interfaz_nueva->comunicacion_interfaz_mutex, NULL);
+        pthread_mutex_init(&interfaz_nueva->cola_bloqueado_mutex, NULL);
+        interfaz_nueva->cola_bloqueados = list_create();
 
-static void agregar_interfaz(op_code tipo, void* stream, int socket_cliente_io) 
-{
-    t_interfaz* interfaz_nueva = malloc(sizeof(t_interfaz));
-    interfaz_nueva->nombre = sacar_cadena_de_paquete(&stream);
-    interfaz_nueva->tipo_interfaz = sacar_cadena_de_paquete(&stream);
-    interfaz_nueva->socket_conectado = socket_cliente_io;
-    pthread_mutex_init(&interfaz_nueva->comunicacion_interfaz_mutex, NULL);
-    pthread_mutex_init(&interfaz_nueva->cola_bloqueado_mutex, NULL);
-    interfaz_nueva->cola_bloqueados = list_create();
-
-    switch(tipo) {
+    switch(paquete->codigo_operacion) {
         case INTERFAZ_GENERICA:
             pthread_mutex_lock(&mutex_INTERFAZ_GENERICA);
             list_add(interfaces_genericas, interfaz_nueva);
@@ -73,18 +65,17 @@ static void agregar_interfaz(op_code tipo, void* stream, int socket_cliente_io)
             break;
         default:
             break;
+        }
+        eliminar_paquete(paquete);
     }
 }
-
 
 bool peticiones_de_io(t_pcb *proceso, t_interfaz* interfaz) 
 {
     //Si existe la interfaz y esta conectada
     if (interfaz == NULL) {
         log_error(kernel_logger, "Interfaz inexistente");
-        desalojo(2); //Desalojo de CPU por error en IO
-        volver_a_CPU(proceso);
-        //mandar_a_EXIT(proceso, "ERROR");
+        mandar_a_EXIT(proceso, "ERROR con IO");
         return false;
     }
 
@@ -92,9 +83,7 @@ bool peticiones_de_io(t_pcb *proceso, t_interfaz* interfaz)
     if(!admite_operacion_interfaz(interfaz, contexto_ejecucion->motivo_desalojo->comando))
     {
         log_error(kernel_logger, "Interfaz incorrecta");
-        desalojo(2); //Desalojo de CPU por error en IO
-        volver_a_CPU(proceso);
-        //mandar_a_EXIT(proceso, "ERROR");
+        mandar_a_EXIT(proceso, "ERROR con IO");
         return false;
     }
 
@@ -183,7 +172,7 @@ bool admite_operacion_interfaz(t_interfaz* interfaz, codigo_instrucciones operac
     return false;
 }
 
-void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz){
+void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion) {
     char motivo[35] = "";
 
     strcat(motivo, "INTERFAZ ");
@@ -197,7 +186,9 @@ void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz){
     }
     
     ingresar_a_BLOCKED_IO(interfaz->cola_bloqueados ,proceso, motivo, interfaz->cola_bloqueado_mutex);
-    logear_cola_io_bloqueados(interfaz);
+    logear_cola_io_bloqueados(interfaz); //NO es obligatorio
+
+    enviar_paquete(peticion, interfaz->socket_conectado);
 
     pthread_t hilo_manejo_io;
     pthread_create(&hilo_manejo_io, NULL, (void* ) esperar_io, interfaz);
@@ -207,13 +198,14 @@ void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz){
 
 void esperar_io(t_interfaz* interfaz)
 {
-    int termine_io = 0;
-    //Evita que varios hilos conectados a la misma IO lean el mismo mensaje y ignoren otros 
-    pthread_mutex_lock(&interfaz->comunicacion_interfaz_mutex);
-    recv(interfaz->socket_conectado, &termine_io, sizeof(int), 0); 
-    pthread_mutex_unlock(&interfaz->comunicacion_interfaz_mutex);
+int termino_io = 0;
 
-    //el proceso pasa de blocked a ready
-    ingresar_de_BLOCKED_a_READY_IO(interfaz->cola_bloqueados, interfaz->cola_bloqueado_mutex);
-    logear_cola_io_bloqueados(interfaz);
+while (termino_io == 0)
+{
+pthread_mutex_lock(&interfaz->comunicacion_interfaz_mutex);
+recv(interfaz->socket_conectado, &termino_io, sizeof(int), MSG_WAITALL);
+pthread_mutex_unlock(&interfaz->comunicacion_interfaz_mutex);
+}
+ 
+ ingresar_de_BLOCKED_a_READY_IO(interfaz->cola_bloqueados, interfaz->cola_bloqueado_mutex);
 }

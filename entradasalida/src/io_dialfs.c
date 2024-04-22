@@ -6,11 +6,13 @@ static char *ip_memoria;
 static char *puerto_memoria;
 static int socket_kernel;
 static int socket_memoria;
-static char *path_dial_fs;
+static char* path_dial_fs;
 static int tamanio_bloque;
 static int cantidad_bloques;
 static int tamanio_archivo_bloques;
 static int tiempo_unidad_trabajo;
+static int retraso_compactacion;
+
 t_log *dialfs_logger;
 
 static void recibir_peticiones_de_kernel();
@@ -45,10 +47,11 @@ void main_dialfs(t_interfaz *interfaz_hilo)
     puerto_kernel = config_get_string_value(config, "PUERTO_KERNEL");
     ip_memoria = config_get_string_value(config, "IP_MEMORIA");
     puerto_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
-    path_dial_fs = config_get_string_value(config, "PATH_DIALFS");
+    path_dial_fs = config_get_string_value(config, "PATH_BASE_DIALFS");
     tiempo_unidad_trabajo = config_get_int_value(config, "TIEMPO_UNIDAD_TRABAJO");
     tamanio_bloque = config_get_int_value(config, "BLOCK_SIZE");
     cantidad_bloques = config_get_int_value(config, "BLOCK_COUNT");
+    retraso_compactacion = config_get_int_value(config, "RETRASO_COMPACTACION");
 
     log_info(dialfs_logger, "Iniciando interfaz DIALFS: %s", nombre);
 
@@ -59,7 +62,11 @@ void main_dialfs(t_interfaz *interfaz_hilo)
 
     conectarse_a_kernel(socket_kernel, INTERFAZ_DIALFS, nombre, "DIALFS");
 
+    printf("Obtengo como path de DIALFS: %s \n", path_dial_fs);
+
     crear_archivo_de_bloque(path_dial_fs, tamanio_archivo_bloques);
+
+    cargar_bitmap(cantidad_bloques, path_dial_fs);
 
     recibir_peticiones_de_kernel();
 }
@@ -140,7 +147,7 @@ static void aviso_de_operacion_finalizada_a_kernel(int proceso_conectado)
 
 static void crear_archivo(char *nombre_archivo)
 {
-    char *path_archivo = string_from_format("%s/%s.txt", path_dial_fs, nombre_archivo);
+    char *path_archivo = string_from_format("%s/%s", path_dial_fs, nombre_archivo);
 
     // Creamos el archivo vacio
     FILE *archivo = fopen(path_archivo, "w"); 
@@ -168,7 +175,7 @@ static void crear_archivo(char *nombre_archivo)
 static void eliminar_archivo(char *nombre_archivo)
 {
     // Obtenemos el path del archivo a eliminar
-    char *path_archivo = string_from_format("%s/%s.txt", path_dial_fs, nombre_archivo);
+    char *path_archivo = string_from_format("%s/%s", path_dial_fs, nombre_archivo);
 
     // Eliminamos el archivo 
     remove(path_archivo);
@@ -218,6 +225,7 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
 
    if(!bloques_contiguos()) {
         compactar();
+        usleep(1000 * retraso_compactacion);
    }
     //Agregamos los bloques
    for (int i = 0; i < bloques_a_agregar; i++)
@@ -325,7 +333,7 @@ static void reposicionamiento_del_puntero_de_archivo(uint32_t puntero_archivo, c
 	uint32_t offset = direccion_bloque + puntero_archivo;
 	
 	//Abrimos archivo
-	archivo_de_bloques = levantar_archivo_bloque();
+	archivo_de_bloques = levantar_archivo_bloque(path_dial_fs);
 
 	//Nos posicionamos en el dato
 	fseek(archivo_de_bloques, offset, SEEK_SET);

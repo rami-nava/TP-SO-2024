@@ -1,14 +1,5 @@
 #include "operaciones.h"
 
-//===================================================== SEND/RECV =======================================================================
-int recibir_datos(int socket_fd, void *dest, uint32_t size) {
-	return recv(socket_fd, dest, size, 0);
-}
-
-int enviar_datos(int socket_fd, void *source, uint32_t size) {
-	return send(socket_fd, source, size, 0);
-}
-
 //===================================================== PAQUETES =============================================================================
 
 t_paquete* crear_paquete(op_code codigo)

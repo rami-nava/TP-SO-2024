@@ -95,5 +95,8 @@ static void guardar_escritura(uint32_t direccion_fisica, uint32_t tamanio_regist
     
     //Memoria confirma que guardo el texto en la direccion especificada
     int escritura_guardada = 0;
-    recv(socket_memoria, &escritura_guardada, sizeof(int), 0); 
+    while (escritura_guardada == 0)
+    {
+        recv(socket_memoria, &escritura_guardada, sizeof(int), 0); 
+    }
 }
