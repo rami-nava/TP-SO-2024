@@ -33,6 +33,7 @@ void cargar_configuracion(char* path) {
 void inicializar_semaforos(){   
     pthread_mutex_init(&mutex_NEW, NULL);
     pthread_mutex_init(&mutex_READY,NULL); 
+    pthread_mutex_init(&mutex_BLOQUEADOS_recursos,NULL); 
     pthread_mutex_init(&mutex_FIN_QUANTUM,NULL); 
     pthread_mutex_init(&mutex_PROCESOS_DEL_SISTEMA,NULL);
     pthread_mutex_init(&mutex_AUX_VRR,NULL); 
@@ -71,5 +72,6 @@ void inicializar_listas(){
     interfaces_stdin = list_create();
     interfaces_stdout = list_create();
     interfaces_dialfs = list_create();
+    lista_recursos = list_create();
 }
  

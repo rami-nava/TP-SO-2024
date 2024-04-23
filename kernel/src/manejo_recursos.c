@@ -6,6 +6,7 @@ t_list *lista_recursos;
 int *instancias_del_recurso;
 char **nombres_recursos;
 char **cantidad_instancias_recursos;
+pthread_mutex_t mutex_BLOQUEADOS_recursos;
 
 static int indice_recurso(char *recurso_buscado);
 static void eliminar_recurso_de_proceso(t_list* recursos, char* recurso);
@@ -14,7 +15,6 @@ static void eliminar_proceso_colas_bloqueo(t_pcb* proceso);
 //===========================================================================================================
 
 void crear_colas_bloqueo(){
-    lista_recursos = list_create();
     instancias_del_recurso = NULL;
     cantidad_instancias_recursos = config_valores_kernel.instancias_recursos;
     nombres_recursos = config_valores_kernel.recursos;
@@ -131,8 +131,9 @@ static void eliminar_proceso_colas_bloqueo(t_pcb* proceso){
     //Busco en todas las colas de bloqueo de recursos si esta el proceso y si esta lo elimino
     for(int i = 0 ; i < list_size(lista_recursos); i++){
         if(buscar_pcb_en_lista(obtener_lista_recurso_buscado(i), proceso->pid) != NULL){
+            pthread_mutex_lock(&mutex_BLOQUEADOS_recursos);
             list_remove_element(obtener_lista_recurso_buscado(i), (void*)proceso);
-
+            pthread_mutex_unlock(&mutex_BLOQUEADOS_recursos);
             char* nombre_recurso_pedido = nombres_recursos[i];
             int indice_pedido = indice_recurso(nombre_recurso_pedido);
 

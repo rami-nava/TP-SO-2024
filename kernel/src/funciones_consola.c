@@ -101,6 +101,13 @@ void consola_proceso_estado() {
     mostrar_lista_pids(interfaz->cola_bloqueados, cola, interfaz->cola_bloqueado_mutex);
   }
 
+  for(int i = 0 ; i < list_size(lista_recursos) ; i++){
+    t_list* lista = list_get(lista_recursos,i);
+    char cola[20] = "BLOQUEADOS ";
+    strcat(cola, nombres_recursos[i]);
+    mostrar_lista_pids(lista, cola, mutex_BLOQUEADOS_recursos);
+  }
+
 }
 
 void consola_finalizar_proceso(int pid) {

@@ -36,6 +36,7 @@ extern int socket_cpu_interrupt;
 extern int socket_memoria;
 extern int servidor_kernel;
 extern int socket_cliente_io;
+extern char **nombres_recursos;
 
 extern sem_t mutex_pid;
 extern sem_t hay_procesos_nuevos;
@@ -54,6 +55,7 @@ extern pthread_mutex_t mutex_corriendo;
 extern pthread_cond_t cond_corriendo;
 extern pthread_t reloj_RR;
 extern pthread_mutex_t proceso_en_ejecucion_RR_mutex;
+extern pthread_mutex_t mutex_BLOQUEADOS_recursos;
 
 
 extern t_list *cola_NEW;
@@ -65,6 +67,7 @@ extern t_list* interfaces_genericas;
 extern t_list* interfaces_stdin;
 extern t_list* interfaces_stdout;
 extern t_list* interfaces_dialfs;
+extern t_list *lista_recursos;
 
 extern pthread_mutex_t mutex_INTERFAZ_GENERICA;
 extern pthread_mutex_t mutex_INTERFAZ_STDIN;
