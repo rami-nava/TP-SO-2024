@@ -190,6 +190,8 @@ uint32_t tamanio_actual_proceso_en_memoria(uint32_t pid){
 	return tamanio_actual;
 }
 
+
+//ESTE METODO NO SIRVE, NO TIENE EN CUENTA QUE PUEDE ESTAR SOBREESCRIBIENDO OTRAS PAGINAS, PERO PARA TESTEAR VA
 void escribir_memoria(uint32_t dir_fisica, uint32_t valor){
 
 	//pthread_mutex_lock(&mutex_memoria_usuario);
@@ -204,8 +206,7 @@ void escribir_memoria(uint32_t dir_fisica, uint32_t valor){
 	log_info(memoria_logger, "ACCESO A ESPACIO USUARIO - PID [%d] - ACCION: [ESCRIBIR] - DIRECCION FISICA: [%d]", marco->pid_proceso, dir_fisica); // LOG OBLIGATORIO falta  - Tamaño <TAMAÑO A LEER / ESCRIBIR>
 }
 
-t_marco *marco_desde_df(uint32_t dir_fisica)
-{
+t_marco *marco_desde_df(uint32_t dir_fisica){
 	int num_marco = floor(dir_fisica / config_valores_memoria.tam_pagina);
 	//pthread_mutex_lock(&mutex_marcos);
 	t_marco *marco_elegido = list_get(marcos, num_marco);
@@ -213,6 +214,8 @@ t_marco *marco_desde_df(uint32_t dir_fisica)
 	return marco_elegido;
 }
 
+
+//ESTE SOLO SIRVE PARA LEER ENTEROS, PERO RECORDEMOS QUE EN ESTE TP SE PUEDEN LEER MAS DE UN SOLO BYTE
 uint32_t leer_memoria(uint32_t dir_fisica)
 {
 	uint32_t valor_leido = -1;

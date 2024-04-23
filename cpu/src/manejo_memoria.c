@@ -47,8 +47,8 @@ static void recibir_handshake()
 
 //================================================== MMU =================================================================================
 
-uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica)
-{
+uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica){
+    
     uint32_t numero_pagina = 0;
     uint32_t offset = 0;
     uint32_t numero_marco = 0;
@@ -67,40 +67,41 @@ uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica)
     return direccion_fisica;
 }
 
-static uint32_t traducir_pagina_a_marco(uint32_t numero_pagina)
-{
+static uint32_t traducir_pagina_a_marco(uint32_t numero_pagina){
+    
     pedir_numero_frame(numero_pagina);
     log_info(cpu_logger, "Pagina enviada a memoria \n");
+   
     uint32_t numero_marco = numero_marco_pagina();
     log_info(cpu_logger, "PID: %d - OBTENER MARCO - Página: %d - Marco: %d \n", contexto_ejecucion->pid, numero_pagina, numero_marco);
+   
     return numero_marco;
 }
 
-static void pedir_numero_frame(uint32_t numero_pagina)
-{
+static void pedir_numero_frame(uint32_t numero_pagina){
+
     t_paquete *paquete = crear_paquete(TRADUCIR_PAGINA_A_MARCO);
     agregar_entero_sin_signo_a_paquete(paquete, numero_pagina);
     agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
+    
     enviar_paquete(paquete, socket_cliente_memoria);
 }
 
-static uint32_t numero_marco_pagina()
-{
+static uint32_t numero_marco_pagina(){
     uint32_t numero_marco = 0;
 
     t_paquete *paquete = recibir_paquete(socket_cliente_memoria);
     void *stream = paquete->buffer->stream;
 
-    if (paquete->codigo_operacion == NUMERO_MARCO)
-    {
+    if (paquete->codigo_operacion == NUMERO_MARCO){
+        
         numero_marco = sacar_entero_sin_signo_de_paquete(&stream);
 
         eliminar_paquete(paquete);
 
         return numero_marco;
     }
-    else
-    {
+    else{
         log_error(cpu_logger, "No me enviaste el numero de marco :( \n");
         abort();
     }

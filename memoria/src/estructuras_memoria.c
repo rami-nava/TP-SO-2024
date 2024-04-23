@@ -40,7 +40,7 @@ void crear_marcos_memoria() {
 	for(int i = 0; i < cantidad_marcos; i++) {
 		t_marco* marco = malloc(sizeof(t_marco)); 
 
-		marco->nro_pag = -1;
+		marco->nro_pagina = -1;
 		marco->nro_marco = i;
 		marco->libre = 1;
 		marco->pid_proceso = -1;
@@ -76,10 +76,13 @@ void quitar_marcos_a_proceso(uint32_t pid, uint32_t cantidad_marcos_a_liberar){
 	t_proceso_en_memoria *proceso = obtener_proceso_en_memoria(pid);
 	t_pagina *pagina_removida = NULL;
 
+	//TODO preguntar si borramos las paginas cuando se hace resize menor o en que cambia si las dejamos con un bit no cargadas
+
+
 	for(int i = 0; i<cantidad_marcos_a_liberar; i++){
 		
 		pagina_removida = list_remove(proceso->paginas_en_memoria, list_size(proceso->paginas_en_memoria)); //Saca desde el final las paginas
-		liberar_marco(pagina_removida->marco);
+		liberar_marco(pagina_removida->nro_marco);
 
 		free(pagina_removida);
 	}
@@ -90,7 +93,7 @@ void liberar_marco(int marco_a_liberar){
 	
 	t_marco *marco = buscar_marco_por_numero(marco_a_liberar);  
 
-	marco->nro_pag = -1;
+	marco->nro_pagina = -1;
 	marco->libre = 1;
 	marco->pid_proceso = -1;
     
@@ -139,7 +142,7 @@ void asignar_proceso_a_marco(uint32_t pid, t_marco* marco){
 	agregar_pagina_a_proceso(proceso, marco);
 	
 	marco->pid_proceso = pid;
-	marco->nro_pag = list_size(proceso->paginas_en_memoria);
+	marco->nro_pagina = list_size(proceso->paginas_en_memoria);
 	marco->libre = 0;
 
 	
@@ -159,27 +162,28 @@ void agregar_pagina_a_proceso(t_proceso_en_memoria* proceso, t_marco* marco){
 	
 	t_pagina *pagina_nueva = malloc(sizeof(t_pagina));
 
-	pagina_nueva->pid = proceso->pid;
-	pagina_nueva->marco = marco->nro_marco;
-	pagina_nueva->numero_de_pagina = list_size(proceso->paginas_en_memoria);
+	pagina_nueva->pid_proceso = proceso->pid;
+	pagina_nueva->nro_marco = marco->nro_marco;
+	pagina_nueva->nro_pagina = list_size(proceso->paginas_en_memoria);
 
 	list_add(proceso->paginas_en_memoria, pagina_nueva);
 	
 }
 
 uint32_t buscar_marco(uint32_t numero_pagina, int pid){
-    //Obtengo el proceso por el pid
+    
+	//Obtengo el proceso por el pid
     t_proceso_en_memoria *proceso = buscar_proceso(procesos_en_memoria, pid);
 
     // Busco la página correspondiente al número de página
     t_pagina *pagina = NULL;
 
-    for (int i = 0; i < list_size(proceso->paginas_en_memoria); i++) {
+    for (int i = 0; i < list_size(proceso->paginas_en_memoria) && (pagina == NULL); i++) {
         t_pagina *pagina_actual = (t_pagina*) list_get(proceso->paginas_en_memoria, i);
        
-	    if (pagina_actual->numero_de_pagina == numero_pagina) {
+	    if (pagina_actual->nro_pagina == numero_pagina) {
             pagina = pagina_actual;
-            break;
+            //break;
         }
     }
 
@@ -189,7 +193,7 @@ uint32_t buscar_marco(uint32_t numero_pagina, int pid){
     }
 
     // Obtengo el número de marco asignado a la página
-    int marco = pagina->marco;
+    int marco = pagina->nro_marco;
     if (marco == -1) {
         log_info(memoria_logger, "No hay marco asignado para la página %d en el proceso con PID: %d\n", numero_pagina, pid);
     } else {
@@ -222,12 +226,12 @@ void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos) {
  			//Actualizo marco
 			marco->libre = 0; 
  			marco->pid_proceso = pid; 
- 			marco->nro_pag = marcos_ya_asignados; //Aca asigno el nropag a partir de la # de marcos que ya tenia asigandos antes
+ 			marco->nro_pagina = marcos_ya_asignados; //Aca asigno el nropag a partir de la # de marcos que ya tenia asigandos antes
  			
 			// Actualizo paginas 
 			t_pagina* pagina = malloc(sizeof(t_pagina));
 			pagina->pid = pid;
-			pagina->numero_de_pagina = marcos_ya_asignados; //Aca asigno el nropag a partir de la # de marcos que ya tenia asigandos antes sino se pisan los numeros de pag
+			pagina->nro_pagina = marcos_ya_asignados; //Aca asigno el nropag a partir de la # de marcos que ya tenia asigandos antes sino se pisan los numeros de pag
 			pagina->marco = marco->nro_marco;
 			
 			list_add(proceso->paginas_en_memoria, pagina);
@@ -289,3 +293,55 @@ static void mostrar_contenido() {
     printf("\n");
 }
 */
+
+
+
+//================================================== MANEJO ESCRITURAS EN PAGINAS/MARCOS ==================================================
+
+/*
+bool contenido_cabe_en_marcos(uint32_t pid, int tamaño_contenido_bytes) {
+    
+    t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
+
+	int cantidad_paginas_necesarias = cantidad_de_marcos_necesarios(tamaño_contenido_bytes);
+
+    // Verificar si la cantidad de páginas necesarias cabe en las páginas cargadas en los marcos del proceso
+    int cantidad_paginas_cargadas = list_size(proceso->paginas_en_memoria);
+
+	//No importa lo que tengan ya que los procesos van a pisar sus escrituras manejadas con DLS
+    return cantidad_paginas_cargadas >= cantidad_paginas_necesarias;
+
+}
+
+int numero_marco(uint32_t dir_fisica){
+	return floor(dir_fisica / config_valores_memoria.tam_pagina);
+}
+
+int desplazamiento(uint32_t dir_fisica){
+	
+	t_marco* marco_asociado = marco_desde_df(dir_fisica); //Aca hay un leak?
+
+	return dir_fisica - (config_valores_memoria.tam_pagina*(marco_asociado->nro_pagina))
+}
+
+int lugar_restante_en_marco(uint32_t dir_fisica){
+	
+	int desplazamiento = desplazamiento(dir_fisica);
+	
+	return config_valores_memoria.tam_pagina-desplazamiento;
+}
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+

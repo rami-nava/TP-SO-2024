@@ -47,21 +47,19 @@ extern arch_config config_valores_memoria;
 //TODO cambiar todos los ints por uint32_T y poner nombres regulares no: numero_de_pagina y en el otro nro_pag
 
 typedef struct {
-	int pid;
-    int numero_de_pagina;
+	int pid_proceso;
+    int nro_pagina;
     int marco; 
-	
 } t_pagina;
 
 typedef struct {
     int nro_marco;
-	int nro_pag;
-    int pid_proceso;
+	int pid_proceso;
+	int nro_pagina;
 	bool libre;
 } t_marco;
 
-typedef struct 
-{
+typedef struct {
 	int pid;
 	t_list* paginas_en_memoria;
 	t_list* instrucciones;                              

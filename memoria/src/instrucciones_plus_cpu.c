@@ -47,6 +47,7 @@ char* buscar_instruccion_proceso(uint32_t PC, int pid)
 }
 
 //=============================================== MMU ================================================================
+
 void traducir_pagina_a_marcos(uint32_t numero_pagina, int pid, int cliente)
 {
     //Obtengo el marco por el pid y el numero de pagina

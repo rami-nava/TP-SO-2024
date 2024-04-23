@@ -34,6 +34,7 @@ t_proceso_en_memoria *buscar_proceso(t_list *lista, int pid_buscado)
 }
 
 void finalizar_en_memoria(int pid){
+	//TODO NUEVO 1C2024
 
 	//Obtengo el proceso por el pid
 	t_proceso_en_memoria *proceso = buscar_proceso(procesos_en_memoria, pid);
