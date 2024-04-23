@@ -47,9 +47,9 @@ extern arch_config config_valores_memoria;
 //TODO cambiar todos los ints por uint32_T y poner nombres regulares no: numero_de_pagina y en el otro nro_pag
 
 typedef struct {
+	int nro_pagina;
 	int pid_proceso;
-    int nro_pagina;
-    int marco; 
+    int nro_marco; 
 } t_pagina;
 
 typedef struct {
@@ -114,9 +114,5 @@ t_marco* buscar_marco_por_numero(int numero_de_marco);
 uint32_t buscar_marco(uint32_t numero_pagina, int pid);
 
 
-/*
-
-int cantidad_de_marcos_del_proceso(t_proceso_en_memoria* proceso);
-*/
 
 #endif
