@@ -70,7 +70,8 @@ void wait_s(t_pcb *proceso, char **parametros){
     } else //Si hay instancias disponibles
     {
         //Lo agrego a la lista de recursos asignados del proceso
-        list_add(proceso->recursos_asignados, (void*)string_duplicate (recurso));
+        char* recurso_para_asignar = string_duplicate(recurso);
+        list_add(proceso->recursos_asignados, recurso_para_asignar);
 
         ingresar_a_READY(proceso);
     }
@@ -93,6 +94,8 @@ void signal_s(t_pcb *proceso, char **parametros){
 
     log_info(kernel_logger, "PID: %d - Signal: %s - Instancias: %d\n", proceso->pid, recurso_pedido, instancias);
 
+    char* recurso_para_asignar = string_duplicate(recurso_pedido);
+
     eliminar_recurso_de_proceso(proceso->recursos_asignados,recurso_pedido); 
 
     t_list *cola_bloqueados_recurso = obtener_lista_recurso_buscado(indice_pedido);
@@ -110,12 +113,14 @@ void signal_s(t_pcb *proceso, char **parametros){
         t_pcb *pcb_desbloqueado = desencolar(cola_bloqueados_recurso);
 
         //Lo agrego a la lista de recursos asignados del proceso
-        list_add(pcb_desbloqueado->recursos_asignados, (void*)string_duplicate (recurso_pedido));
+        //list_add(pcb_desbloqueado->recursos_asignados, (void*)string_duplicate (recurso_pedido));
 
+        list_add(pcb_desbloqueado->recursos_asignados, recurso_para_asignar);
+        
         //Lo mando a READY
         ingresar_de_BLOCKED_a_READY_recursos(pcb_desbloqueado);
         }
-    }
+    }else free(recurso_para_asignar);
 
     //si llega como instruccion algo distinto de EXIT, el proceso sigue su ejecucion 
     if (strncmp (parametros[2], "EXIT", 4)) volver_a_CPU(proceso);
@@ -167,7 +172,7 @@ static void eliminar_recurso_de_proceso(t_list* recursos, char* recurso){
     
     for(int i = 0; i < cant_recursos; i++){
         if(!strcmp((char*)list_get(recursos,i), recurso)){
-            list_remove(recursos,i);
+            list_remove_and_destroy_element(recursos,i, free);
             return;
         }
     }
