@@ -106,12 +106,14 @@ static void manejo_conexiones(void* conexion)
 
 		case PEDIDO_COPY_STRING:
 			break;
+
 		//INSTRUCCIONES DE CPU
 		case TRADUCIR_PAGINA_A_MARCO:
 			uint32_t numero_pagina = sacar_entero_sin_signo_de_paquete(&stream);
 			int pid_mmu = sacar_entero_de_paquete(&stream);
 			traducir_pagina_a_marcos(numero_pagina, pid, cliente);
 			break;
+
 		case PEDIDO_MOV_IN:
 		    uint32_t direccion_fisica = sacar_entero_de_paquete(&stream);
 			uint32_t valor_leido = leer_memoria(direccion_fisica);
@@ -166,7 +168,14 @@ void resize(uint32_t pid, uint32_t tamanio){
 	//RESIZE PARA COMPRIMIR TAMAÑO Y LUEGO PARA EXPANDIR
 	if(tamanio<tamanio_actual){
 		tamanio_reducido = tamanio_actual-tamanio;
-		cantidad_paginas_a_sacar = tamanio_reducido/config_valores_memoria.tam_pagina;
+
+		//ACA TIENE QUE SER PISO
+		//Suponiendo pags de 4B
+		//Si tiene 20B y el resize es a 16B no pasa nada porque es multiplo 
+		//Si tiene 20B y el resize es a 15B -> tamañoreducido=20-15=5
+		//Si hay que sacar 5B -> solo se saca 1 pagina, y queda con 16B, sino estariamos sacando de mas y el proceso queda con 12B
+		//TODO Hacer una funcion para esto que sea cantmarcosnecesariosextencion y otra cantmarcosnecesarioscompresion
+		cantidad_paginas_a_sacar = tamanio_reducido/config_valores_memoria.tam_pagina; 
 
 		quitar_marcos_a_proceso(pid, cantidad_paginas_a_sacar);
 	}else{
@@ -175,19 +184,19 @@ void resize(uint32_t pid, uint32_t tamanio){
 }
 
 uint32_t tamanio_actual_proceso_en_memoria(uint32_t pid){
+	
 	t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
 	uint32_t tamanio_actual = list_size(proceso->paginas_en_memoria) * config_valores_memoria.tam_pagina;
 	return tamanio_actual;
 }
 
-void escribir_memoria(uint32_t dir_fisica, uint32_t valor)
-{
+void escribir_memoria(uint32_t dir_fisica, uint32_t valor){
+
 	//pthread_mutex_lock(&mutex_memoria_usuario);
 	memcpy(espacio_usuario + dir_fisica, &valor, sizeof(uint32_t));
 	//pthread_mutex_unlock(&mutex_memoria_usuario);
 
 	t_marco *marco = marco_desde_df(dir_fisica);
-	//marco->cantidad_bytes_libres -= sizeof(uint32_t); 
 
 	//TENGO QUE HACER ALGO CON LA PAGINAX????
 	sleep(config_valores_memoria.retardo_respuesta / 1000);
@@ -218,3 +227,5 @@ uint32_t leer_memoria(uint32_t dir_fisica)
 
 	return valor_leido;
 }
+
+//TODO mover estos de leer y escribir a estructuras, y ademas hay que hacerlos para strings

@@ -50,7 +50,7 @@ typedef struct {
 	int pid;
     int numero_de_pagina;
     int marco; 
-	bool cargada_en_memoria;
+	
 } t_pagina;
 
 typedef struct {
@@ -58,7 +58,6 @@ typedef struct {
 	int nro_pag;
     int pid_proceso;
 	bool libre;
-	int cantidad_bytes_libres;
 } t_marco;
 
 typedef struct 
@@ -113,6 +112,8 @@ void resize(uint32_t pid, uint32_t tamanio);
 int cantidad_de_marcos_libres();
 int cantidad_de_marcos_necesarios(int tamanio);
 void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos);
+t_marco* buscar_marco_por_numero(int numero_de_marco);
+uint32_t buscar_marco(uint32_t numero_pagina, int pid);
 
 
 /*
