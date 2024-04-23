@@ -242,27 +242,27 @@ static void set(char* registro, char* valor)
 }
 
 static void sum(char* registro_destino, char* registro_origen){ 
-    int valor1 = buscar_registro(registro_destino);
-    int valor2 = buscar_registro(registro_origen);  
+    uint32_t valor1 = buscar_registro(registro_destino);
+    uint32_t valor2 = buscar_registro(registro_origen);  
 
-    int suma = valor1 + valor2;
+    uint32_t suma = valor1 + valor2;
     
     //convierte la suma a una cadena de caracteres antes de pasarlo a setear_registro
     char suma_str[20]; // Tamaño suficiente para almacenar números enteros
-    snprintf(suma_str, sizeof(suma_str), "%d", suma);
+    snprintf(suma_str, sizeof(suma_str), "%" PRIu32, suma); //PRIu32 es para el tipo de dato uint32_t
 
     setear_registro(registro_destino, suma_str);
 }
 
 static void sub(char* registro_destino, char* registro_origen){ 
-    int valor1 = buscar_registro(registro_destino);
-    int valor2 = buscar_registro(registro_origen);
+    uint32_t valor1 = buscar_registro(registro_destino);
+    uint32_t valor2 = buscar_registro(registro_origen);
 
-    int resta = valor1 - valor2;
+    uint32_t resta = valor1 - valor2;
     
     //convierte la resta a una cadena de caracteres antes de pasarlo a setear_registro
     char resta_str[20]; // Tamaño suficiente para almacenar números enteros
-    snprintf(resta_str, sizeof(resta_str), "%d", resta);
+    snprintf(resta_str, sizeof(resta_str), "%" PRIu32, resta); //PRIu32 es para el tipo de dato uint32_t
 
     setear_registro(registro_destino, resta_str);
 }
@@ -279,22 +279,30 @@ static void io_gen_sleep(char* interfaz, char* unidades_trabajo)
     modificar_motivo(IO_GEN_SLEEP, 2, interfaz, unidades_trabajo, "", "", "");
 }
 
-static void io_stdin_read(char* interfaz, char* registro_direccion, char* registro)
+static void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio)
 {
-    int tamanio_registro = buscar_registro(registro);
-    int direccion_logica = buscar_registro(registro_direccion);
-    uint32_t direccion_fisica = traducir_de_logica_a_fisica(direccion_logica);
+    char direccion_fisica[12];
+    char tamanio[12]; //Alcanza para almacenar un uint32_t
 
-    modificar_motivo(IO_STDIN_READ, 3, interfaz, (char*)direccion_fisica, (char*)tamanio_registro, "", "");
+    uint32_t direccion_logica = buscar_registro(registro_direccion);
+
+    sprintf(direccion_fisica, "%" PRIu32,traducir_de_logica_a_fisica(direccion_logica));
+    sprintf(direccion_fisica, "%" PRIu32, buscar_registro(registro_tamanio));//PRIu32 es para el tipo de dato uint32_t
+
+    modificar_motivo(IO_STDIN_READ, 3, interfaz, direccion_fisica, tamanio, "", "");
 }
 
-static void io_stdout_write(char* interfaz, char* registro_direccion, char* registro)
+static void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio)
 {
-    int tamanio_registro = buscar_registro(registro);
-    int direccion_logica = buscar_registro(registro_direccion);
-    uint32_t direccion_fisica = traducir_de_logica_a_fisica(direccion_logica);
+    char direccion_fisica[12];
+    char tamanio[12]; //Alcanza para almacenar un uint32_t
 
-    modificar_motivo(IO_STDOUT_WRITE, 3, interfaz, (char*)direccion_fisica, (char*)tamanio_registro, "", "");
+    uint32_t direccion_logica = buscar_registro(registro_direccion);
+
+    sprintf(direccion_fisica, "%" PRIu32,traducir_de_logica_a_fisica(direccion_logica));
+    sprintf(direccion_fisica, "%" PRIu32, buscar_registro(registro_tamanio));//PRIu32 es para el tipo de dato uint32_t
+
+    modificar_motivo(IO_STDOUT_WRITE, 3, interfaz, direccion_fisica, tamanio, "", "");
 }
 
 static void io_fs_create(char* interfaz, char* nombre_archivo)
@@ -367,42 +375,42 @@ void setear_registro(char *registros, char* valor)
     log_info(cpu_logger, "PID %d - Registro: %s - Valor: %s", contexto_ejecucion->pid, registros, valor);
 }
 
-int buscar_registro(char *registro)
+uint32_t buscar_registro(char *registro)
 {
-    int valor = 0;
+    uint32_t valor = 0;
 
     if (string_equals_ignore_case(registro, "PC"))
-        valor = (int) contexto_ejecucion->PC;
+        valor = contexto_ejecucion->PC;
 
     if (string_equals_ignore_case(registro, "AX"))
-        valor = (int) contexto_ejecucion->AX;
+        valor = contexto_ejecucion->AX;
 
     if (string_equals_ignore_case(registro, "BX"))
-        valor = (int) contexto_ejecucion->BX;
+        valor = contexto_ejecucion->BX;
 
     if (string_equals_ignore_case(registro, "CX"))
-        valor = (int) contexto_ejecucion->CX;
+        valor = contexto_ejecucion->CX;
 
     if (string_equals_ignore_case(registro, "DX"))
-        valor = (int) contexto_ejecucion->DX;
+        valor = contexto_ejecucion->DX;
 
     if (string_equals_ignore_case(registro, "EAX"))
-        valor = (int) contexto_ejecucion->EAX;
+        valor = contexto_ejecucion->EAX;
 
     if (string_equals_ignore_case(registro, "EBX"))
-        valor = (int) contexto_ejecucion->EBX;
+        valor = contexto_ejecucion->EBX;
 
     if (string_equals_ignore_case(registro, "ECX"))
-        valor = (int) contexto_ejecucion->ECX;
+        valor = contexto_ejecucion->ECX;
 
     if (string_equals_ignore_case(registro, "EDX"))
-        valor = (int) contexto_ejecucion->EDX;
+        valor = contexto_ejecucion->EDX;
 
     if (string_equals_ignore_case(registro, "SI"))
-        valor = (int) contexto_ejecucion->SI;
+        valor = contexto_ejecucion->SI;
 
     if (string_equals_ignore_case(registro, "DI"))
-        valor = (int) contexto_ejecucion->DI;
+        valor = contexto_ejecucion->DI;
 
     return valor;
 }

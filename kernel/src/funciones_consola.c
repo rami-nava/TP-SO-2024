@@ -64,6 +64,43 @@ void consola_proceso_estado() {
   mostrar_lista_pids(cola_NEW, "NEW", mutex_NEW);
   mostrar_lista_pids(cola_READY, "READY", mutex_READY);
   //Ver como mostrar los bloqueados TODO
+
+  for(int i = 0 ; i < list_size(interfaces_genericas) ; i++){
+    t_interfaz* interfaz = list_get(interfaces_genericas,i);
+    char cola[40] = "BLOQUEADOS INTERFAZ ";
+    strcat(cola, interfaz->tipo_interfaz);
+    strcat(cola, " ");
+    strcat(cola, interfaz->nombre);
+    mostrar_lista_pids(interfaz->cola_bloqueados, cola, interfaz->cola_bloqueado_mutex);
+  }
+
+  for(int i = 0 ; i < list_size(interfaces_stdin) ; i++){
+    t_interfaz* interfaz = list_get(interfaces_stdin,i);
+    char cola[40] = "BLOQUEADOS INTERFAZ ";
+    strcat(cola, interfaz->tipo_interfaz);
+    strcat(cola, " ");
+    strcat(cola, interfaz->nombre);
+    mostrar_lista_pids(interfaz->cola_bloqueados, cola, interfaz->cola_bloqueado_mutex);
+  }
+
+  for(int i = 0 ; i < list_size(interfaces_stdout) ; i++){
+    t_interfaz* interfaz = list_get(interfaces_stdout,i);
+    char cola[40] = "BLOQUEADOS INTERFAZ ";
+    strcat(cola, interfaz->tipo_interfaz);
+    strcat(cola, " ");
+    strcat(cola, interfaz->nombre);
+    mostrar_lista_pids(interfaz->cola_bloqueados, cola, interfaz->cola_bloqueado_mutex);
+  }
+
+  for(int i = 0 ; i < list_size(interfaces_dialfs) ; i++){
+    t_interfaz* interfaz = list_get(interfaces_dialfs,i);
+    char cola[40] = "BLOQUEADOS INTERFAZ ";
+    strcat(cola, interfaz->tipo_interfaz);
+    strcat(cola, " ");
+    strcat(cola, interfaz->nombre);
+    mostrar_lista_pids(interfaz->cola_bloqueados, cola, interfaz->cola_bloqueado_mutex);
+  }
+
 }
 
 void consola_finalizar_proceso(int pid) {

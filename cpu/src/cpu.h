@@ -56,7 +56,7 @@ void copy_string(char* tamanio);
 void setear_registro(char* registro, char* valor);
 bool no_es_bloqueante(codigo_instrucciones instruccion_actual);
 void ciclo_de_instruccion();
-int buscar_registro(char*registro);
+uint32_t buscar_registro(char*registro);
 void inicializar_semaforos();
 void realizar_handshake();
 uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica);
