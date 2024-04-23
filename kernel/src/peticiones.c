@@ -216,11 +216,13 @@ static void io_fs_write(t_pcb *proceso, char **parametros){
 
 static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz) 
 {  
+    interfaz->tiempo_sleep_kernel = tiempo_sleep;
+    
     t_paquete* paquete = crear_paquete(GENERICA_IO_SLEEP);
     agregar_entero_a_paquete(paquete, proceso->pid);
     agregar_entero_a_paquete(paquete, tiempo_sleep);
 
-    crear_hilo_io(proceso, interfaz, paquete);
+    crear_hilo_io_generica(proceso, interfaz, paquete);
 }
 
 static void a_leer_o_escribir_interfaz(op_code codigo, t_pcb * proceso, uint32_t direccion, uint32_t tamanio, t_interfaz* interfaz) 

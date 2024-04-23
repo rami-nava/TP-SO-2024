@@ -14,6 +14,13 @@ t_pcb *desencolar(t_list *cola){
     return (t_pcb *)list_remove(cola, 0);
 }
 
+void eliminar_de_cola(t_list *cola, t_pcb *pcb, pthread_mutex_t mutex_cola){
+    pthread_mutex_lock(&mutex_cola);
+    list_remove_element(cola,pcb);
+    pthread_mutex_unlock(&mutex_cola);
+}
+  
+
 t_pcb* buscar_pcb_de_lista_y_eliminar(t_list *lista, int pid_buscado, pthread_mutex_t mutex_lista)
 {
   pthread_mutex_lock(&mutex_lista);
@@ -23,6 +30,19 @@ t_pcb* buscar_pcb_de_lista_y_eliminar(t_list *lista, int pid_buscado, pthread_mu
     pthread_mutex_unlock(&mutex_lista);
     return pcb_buscado;
   }else return NULL;
+}
+
+t_pcb* buscar_pcb_en_lista (t_list* lista, int pid){
+    int elementos = list_size(lista);
+	for (int i = 0; i < elementos; i++)
+	{
+		t_pcb *pcb = list_get(lista, i);
+		if (pid == pcb->pid)
+		{
+            return pcb;
+		}
+	}
+    return NULL;
 }
 
 void detener_planificacion() {
@@ -44,17 +64,23 @@ void desalojo(int tipo_interrupcion){
 }
 
 void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb){
-    t_pcb* pcb_asociado = NULL;  
+    
+    estado_proceso estado_actual = pcb->estado;
 
-    //lo busco y lo mato de la cola ready
-    pcb_asociado = buscar_pcb_de_lista_y_eliminar(cola_READY, pcb->pid, mutex_READY); 
-
-    //si no esta en la cola ready lo busco en la blocked
-    if (pcb_asociado == NULL) {
-        //TODO revisar si hace falta
+    switch(estado_actual){
+        case NEW:
+            eliminar_de_cola(cola_NEW, pcb, mutex_NEW);
+            break;
+        case READY:
+            eliminar_de_cola(cola_READY, pcb, mutex_READY);
+            break;
+        //case BLOCKED:
+            //Usar buscar pcb y elementar, que le diga a las interfaces que saquen este pcb de sus colas
+            //eliminar_de_cola(interfaz->cola_bloqueados, pcb, interfaz->cola_bloqueado_mutex);
+            //break;
+        default:
+            break;
     }
-
-    if(!(pcb_asociado != NULL && pcb_asociado->pid == pcb->pid)) printf("EL proceso ya fue eliminado del sistema\n");
 }
 
 bool ocurrio_IO(t_contexto* contexto_ejecucion){

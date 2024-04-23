@@ -75,10 +75,9 @@ t_contexto* enviar_a_cpu(t_pcb* proceso) {
     
     enviar_contexto(socket_cpu_dispatch);
     
-    pthread_mutex_lock(&mutex_FIN_QUANTUM);
     recibir_contexto(socket_cpu_dispatch); 
+    
     actualizar_PCB(proceso);
-    pthread_mutex_unlock(&mutex_FIN_QUANTUM);
 
     return contexto_ejecucion;
  
@@ -128,23 +127,7 @@ void liberar_PCB(t_pcb* proceso) {
     
     //liberar_en_memoria(proceso);
     list_destroy_and_destroy_elements(proceso->recursos_asignados, free);
-    liberar_memoria_contexto();
     free(proceso);
 }
 
-void liberar_recursos_asignados(t_pcb* proceso) {
-    int cant_recursos = list_size(proceso->recursos_asignados);
-
-    if (cant_recursos != 0) {
-        t_list* recursos_a_liberar = list_duplicate(proceso->recursos_asignados);
-
-        for (int i = 0; i < cant_recursos; i++) {
-            char* recurso = (char*)list_get(recursos_a_liberar, i);
-            char* parametros[3] = {recurso, "", "EXIT"};
-            signal_s(proceso, parametros);
-        }
-
-        list_destroy(recursos_a_liberar);
-    }
-}
 

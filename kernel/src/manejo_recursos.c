@@ -143,19 +143,6 @@ static void eliminar_proceso_colas_bloqueo(t_pcb* proceso){
     }
 }
 
-t_pcb* buscar_pcb_en_lista (t_list* lista, int pid){
-    int elementos = list_size(lista);
-	for (int i = 0; i < elementos; i++)
-	{
-		t_pcb *pcb = list_get(lista, i);
-		if (pid == pcb->pid)
-		{
-            return pcb;
-		}
-	}
-    return NULL;
-}
-
 static t_list* obtener_lista_recurso_buscado(int indice){
     t_list *lista_buscada = (t_list *)list_get(lista_recursos, indice);
     return lista_buscada;
@@ -179,8 +166,24 @@ static void eliminar_recurso_de_proceso(t_list* recursos, char* recurso){
     
     for(int i = 0; i < cant_recursos; i++){
         if(!strcmp((char*)list_get(recursos,i), recurso)){
-            list_remove_and_destroy_element(recursos,i, free);
+            list_remove(recursos,i);
             return;
         }
+    }
+}
+
+void liberar_recursos_asignados(t_pcb* proceso) {
+    int cant_recursos = list_size(proceso->recursos_asignados);
+
+    if (cant_recursos != 0) {
+        t_list* recursos_a_liberar = list_duplicate(proceso->recursos_asignados);
+
+        for (int i = 0; i < cant_recursos; i++) {
+            char* recurso = (char*)list_get(recursos_a_liberar, i);
+            char* parametros[3] = {recurso, "", "EXIT"};
+            signal_s(proceso, parametros);
+        }
+
+        list_destroy(recursos_a_liberar);
     }
 }

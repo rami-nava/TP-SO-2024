@@ -93,7 +93,9 @@ typedef struct
     int socket_conectado;
     char* nombre;
     char* tipo_interfaz;
-    pthread_mutex_t comunicacion_interfaz_mutex;
+    int tiempo_sleep;
+    int tiempo_sleep_kernel;
+    sem_t sem_comunicacion_interfaz;
     pthread_mutex_t cola_bloqueado_mutex;
     t_list* cola_bloqueados;
 } t_interfaz;    
@@ -191,7 +193,7 @@ bool peticiones_de_io(t_pcb *proceso, t_interfaz* interfaz);
 bool admite_operacion_interfaz(t_interfaz* interfaz, codigo_instrucciones operacion);
 t_interfaz* obtener_interfaz_por_nombre(char* nombre_interfaz);
 void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion);
-void esperar_io(t_interfaz* interfaz);
+void crear_hilo_io_generica(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion);
 
 
 #endif

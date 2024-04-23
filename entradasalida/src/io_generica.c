@@ -8,6 +8,7 @@ static int tiempo_unidad_de_trabajo;
 t_log* generica_logger;
 
 static void realizar_sleep();
+static void conectarse_a_kernel_generica(char* nombre_interfaz);
 
 void main_generica(t_interfaz* interfaz){
 
@@ -29,9 +30,18 @@ void main_generica(t_interfaz* interfaz){
 
     socket_kernel = crear_conexion(ip_kernel, puerto_kernel);
 
-    conectarse_a_kernel(socket_kernel, INTERFAZ_GENERICA ,nombre_interfaz, "GENERICA");
+    conectarse_a_kernel_generica(nombre_interfaz);
     
     realizar_sleep();
+}
+
+static void conectarse_a_kernel_generica(char* nombre_interfaz)
+{
+    t_paquete* paquete = crear_paquete(INTERFAZ_GENERICA);
+    agregar_cadena_a_paquete(paquete, nombre_interfaz);
+    agregar_cadena_a_paquete(paquete, "GENERICA");
+    agregar_entero_a_paquete(paquete, tiempo_unidad_de_trabajo);
+    enviar_paquete(paquete, socket_kernel);
 }
 
 void realizar_sleep() 
@@ -53,10 +63,11 @@ void realizar_sleep()
 
         log_info(generica_logger, "PID: %d - Operacion: IO_GEN_SLEEP\n", proceso_conectado);
 
-        usleep(tiempo_unidad_de_trabajo * cantidad_tiempo * 1000);
+        int tiempo_sleep = tiempo_unidad_de_trabajo * cantidad_tiempo * 1000;
+        usleep(tiempo_sleep);
 
-        int termino_io = 1;
-        send(socket_kernel, &termino_io, sizeof(int), 0);
+        //int termino_io = 1;
+        //send(socket_kernel, &termino_io, sizeof(int), 0);
 
         log_info(generica_logger, "El proceso: %d finalizo IO\n", proceso_conectado);
 
