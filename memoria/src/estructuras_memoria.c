@@ -306,7 +306,8 @@ static int numero_marco(uint32_t direccion_fisica);
 static int desplazamiento(uint32_t direccion_fisica);
 static int lugar_restante_en_marco(uint32_t direccion_fisica);
 static uint32_t calcular_direccion_fisica_inicial_marco(t_marco* marco);
-static void* buscar_contenido_espacio_usuario(uint32_t dir_fisica, int tamanio);
+//static void* buscar_contenido_espacio_usuario(uint32_t dir_fisica, int tamanio);
+static bool comparador_paginas(void* pagina1, void* pagina2);
 static void ordenar_lista_por_numero_pagina(t_list* tabla_paginas);
 static void copiar_contenido_en_partes_espacio_usuario(uint32_t direccion_fisica_inicial, int bytes_restantes_primer_marco, void* contenido, uint32_t tam_contenido, t_list* paginas_contiguas);
 static t_list* paginas_contiguas_a_cargar(t_proceso_en_memoria* proceso, int cantidad_paginas, uint32_t pagina_inicio);
@@ -336,6 +337,7 @@ void escribir_espacio_usuario(uint32_t pid, uint32_t direccion_fisica, uint32_t 
 
 void escribir__contenido_espacio_usuario(uint32_t pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido){
 
+	//usleep(1000 * config_valores_memoria.retardo_respuesta); //TODO ver si poner el usleep aca o hacer otro escribir general para ambos metodos
 
 	t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
 
@@ -345,14 +347,15 @@ void escribir__contenido_espacio_usuario(uint32_t pid, uint32_t direccion_fisica
 
 	//Entra en una pagina/marco
 	if (lugar_restante_en_marco(direccion_fisica) >= tamanio_escritura){
+		
 		//Entra en este marco
 			
-		//usleep(1000 * config_valores_memoria.retardo_respuesta); //TODO ver si poner el usleep aca o hacer otro escribir general para ambos metodos
-
 		memcpy((char*) espacio_usuario + direccion_fisica, contenido, (size_t) tamanio_escritura); //ver si funca con el casteo
 	
 	}else{
+
 		escribir_contenido_en_partes(proceso, direccion_fisica, tamanio_escritura, contenido);
+
 	}
 
 }
@@ -369,7 +372,7 @@ static void escribir_contenido_en_partes(t_proceso_en_memoria* proceso, uint32_t
 
 	int cantidad_paginas_necesarias = cantidad_de_marcos_necesarios(tamanio_escritura - bytes_restantes_primer_marco) +1; //Cuantas paginas/marcos se necesitan para el resto del contenido, el +1 es de la primera que ya restamos los bytes
 
-	t_list* paginas_a_cargar = paginas_contiguas_a_cargar(cantidad_paginas_necesarias, primer_marco->nro_pagina);
+	t_list* paginas_a_cargar = paginas_contiguas_a_cargar(proceso, cantidad_paginas_necesarias, primer_marco->nro_pagina);
 
 	//Ahora ya tenemos las paginas en las cuales de divididara el contenido, la primera es la que hay que chequear cuantos bytes escribir, el resto enteras
 	
@@ -409,16 +412,17 @@ static int desplazamiento(uint32_t direccion_fisica){
 	
 	t_marco* marco_asociado = marco_desde_df(direccion_fisica); //Aca hay un leak?
 
-	return direccion_fisica - (config_valores_memoria.tam_pagina*(marco_asociado->nro_pagina))
+	return direccion_fisica - (config_valores_memoria.tam_pagina*(marco_asociado->nro_pagina));
+
 }
 
 
 
 static int lugar_restante_en_marco(uint32_t direccion_fisica){
 	
-	int desplazamiento = desplazamiento(direccion_fisica);
+	int offset = desplazamiento(direccion_fisica);
 	
-	return config_valores_memoria.tam_pagina-desplazamiento;
+	return config_valores_memoria.tam_pagina-offset;
 }
 
 
@@ -430,6 +434,7 @@ static uint32_t calcular_direccion_fisica_inicial_marco(t_marco* marco) {
 	uint32_t direccion_fisica = marco->nro_marco * config_valores_memoria.tam_pagina;
     
 	return direccion_fisica;
+
 }
 
 
@@ -453,15 +458,16 @@ static void* buscar_contenido_espacio_usuario(uint32_t dir_fisica, int tamanio) 
 */
 
 
-static void ordenar_lista_por_numero_pagina(t_list* tabla_paginas){
-    
-    static bool comparador_paginas(void* pagina1, void* pagina2) {
+static bool comparador_paginas(void* pagina1, void* pagina2) {
         
 		t_pagina* p1 = (t_pagina*) pagina1;
         t_pagina* p2 = (t_pagina*) pagina2;
         return p1->nro_pagina < p2->nro_pagina;
     
-	}
+}
+
+
+static void ordenar_lista_por_numero_pagina(t_list* tabla_paginas){
     
     // Ordena la lista de páginas en memoria por número de página ascendente
     list_sort(tabla_paginas, comparador_paginas);
