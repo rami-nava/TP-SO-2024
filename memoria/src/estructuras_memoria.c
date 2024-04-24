@@ -50,7 +50,7 @@ void crear_marcos_memoria() {
 }
 
 
-//============================================ FUNCIONES DE LOGICA DE MARCOS/PAGINAS =============================================
+//============================================ FUNCIONES DE ASIGNACION DE MARCOS/PAGINAS =============================================
 
 int cantidad_de_marcos_libres(){
 	
@@ -296,14 +296,97 @@ static void mostrar_contenido() {
 
 
 
+
 //================================================== MANEJO ESCRITURAS EN PAGINAS/MARCOS ==================================================
 
-/*
-bool contenido_cabe_en_marcos(uint32_t pid, int tamaño_contenido_bytes) {
-    
-    t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
 
-	int cantidad_paginas_necesarias = cantidad_de_marcos_necesarios(tamaño_contenido_bytes);
+static void escribir_contenido_en_partes(t_proceso_en_memoria* proceso, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido);
+static bool contenido_cabe_en_marcos(t_proceso_en_memoria* proceso, int tamanio_contenido_bytes);
+static int numero_marco(uint32_t direccion_fisica);
+static int desplazamiento(uint32_t direccion_fisica);
+static int lugar_restante_en_marco(uint32_t direccion_fisica);
+static uint32_t calcular_direccion_fisica_inicial_marco(t_marco* marco);
+static void* buscar_contenido_espacio_usuario(uint32_t dir_fisica, int tamanio);
+static void ordenar_lista_por_numero_pagina(t_list* tabla_paginas);
+static void copiar_contenido_en_espacio_usuario(uint32_t direccion_fisica_inicial, int bytes_restantes_primer_marco, void* contenido, uint32_t tam_contenido, t_list* paginas_contiguas);
+static t_list* paginas_contiguas_a_cargar(t_proceso_en_memoria* proceso, int cantidad_paginas, uint32_t pagina_inicio);
+
+
+
+
+
+/*
+//SI NO FUNCIONA CON (void* contenido) HACER ALGO ASI SEGUN LA INSTRUCCION
+void escribir_espacio_usuario(uint32_t pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido, char* tipo_dato){
+	//METODO GENERAL
+
+	if (tipo_dato == "STRING"){
+		return;
+	}
+	if (tipo_dato == "REGISTRO 1 BYTE"){
+		return;
+	}
+	if (tipo_dato == "REGISTRO 4 BYTES"){
+		return;
+	}
+}
+*/
+
+
+
+void escribir__contenido_espacio_usuario(uint32_t pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido){
+
+
+	t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
+
+	if(!contenido_cabe_en_marcos(proceso, tamanio_escritura)){
+		//TODO preguntar que onda, igual dudo que se de este caso
+	}
+
+	//Entra en una pagina/marco
+	if (lugar_restante_en_marco(direccion_fisica) >= tamanio_escritura){
+		//Entra en este marco
+			
+		//usleep(1000 * config_valores_memoria.retardo_respuesta); //TODO ver si poner el usleep aca o hacer otro escribir general para ambos metodos
+
+		memcpy((char*) espacio_usuario + direccion_fisica, contenido, (size_t) tamanio_escritura); //ver si funca con el casteo
+	}else{
+		escribir_contenido_en_partes(proceso, direccion_fisica, tamanio_escritura, contenido);
+	}
+
+}
+
+
+
+static void escribir_contenido_en_partes(t_proceso_en_memoria* proceso, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido){
+	
+	//Spliteo el contenido segun en cuantas divisiones de paginas/marcos deba hacerse 
+
+	t_marco* primer_marco = marco_desde_df(direccion_fisica);
+	
+	int bytes_restantes_primer_marco = lugar_restante_en_marco(direccion_fisica); //Cuantos bytes entran del contenido en el primer marco marcado por df
+
+	int cantidad_paginas_necesarias = cantidad_de_marcos_necesarios(tamanio_escritura - bytes_restantes_primer_marco) +1; //Cuantas paginas/marcos se necesitan para el resto del contenido, el +1 es de la primera que ya restamos los bytes
+
+	t_list* paginas_a_cargar = paginas_contiguas_a_cargar(cantidad_paginas_necesarias, primer_marco->nro_pagina);
+
+	//Ahora ya tenemos las paginas en las cuales de divididara el contenido, la primera es la que hay que chequear cuantos bytes escribir, el resto enteras
+	
+	copiar_contenido_en_espacio_usuario(direccion_fisica, bytes_restantes_primer_marco, contenido, tamanio_escritura, paginas_a_cargar);
+
+
+
+	list_destroy(paginas_a_cargar);
+}
+
+
+
+
+
+static bool contenido_cabe_en_marcos(t_proceso_en_memoria* proceso, int tamanio_contenido_bytes) {
+    
+
+	int cantidad_paginas_necesarias = cantidad_de_marcos_necesarios(tamanio_contenido_bytes);
 
     // Verificar si la cantidad de páginas necesarias cabe en las páginas cargadas en los marcos del proceso
     int cantidad_paginas_cargadas = list_size(proceso->paginas_en_memoria);
@@ -313,25 +396,194 @@ bool contenido_cabe_en_marcos(uint32_t pid, int tamaño_contenido_bytes) {
 
 }
 
-int numero_marco(uint32_t dir_fisica){
-	return floor(dir_fisica / config_valores_memoria.tam_pagina);
+
+
+static int numero_marco(uint32_t direccion_fisica){
+	return floor(direccion_fisica / config_valores_memoria.tam_pagina);
 }
 
-int desplazamiento(uint32_t dir_fisica){
-	
-	t_marco* marco_asociado = marco_desde_df(dir_fisica); //Aca hay un leak?
 
-	return dir_fisica - (config_valores_memoria.tam_pagina*(marco_asociado->nro_pagina))
+
+static int desplazamiento(uint32_t direccion_fisica){
+	
+	t_marco* marco_asociado = marco_desde_df(direccion_fisica); //Aca hay un leak?
+
+	return direccion_fisica - (config_valores_memoria.tam_pagina*(marco_asociado->nro_pagina))
 }
 
-int lugar_restante_en_marco(uint32_t dir_fisica){
+
+
+static int lugar_restante_en_marco(uint32_t direccion_fisica){
 	
-	int desplazamiento = desplazamiento(dir_fisica);
+	int desplazamiento = desplazamiento(direccion_fisica);
 	
 	return config_valores_memoria.tam_pagina-desplazamiento;
 }
-*/
 
+
+
+static uint32_t calcular_direccion_fisica_inicial_marco(t_marco* marco) {
+    
+	// Calcula la dirección física usando el número de marco y el tamaño de página
+    
+	uint32_t direccion_fisica = marco->nro_marco * config_valores_memoria.tam_pagina;
+    
+	return direccion_fisica;
+}
+
+
+
+static void* buscar_contenido_espacio_usuario(uint32_t dir_fisica, int tamanio) {
+    
+	//TODO preguntar si es del void* entero cuando viene por ejemplo copy_string o del proceso, porque si es del proceso
+	//		hay que hacer lo mismo para escribir, de dividir en paginas a leer y marcos que correspondan a ese proceso.
+	// 		por lo tanto habria que buscar los marcos en los que esten las paginas, desde la df hasta el tamanio por param.
+
+	// Calculamos el desplazamiento dentro del espacio de usuario
+    int desplazamiento = dir_fisica;
+
+    void* contenido = malloc(tamanio);
+
+    // Copiamos el contenido del espacio de usuario al contenido a escribir
+    memcpy(contenido, espacio_usuario + desplazamiento, tamanio);
+
+    return contenido;
+}
+
+
+static void ordenar_lista_por_numero_pagina(t_list* tabla_paginas){
+    
+    static bool comparador_paginas(void* pagina1, void* pagina2) {
+        
+		t_pagina* p1 = (t_pagina*) pagina1;
+        t_pagina* p2 = (t_pagina*) pagina2;
+        return p1->nro_pagina < p2->nro_pagina;
+    
+	}
+    
+    // Ordena la lista de páginas en memoria por número de página ascendente
+    list_sort(tabla_paginas, comparador_paginas);
+}
+
+
+
+
+static void copiar_contenido_en_espacio_usuario(uint32_t direccion_fisica_inicial, int bytes_restantes_primer_marco, void* contenido, uint32_t tam_contenido, t_list* paginas_contiguas) {
+    
+	uint32_t bytes_copiados = 0;
+	uint32_t bytes_por_marco = config_valores_memoria.tam_pagina;
+
+	//Trato la primer pagina por si no comienza en 0 la DF y hay que escribir desde la mitad del marco
+	
+	//Copio solo la parte que entra en el primer marco
+	memcpy(espacio_usuario + direccion_fisica_inicial, contenido, bytes_restantes_primer_marco);
+	
+	bytes_copiados += bytes_restantes_primer_marco; 
+
+
+    // Iterar sobre las páginas contiguas
+    for (int i = 1; i < list_size(paginas_contiguas) && (bytes_copiados <= tam_contenido); i++) { // (bytes_copiados <= tam_contenido) ->orque puede no llegar a copiar completa la ultima pagina
+        
+		t_pagina* pagina = list_get(paginas_contiguas, i);
+        
+		t_marco* marco = buscar_marco_por_numero(pagina->nro_marco);
+        
+        // Calcular la dirección física dle marco actual en donde comenzar a escribir la parte
+        uint32_t direccion_fisica = calcular_direccion_fisica_inicial_marco(marco);
+
+        // Copiar los bytes en el espacio de usuario, al sumar bytes_copiados esta partiendo el string/entero
+        memcpy(espacio_usuario + direccion_fisica, contenido + bytes_copiados, bytes_por_marco);
+
+        // Actualizar el número de bytes copiados
+        bytes_copiados += bytes_por_marco;
+    }
+
+}
+
+static t_list* paginas_contiguas_a_cargar(t_proceso_en_memoria* proceso, int cantidad_paginas, uint32_t pagina_inicio){
+
+	//Retorna la lista con las paginas en las cuales se va a cargar el contenido, a partir de la pagina que se pasa por parametro
+	t_list* lista_paginas = list_create();
+
+	for (int i = 0; i < cantidad_paginas; i++) {
+        
+		//Ordeno la tabla de paginas para acceder directamente con el index
+		ordenar_lista_por_numero_pagina(proceso->paginas_en_memoria);
+
+		// Busca la página correspondiente en la tabla de páginas del proceso
+        int nro_pagina = pagina_inicio + i; //Al arrancar en 0 también agrega la primera, que hay que tratar a parte
+        
+		t_pagina* pagina = list_get(proceso->paginas_en_memoria, nro_pagina);
+
+		if (pagina == NULL){
+			//TODO
+		}
+
+        list_add(lista_paginas, pagina);
+       
+    }
+
+    return lista_paginas;
+}
+
+
+
+
+/*
+
+ALGORITMO FUNCIONAMIENTO DE LA ESCRITURA
+
+NECESITO: DF, TAMAÑO A ESCRIBIR (sino lo calculo para enteros)
+
+------------
+
+1) EN EL CASO DE MOVIN-MOVOUT TENEMOS SERVIDO EL DATO PORQUE ES SOLO UN ENTERO QUE VIENE DEL REGISTRO
+	EN EL CASO DE COPYSTRING -> BUSCAR LO QUE SE DEBE ESCRIBIR EN EL VOID* 
+	
+	EN LOS OTROS CASO VER!
+
+------------
+
+2)) VER SI ENTRA LO QUE SE QUIERE ESCRIBIR EN EL MARCO ASOCIADO
+
+SI EL TAMAÑOCONTENIDO ES MENOR AL TAMPAG
+	
+	SI EL LUGAR RESTANTE EN EL MARCO ES <= AL TAMAÑOCONTENIDO (supera los bordes del marco)
+		ESCRIBIR CONTENIDO EN DF -> en este caso se asegura de no pisar otro marco, si por ejemplo el desp es 
+									el ultimo byte y toca un entero de 4bytes el prox marco que no necesariamente 
+									es del proceso.
+	
+	SINO
+		ESCRIBIR CONTENIDO EN PARTES
+
+SINO
+	
+	ESCRIBIR CONTENIDO EN PARTES
+
+------------
+
+3)) ESCRIBIR CONTENIDO EN PARTES
+
+BUSCAR DADA LA DF EL LUGAR RESTANTE EN MARCO (SI EL DESPLAZAMIENTO ES PJ 3, RESTAN TAMMARCO-DESPLAZAMIENTO BYTES EN EL MARCO, NO EL TOTAL DE BYTES)
+
+BUSCAR CUANTOS MARCOS SE REQUIEREN ADEMAS DEL LUGAR RESTANTE EN EL PRIMER MARCO
+
+BUSCAR MARCOS CONTIGUOS DEL PROCESO PARA ESCRIBIR LA DATA
+
+DIVIDIR EL STRING/ENTERO 
+	SE PUEDE USAR: char* parte_string = malloc(bytes_disponibles_en_marco + 1); // +1 para el carácter nulo '\0'
+				   strncpy(parte_string, string, bytes_disponibles_en_marco);
+				   parte_string[bytes_disponibles_en_marco] = '\0';
+
+COPIAR CADA PARTE DEL STRING EN LA DF DEL MARCO QUE SE ESTE COPIANDO
+YA QUE EN EL PRIMER MARCO TENEMOS LA DF QUE VIENE DE CPU
+PERO EN LOS SIGUIENTES HAY QUE VER DONDE ARRANCAN, ES DECIR LA DF DE LA PRIMERA POSICION
+	DF_inicio_marco = NUMMARCO * TAMPAGINA;
+	memcpy(espacio_usuario + direccion_fisica, parte_string, tamaño_parte_string);
+        
+
+
+*/
 
 
 

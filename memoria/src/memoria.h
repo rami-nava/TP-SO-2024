@@ -42,9 +42,10 @@ typedef struct
 	int retardo_respuesta;
 	char* algoritmo_reemplazo;
 } arch_config;
+
 extern arch_config config_valores_memoria;
 
-//TODO cambiar todos los ints por uint32_T y poner nombres regulares no: numero_de_pagina y en el otro nro_pag
+//TODO cambiar todos los ints por uint32_T 
 
 typedef struct {
 	int nro_pagina;
@@ -66,6 +67,7 @@ typedef struct {
 } t_proceso_en_memoria;
 
 //======================================================= FUNCIONES =========================================================================================================
+
 /// UTILS ///
 int atender_clientes_memoria(int socket);
 void cargar_configuracion(char* path);
@@ -112,6 +114,10 @@ int cantidad_de_marcos_necesarios(int tamanio);
 void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos);
 t_marco* buscar_marco_por_numero(int numero_de_marco);
 uint32_t buscar_marco(uint32_t numero_pagina, int pid);
+
+
+//ESCRITURA Y LECTURA
+void escribir__contenido_espacio_usuario(uint32_t pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido);
 
 
 
