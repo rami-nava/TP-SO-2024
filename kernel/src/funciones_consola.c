@@ -63,7 +63,6 @@ void consola_iniciar_planificacion() {
 void consola_proceso_estado() {
   mostrar_lista_pids(cola_NEW, "NEW", mutex_NEW);
   mostrar_lista_pids(cola_READY, "READY", mutex_READY);
-  //Ver como mostrar los bloqueados TODO
 
   for(int i = 0 ; i < list_size(interfaces_genericas) ; i++){
     t_interfaz* interfaz = list_get(interfaces_genericas,i);

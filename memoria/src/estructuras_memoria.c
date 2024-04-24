@@ -14,14 +14,15 @@ void creacion_espacio_usuario(){
         abort();
     } 
 
-	memset(espacio_usuario,0,config_valores_memoria.tam_memoria); //inicializa con 0
+	//Se inicializa con 0
+	memset(espacio_usuario,0,config_valores_memoria.tam_memoria); 
 
 	marcos = list_create();
 
 	crear_marcos_memoria();
 }
 
-//============================================ PROCESOS EN MEMORIA - MARCOS ====================================================
+//============================================ CREACION DE PROCESOS && MARCOS DE MEMORIA ====================================================
 
 void crear_estructuras_memoria(int pid, FILE* archivo){
 
@@ -63,30 +64,28 @@ int cantidad_de_marcos_libres(){
 			contador++;
 		}
 	}
-	
 	return contador;
 }
 
-int cantidad_de_marcos_necesarios(int tamanio){
-	return (int) ceil(tamanio/config_valores_memoria.tam_pagina); //PROBAR CASTEO
+int cantidad_de_marcos_necesarios(int tamanio_contenido_bytes){
+	return (int) ceil(tamanio_contenido_bytes/tam_pagina); //PROBAR CASTEO
 }
 
-void quitar_marcos_a_proceso(uint32_t pid, uint32_t cantidad_marcos_a_liberar){
+void quitar_marcos_a_proceso(int pid, uint32_t cantidad_marcos_a_liberar){
 	
 	t_proceso_en_memoria *proceso = obtener_proceso_en_memoria(pid);
 	t_pagina *pagina_removida = NULL;
 
 	//TODO preguntar si borramos las paginas cuando se hace resize menor o en que cambia si las dejamos con un bit no cargadas
 
-
 	for(int i = 0; i<cantidad_marcos_a_liberar; i++){
-		
-		pagina_removida = list_remove(proceso->paginas_en_memoria, list_size(proceso->paginas_en_memoria)); //Saca desde el final las paginas
+
+		//Saca desde el final las paginas
+		pagina_removida = list_remove(proceso->paginas_en_memoria, list_size(proceso->paginas_en_memoria)); 
 		liberar_marco(pagina_removida->nro_marco);
 
 		free(pagina_removida);
 	}
-	
 }
 
 void liberar_marco(int marco_a_liberar){
@@ -96,7 +95,6 @@ void liberar_marco(int marco_a_liberar){
 	marco->nro_pagina = -1;
 	marco->libre = 1;
 	marco->pid_proceso = -1;
-    
 }
 
 t_marco* buscar_marco_por_numero(int numero_de_marco) {
@@ -109,11 +107,10 @@ t_marco* buscar_marco_por_numero(int numero_de_marco) {
             return marco_actual;
         }
     }
-    
     return NULL;
 }
 
-void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos_necesarios) {
+void asignar_marcos_a_proceso(int pid, int cantidad_de_marcos_necesarios) {
 	
 	//PRIMERO DEBERIA BUSCAR MARCOS LIBRES
 	//SEGUNDO AL MARCO LIBRE ASIGNARLE EL PID DEL PROCESO Y MARCARLO COMO OCUPADO 
@@ -133,22 +130,19 @@ void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos_necesarios) {
 			}
 		}
 	}
-
-	
 }
 
-void asignar_proceso_a_marco(uint32_t pid, t_marco* marco){
+void asignar_proceso_a_marco(int pid, t_marco* marco){
 	t_proceso_en_memoria *proceso = obtener_proceso_en_memoria(pid);
 	agregar_pagina_a_proceso(proceso, marco);
 	
 	marco->pid_proceso = pid;
 	marco->nro_pagina = list_size(proceso->paginas_en_memoria);
 	marco->libre = 0;
-
-	
 }
 
-t_proceso_en_memoria* obtener_proceso_en_memoria(uint32_t pid) { //Busca en los procesos cuyas instrucciones ya fueron cargadas
+//Busca en los procesos cuyas instrucciones ya fueron cargadas
+t_proceso_en_memoria* obtener_proceso_en_memoria(int pid) { 
     
 	for (int i = 0; i < list_size(procesos_en_memoria); i++) {
         t_proceso_en_memoria* proceso = (t_proceso_en_memoria*) list_get(procesos_en_memoria, i);
@@ -156,6 +150,7 @@ t_proceso_en_memoria* obtener_proceso_en_memoria(uint32_t pid) { //Busca en los 
             return proceso; 
         }
     }
+	return NULL;
 }
 
 void agregar_pagina_a_proceso(t_proceso_en_memoria* proceso, t_marco* marco){
@@ -167,7 +162,6 @@ void agregar_pagina_a_proceso(t_proceso_en_memoria* proceso, t_marco* marco){
 	pagina_nueva->nro_pagina = list_size(proceso->paginas_en_memoria);
 
 	list_add(proceso->paginas_en_memoria, pagina_nueva);
-	
 }
 
 uint32_t buscar_marco(uint32_t numero_pagina, int pid){
@@ -200,15 +194,11 @@ uint32_t buscar_marco(uint32_t numero_pagina, int pid){
         log_info(memoria_logger, "PID: %d - OBTENER MARCO - Página: %d - Marco: %d\n", pid, numero_pagina, marco);
     }
 
-    
     return marco;
 }
 
-
-
-
 /*
-void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos) {
+void asignar_marcos_a_proceso(int pid, int cantidad_de_marcos) {
  	
 	t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
 	//if (proceso != -1)...
@@ -244,8 +234,6 @@ void asignar_marcos_a_proceso(uint32_t pid, int cantidad_de_marcos) {
 
  	list_iterator_destroy(iterador);
 }
-
-
 
 int cantidad_de_marcos_del_proceso(t_proceso_en_memoria* proceso) { //Equivale a cantidad de paginas en memoria
 
@@ -294,11 +282,7 @@ static void mostrar_contenido() {
 }
 */
 
-
-
-
 //================================================== MANEJO ESCRITURAS EN PAGINAS/MARCOS ==================================================
-
 
 static void escribir_contenido_en_partes(t_proceso_en_memoria* proceso, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido);
 static bool contenido_cabe_en_marcos(t_proceso_en_memoria* proceso, int tamanio_contenido_bytes);
@@ -312,13 +296,9 @@ static void ordenar_lista_por_numero_pagina(t_list* tabla_paginas);
 static void copiar_contenido_en_partes_espacio_usuario(uint32_t direccion_fisica_inicial, int bytes_restantes_primer_marco, void* contenido, uint32_t tam_contenido, t_list* paginas_contiguas);
 static t_list* paginas_contiguas_a_cargar(t_proceso_en_memoria* proceso, int cantidad_paginas, uint32_t pagina_inicio);
 
-
-
-
-
 /*
 //SI NO FUNCIONA CON (void* contenido) HACER ALGO ASI SEGUN LA INSTRUCCION
-void escribir_espacio_usuario(uint32_t pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido, char* tipo_dato){
+void escribir_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido, char* tipo_dato){
 	//METODO GENERAL
 
 	if (tipo_dato == "STRING"){
@@ -333,9 +313,7 @@ void escribir_espacio_usuario(uint32_t pid, uint32_t direccion_fisica, uint32_t 
 }
 */
 
-
-
-void escribir__contenido_espacio_usuario(uint32_t pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido){
+void escribir__contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido){
 
 	//usleep(1000 * config_valores_memoria.retardo_respuesta); //TODO ver si poner el usleep aca o hacer otro escribir general para ambos metodos
 
@@ -360,8 +338,6 @@ void escribir__contenido_espacio_usuario(uint32_t pid, uint32_t direccion_fisica
 
 }
 
-
-
 static void escribir_contenido_en_partes(t_proceso_en_memoria* proceso, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido){
 	
 	//Spliteo el contenido segun en cuantas divisiones de paginas/marcos deba hacerse 
@@ -378,18 +354,11 @@ static void escribir_contenido_en_partes(t_proceso_en_memoria* proceso, uint32_t
 	
 	copiar_contenido_en_partes_espacio_usuario(direccion_fisica, bytes_restantes_primer_marco, contenido, tamanio_escritura, paginas_a_cargar);
 
-
-
 	list_destroy(paginas_a_cargar);
 }
 
-
-
-
-
 static bool contenido_cabe_en_marcos(t_proceso_en_memoria* proceso, int tamanio_contenido_bytes) {
     
-
 	int cantidad_paginas_necesarias = cantidad_de_marcos_necesarios(tamanio_contenido_bytes);
 
     // Verificar si la cantidad de páginas necesarias cabe en las páginas cargadas en los marcos del proceso
@@ -400,43 +369,32 @@ static bool contenido_cabe_en_marcos(t_proceso_en_memoria* proceso, int tamanio_
 
 }
 
-
-
 static int numero_marco(uint32_t direccion_fisica){
-	return floor(direccion_fisica / config_valores_memoria.tam_pagina);
+	return floor(direccion_fisica / tam_pagina);
 }
-
-
 
 static int desplazamiento(uint32_t direccion_fisica){
 	
 	t_marco* marco_asociado = marco_desde_df(direccion_fisica); //Aca hay un leak?
 
-	return direccion_fisica - (config_valores_memoria.tam_pagina*(marco_asociado->nro_pagina));
+	return direccion_fisica - (tam_pagina*(marco_asociado->nro_pagina));
 
 }
-
-
 
 static int lugar_restante_en_marco(uint32_t direccion_fisica){
 	
 	int offset = desplazamiento(direccion_fisica);
 	
-	return config_valores_memoria.tam_pagina-offset;
+	return tam_pagina-offset;
 }
 
-
-
+// Calcula la dirección física usando el número de marco y el tamaño de página
 static uint32_t calcular_direccion_fisica_inicial_marco(t_marco* marco) {
-    
-	// Calcula la dirección física usando el número de marco y el tamaño de página
-    
-	uint32_t direccion_fisica = marco->nro_marco * config_valores_memoria.tam_pagina;
+        
+	uint32_t direccion_fisica = marco->nro_marco * tam_pagina;
     
 	return direccion_fisica;
-
 }
-
 
 /*
 static void* buscar_contenido_espacio_usuario(uint32_t dir_fisica, int tamanio) {
@@ -457,15 +415,12 @@ static void* buscar_contenido_espacio_usuario(uint32_t dir_fisica, int tamanio) 
 }
 */
 
-
 static bool comparador_paginas(void* pagina1, void* pagina2) {
         
 		t_pagina* p1 = (t_pagina*) pagina1;
         t_pagina* p2 = (t_pagina*) pagina2;
         return p1->nro_pagina < p2->nro_pagina;
-    
 }
-
 
 static void ordenar_lista_por_numero_pagina(t_list* tabla_paginas){
     
@@ -473,13 +428,10 @@ static void ordenar_lista_por_numero_pagina(t_list* tabla_paginas){
     list_sort(tabla_paginas, comparador_paginas);
 }
 
-
-
-
 static void copiar_contenido_en_partes_espacio_usuario(uint32_t direccion_fisica_inicial, int bytes_restantes_primer_marco, void* contenido, uint32_t tam_contenido, t_list* paginas_contiguas) {
     
 	uint32_t bytes_copiados = 0;
-	uint32_t bytes_por_marco = config_valores_memoria.tam_pagina;
+	uint32_t bytes_por_marco = tam_pagina;
 
 	//Trato la primer pagina por si no comienza en 0 la DF y hay que escribir desde la mitad del marco
 	
@@ -508,7 +460,6 @@ static void copiar_contenido_en_partes_espacio_usuario(uint32_t direccion_fisica
 
 }
 
-
 static t_list* paginas_contiguas_a_cargar(t_proceso_en_memoria* proceso, int cantidad_paginas, uint32_t pagina_inicio){
 
 	//Retorna la lista con las paginas en las cuales se va a cargar el contenido, a partir de la pagina que se pasa por parametro
@@ -534,9 +485,6 @@ static t_list* paginas_contiguas_a_cargar(t_proceso_en_memoria* proceso, int can
 
     return lista_paginas;
 }
-
-
-
 
 /*
 
@@ -590,8 +538,6 @@ PERO EN LOS SIGUIENTES HAY QUE VER DONDE ARRANCAN, ES DECIR LA DF DE LA PRIMERA 
 	DF_inicio_marco = NUMMARCO * TAMPAGINA;
 	memcpy(espacio_usuario + direccion_fisica, parte_string, tamaño_parte_string);
         
-
-
 */
 
 

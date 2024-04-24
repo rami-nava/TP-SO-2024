@@ -6,6 +6,7 @@ t_config* config;
 int server_memoria;
 arch_config config_valores_memoria;
 int cantidad_marcos;
+int tam_pagina;
 
 int main(void) {
 	
@@ -15,7 +16,9 @@ int main(void) {
 
     procesos_en_memoria = list_create();
 
-	cantidad_marcos = config_valores_memoria.tam_memoria / config_valores_memoria.tam_pagina;
+    tam_pagina = config_valores_memoria.tam_pagina;
+
+	cantidad_marcos = config_valores_memoria.tam_memoria / tam_pagina;
 
     creacion_espacio_usuario();
 
