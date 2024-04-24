@@ -308,7 +308,7 @@ static int lugar_restante_en_marco(uint32_t direccion_fisica);
 static uint32_t calcular_direccion_fisica_inicial_marco(t_marco* marco);
 static void* buscar_contenido_espacio_usuario(uint32_t dir_fisica, int tamanio);
 static void ordenar_lista_por_numero_pagina(t_list* tabla_paginas);
-static void copiar_contenido_en_espacio_usuario(uint32_t direccion_fisica_inicial, int bytes_restantes_primer_marco, void* contenido, uint32_t tam_contenido, t_list* paginas_contiguas);
+static void copiar_contenido_en_partes_espacio_usuario(uint32_t direccion_fisica_inicial, int bytes_restantes_primer_marco, void* contenido, uint32_t tam_contenido, t_list* paginas_contiguas);
 static t_list* paginas_contiguas_a_cargar(t_proceso_en_memoria* proceso, int cantidad_paginas, uint32_t pagina_inicio);
 
 
@@ -350,6 +350,7 @@ void escribir__contenido_espacio_usuario(uint32_t pid, uint32_t direccion_fisica
 		//usleep(1000 * config_valores_memoria.retardo_respuesta); //TODO ver si poner el usleep aca o hacer otro escribir general para ambos metodos
 
 		memcpy((char*) espacio_usuario + direccion_fisica, contenido, (size_t) tamanio_escritura); //ver si funca con el casteo
+	
 	}else{
 		escribir_contenido_en_partes(proceso, direccion_fisica, tamanio_escritura, contenido);
 	}
@@ -372,7 +373,7 @@ static void escribir_contenido_en_partes(t_proceso_en_memoria* proceso, uint32_t
 
 	//Ahora ya tenemos las paginas en las cuales de divididara el contenido, la primera es la que hay que chequear cuantos bytes escribir, el resto enteras
 	
-	copiar_contenido_en_espacio_usuario(direccion_fisica, bytes_restantes_primer_marco, contenido, tamanio_escritura, paginas_a_cargar);
+	copiar_contenido_en_partes_espacio_usuario(direccion_fisica, bytes_restantes_primer_marco, contenido, tamanio_escritura, paginas_a_cargar);
 
 
 
@@ -432,7 +433,7 @@ static uint32_t calcular_direccion_fisica_inicial_marco(t_marco* marco) {
 }
 
 
-
+/*
 static void* buscar_contenido_espacio_usuario(uint32_t dir_fisica, int tamanio) {
     
 	//TODO preguntar si es del void* entero cuando viene por ejemplo copy_string o del proceso, porque si es del proceso
@@ -449,6 +450,7 @@ static void* buscar_contenido_espacio_usuario(uint32_t dir_fisica, int tamanio) 
 
     return contenido;
 }
+*/
 
 
 static void ordenar_lista_por_numero_pagina(t_list* tabla_paginas){
@@ -468,7 +470,7 @@ static void ordenar_lista_por_numero_pagina(t_list* tabla_paginas){
 
 
 
-static void copiar_contenido_en_espacio_usuario(uint32_t direccion_fisica_inicial, int bytes_restantes_primer_marco, void* contenido, uint32_t tam_contenido, t_list* paginas_contiguas) {
+static void copiar_contenido_en_partes_espacio_usuario(uint32_t direccion_fisica_inicial, int bytes_restantes_primer_marco, void* contenido, uint32_t tam_contenido, t_list* paginas_contiguas) {
     
 	uint32_t bytes_copiados = 0;
 	uint32_t bytes_por_marco = config_valores_memoria.tam_pagina;
@@ -476,7 +478,7 @@ static void copiar_contenido_en_espacio_usuario(uint32_t direccion_fisica_inicia
 	//Trato la primer pagina por si no comienza en 0 la DF y hay que escribir desde la mitad del marco
 	
 	//Copio solo la parte que entra en el primer marco
-	memcpy(espacio_usuario + direccion_fisica_inicial, contenido, bytes_restantes_primer_marco);
+	memcpy((char *) espacio_usuario + direccion_fisica_inicial, contenido, (size_t) bytes_restantes_primer_marco);
 	
 	bytes_copiados += bytes_restantes_primer_marco; 
 
@@ -492,13 +494,14 @@ static void copiar_contenido_en_espacio_usuario(uint32_t direccion_fisica_inicia
         uint32_t direccion_fisica = calcular_direccion_fisica_inicial_marco(marco);
 
         // Copiar los bytes en el espacio de usuario, al sumar bytes_copiados esta partiendo el string/entero
-        memcpy(espacio_usuario + direccion_fisica, contenido + bytes_copiados, bytes_por_marco);
+        memcpy((char *) espacio_usuario + direccion_fisica, contenido + bytes_copiados, (size_t) bytes_por_marco);
 
         // Actualizar el número de bytes copiados
         bytes_copiados += bytes_por_marco;
     }
 
 }
+
 
 static t_list* paginas_contiguas_a_cargar(t_proceso_en_memoria* proceso, int cantidad_paginas, uint32_t pagina_inicio){
 
