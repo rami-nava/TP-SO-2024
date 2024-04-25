@@ -35,7 +35,7 @@ void leer_instrucciones_desde_archivo(t_proceso_en_memoria* proceso, FILE* archi
 char* buscar_instruccion_proceso(uint32_t PC, int pid)
 {
 	//Obtengo el proceso por el pid
-	t_proceso_en_memoria *proceso = buscar_proceso(procesos_en_memoria, pid);
+	t_proceso_en_memoria *proceso = obtener_proceso_en_memoria(pid);
 
 	//Busco la instruccion en la lista segun el PC
 	char *instruccion = list_get(proceso->instrucciones, PC);
@@ -101,7 +101,8 @@ void escribir_memoria(uint32_t dir_fisica, uint32_t valor, int pid){
 //============================================== Resize ================================================================
 
 void resize(int pid, uint32_t tamanio){
-	uint32_t tamanio_actual = tamanio_actual_proceso_en_memoria(pid);
+	t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
+	uint32_t tamanio_actual = tamanio_actual_proceso_en_memoria(proceso);
 	uint32_t tamanio_reducido;
 	int cantidad_paginas_a_sacar;
 	int cantidad_marcos_necesarios = cantidad_de_marcos_necesarios(tamanio);
@@ -120,10 +121,10 @@ void resize(int pid, uint32_t tamanio){
 		//TODO Hacer una funcion para esto que sea cantmarcosnecesariosextencion y otra cantmarcosnecesarioscompresion
 		cantidad_paginas_a_sacar = tamanio_reducido/tam_pagina; 
 
-		quitar_marcos_a_proceso(pid, cantidad_paginas_a_sacar);
+		quitar_marcos_a_proceso(proceso, cantidad_paginas_a_sacar);
 	}else{ //AUMENTAR TAMAÑO
 		log_info(memoria_logger, "PID: %d - TAMAÑO ACTUAL: %d - TAMAÑO A AUMENTAR: %d", pid, tamanio_actual, tamanio);
-		asignar_marcos_a_proceso(pid, cantidad_marcos_necesarios); //cant_m_nec equivale a la cant_pags
+		asignar_marcos_a_proceso(proceso, cantidad_marcos_necesarios); //cant_m_nec equivale a la cant_pags
 	}
 }
 
@@ -137,9 +138,8 @@ int out_of_memory(int pid, uint32_t tamanio){ //SOLO FUNCIONA PARA EXTENDER EL T
 		return 1; //OUT OF MEMORY
 }
 
-uint32_t tamanio_actual_proceso_en_memoria(int pid){
+uint32_t tamanio_actual_proceso_en_memoria(t_proceso_en_memoria* proceso){
 	
-	t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
 	uint32_t tamanio_actual = list_size(proceso->paginas_en_memoria) * tam_pagina;
 	return tamanio_actual;
 }

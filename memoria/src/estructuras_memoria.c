@@ -56,6 +56,24 @@ void crear_marcos_memoria() {
 	}
 }
 
+void finalizar_en_memoria(int pid){
+	//TODO NUEVO 1C2024
+	//Obtengo el proceso por el pid
+	t_proceso_en_memoria *proceso = obtener_proceso_en_memoria(pid);
+
+	//Libero las paginas
+	int cantidad_paginas_de_proceso = list_size(proceso->paginas_en_memoria);
+	quitar_marcos_a_proceso(proceso, cantidad_paginas_de_proceso);
+
+	//Elimino el proceso de la lista
+	list_remove_element(procesos_en_memoria, proceso);
+
+	//Limpio su lista de instrucciones
+	list_destroy(proceso->instrucciones);
+
+	//Libero su memoria
+	free(proceso);
+}
 
 //============================================ FUNCIONES DE ASIGNACION DE MARCOS/PAGINAS =============================================
 
@@ -77,11 +95,12 @@ int cantidad_de_marcos_necesarios(int tamanio_contenido_bytes){
 	return (int) ceil(tamanio_contenido_bytes/tam_pagina); //PROBAR CASTEO
 }
 
-void quitar_marcos_a_proceso(int pid, uint32_t cantidad_marcos_a_liberar){
+void quitar_marcos_a_proceso(t_proceso_en_memoria* proceso, uint32_t cantidad_marcos_a_liberar){
 	
-	t_proceso_en_memoria *proceso = obtener_proceso_en_memoria(pid);
 	t_pagina *pagina_removida = NULL;
 
+	log_info(memoria_logger, "Liberando paginas - PID: %d - Tamaño: %d", proceso->pid, cantidad_marcos_a_liberar); 
+	
 	//TODO preguntar si borramos las paginas cuando se hace resize menor o en que cambia si las dejamos con un bit no cargadas
 
 	for(int i = 0; i<cantidad_marcos_a_liberar; i++){
@@ -116,7 +135,7 @@ t_marco* buscar_marco_por_numero(int numero_de_marco) {
     return NULL;
 }
 
-void asignar_marcos_a_proceso(int pid, int cantidad_de_marcos_necesarios) {
+void asignar_marcos_a_proceso(t_proceso_en_memoria* proceso, int cantidad_de_marcos_necesarios) {
 	
 	//PRIMERO DEBERIA BUSCAR MARCOS LIBRES
 	//SEGUNDO AL MARCO LIBRE ASIGNARLE EL PID DEL PROCESO Y MARCARLO COMO OCUPADO 
@@ -126,23 +145,25 @@ void asignar_marcos_a_proceso(int pid, int cantidad_de_marcos_necesarios) {
 	t_marco* marco_obtenido = NULL;
 	int contador=0;
 
+	log_info(memoria_logger, "Agregando paginas - PID: %d - Tamaño: %d", proceso->pid, cantidad_de_marcos_necesarios); 
+
 	for(int i = 0; i<list_size(marcos); i++){
 		if(contador < cantidad_de_marcos_necesarios){
 			marco_obtenido = (t_marco*) list_get(marcos,i);
 			
 			if(marco_obtenido->libre == 1){ //SI EL MARCO QUE SE OBTIENE ESTA LIBRE
-				asignar_proceso_a_marco(pid, marco_obtenido); //TAMBIEN AGREGA PAGINA A PROCESO
+				asignar_proceso_a_marco(proceso, marco_obtenido); //TAMBIEN AGREGA PAGINA A PROCESO
 				contador++;
 			}
 		}
 	}
 }
 
-void asignar_proceso_a_marco(int pid, t_marco* marco){
-	t_proceso_en_memoria *proceso = obtener_proceso_en_memoria(pid);
+void asignar_proceso_a_marco(t_proceso_en_memoria* proceso, t_marco* marco){
+	
 	agregar_pagina_a_proceso(proceso, marco);
 	
-	marco->pid_proceso = pid;
+	marco->pid_proceso = proceso->pid;
 	marco->nro_pagina = list_size(proceso->paginas_en_memoria);
 	marco->libre = 0;
 }
@@ -173,7 +194,7 @@ void agregar_pagina_a_proceso(t_proceso_en_memoria* proceso, t_marco* marco){
 uint32_t buscar_marco(uint32_t numero_pagina, int pid){
     
 	//Obtengo el proceso por el pid
-    t_proceso_en_memoria *proceso = buscar_proceso(procesos_en_memoria, pid);
+    t_proceso_en_memoria *proceso = obtener_proceso_en_memoria(pid);
 
     // Busco la página correspondiente al número de página
     t_pagina *pagina = NULL;
@@ -318,7 +339,7 @@ void escribir_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t taman
 }
 */
 
-void escribir__contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido){
+void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido){
 
 	//usleep(1000 * config_valores_memoria.retardo_respuesta); //TODO ver si poner el usleep aca o hacer otro escribir general para ambos metodos
 

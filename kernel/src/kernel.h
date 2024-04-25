@@ -96,8 +96,6 @@ typedef struct
     int socket_conectado;
     char* nombre;
     char* tipo_interfaz;
-    int tiempo_sleep;
-    int tiempo_sleep_kernel;
     sem_t sem_comunicacion_interfaz;
     pthread_mutex_t cola_bloqueado_mutex;
     t_list* cola_bloqueados;

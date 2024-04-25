@@ -73,7 +73,6 @@ typedef struct {
 /// UTILS ///
 int atender_clientes_memoria(int socket);
 void cargar_configuracion(char* path);
-t_proceso_en_memoria* buscar_proceso(t_list *lista, int pid_buscado);
 void finalizar_en_memoria(int pid);
 
 /// @brief CPU + INSTRUCCIONES ///
@@ -96,29 +95,26 @@ t_marco *marco_desde_df(uint32_t dir_fisica);
 uint32_t leer_memoria(uint32_t dir_fisica, int pid);
 void acceso_a_espacio_usuario(int pid, char* accion, uint32_t dir_fisica, uint32_t tamanio);
 
-
 /// @brief  PROCESOS EN MEMORIA - MARCOS ///
 void crear_estructuras_memoria(int pid, FILE* archivo);
 void crear_marcos_memoria();
 t_proceso_en_memoria* obtener_proceso_en_memoria(int pid);
-uint32_t tamanio_actual_proceso_en_memoria(int pid);
-void quitar_marcos_a_proceso(int pid, uint32_t cantidad_marcos_a_sacar);
+uint32_t tamanio_actual_proceso_en_memoria(t_proceso_en_memoria* proceso);
+void quitar_marcos_a_proceso(t_proceso_en_memoria* proceso, uint32_t cantidad_marcos_a_sacar);
 void liberar_marco(int marco_a_liberar);
-void asignar_marcos_a_proceso(int pid, int cantidad_de_marcos_necesarios);
-void asignar_proceso_a_marco(int pid, t_marco* marco);
+void asignar_marcos_a_proceso(t_proceso_en_memoria* proceso, int cantidad_de_marcos_necesarios);
+void asignar_proceso_a_marco(t_proceso_en_memoria* proceso, t_marco* marco);
 void agregar_pagina_a_proceso(t_proceso_en_memoria* proceso, t_marco* marco);
 
 // FUNCIONES MARCOS/PAGINAS ///
 int cantidad_de_marcos_libres();
 int cantidad_de_marcos_necesarios(int tamanio);
-void asignar_marcos_a_proceso(int pid, int cantidad_de_marcos);
 t_marco* buscar_marco_por_numero(int numero_de_marco);
 uint32_t buscar_marco(uint32_t numero_pagina, int pid);
 int numero_marco(uint32_t direccion_fisica);
 
 //ESCRITURA Y LECTURA
-void escribir__contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido);
-
+void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido);
 
 
 #endif

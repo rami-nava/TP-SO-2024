@@ -218,9 +218,7 @@ static void io_fs_write(t_pcb *proceso, char **parametros){
 }
 
 static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz) 
-{  
-    interfaz->tiempo_sleep_kernel = tiempo_sleep;
-    
+{      
     t_paquete* paquete = crear_paquete(GENERICA_IO_SLEEP);
     agregar_entero_a_paquete(paquete, proceso->pid);
     agregar_entero_a_paquete(paquete, tiempo_sleep);

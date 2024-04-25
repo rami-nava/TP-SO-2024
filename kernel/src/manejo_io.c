@@ -5,7 +5,6 @@ pthread_mutex_t mutex_INTERFAZ_STDIN;
 pthread_mutex_t mutex_INTERFAZ_STDOUT;
 pthread_mutex_t mutex_INTERFAZ_DIALFS;
 
-static void esperar_io_generica(t_interfaz* interfaz);
 static void esperar_io(t_interfaz* interfaz);
 static void eliminar_interfaz(t_interfaz* interfaz);
 static void manejar_desconexion(int socket, char* nombre);
@@ -215,45 +214,6 @@ recv(interfaz->socket_conectado, &termino_io, sizeof(int), MSG_WAITALL);
 ingresar_de_BLOCKED_a_READY_IO(interfaz->cola_bloqueados, interfaz->cola_bloqueado_mutex);
 
 sem_post(&interfaz->sem_comunicacion_interfaz);
-}
-
-void crear_hilo_io_generica(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion) {
-    
-    char motivo[35] = "";
-
-    strcat(motivo, "INTERFAZ ");
-    strcat(motivo, interfaz->tipo_interfaz);
-    strcat(motivo, ": ");
-    strcat(motivo, interfaz->nombre);
-
-    if(!strcmp(config_valores_kernel.algoritmo, "VRR")){
-        sem_wait(&ciclo_actual_quantum_sem);
-        proceso->quantum = ciclo_actual_quantum;
-    }
-
-    ingresar_a_BLOCKED_IO(interfaz->cola_bloqueados ,proceso, motivo, interfaz->cola_bloqueado_mutex, interfaz->tipo_interfaz);
-    logear_cola_io_bloqueados(interfaz); //NO es obligatorio
-
-    //Esperamos a que la interfaz se desbloquee
-    sem_wait(&interfaz->sem_comunicacion_interfaz);
-
-    enviar_paquete(peticion, interfaz->socket_conectado);
-
-    pthread_t hilo_manejo_io;
-    pthread_create(&hilo_manejo_io, NULL, (void* ) esperar_io_generica, interfaz);
-    pthread_detach(hilo_manejo_io);
-
-    sem_post(&interfaz->sem_comunicacion_interfaz);
-
-}
-
-static void esperar_io_generica(t_interfaz* interfaz)
-{
-    int tiempo_sleep_total = interfaz->tiempo_sleep * interfaz->tiempo_sleep_kernel * 1000;
-
-    usleep(tiempo_sleep_total);
-
-    ingresar_de_BLOCKED_a_READY_IO(interfaz->cola_bloqueados, interfaz->cola_bloqueado_mutex);
 }
 
 static void manejar_desconexion(int socket, char* nombre){
