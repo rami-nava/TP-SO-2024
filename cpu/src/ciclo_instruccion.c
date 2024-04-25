@@ -42,7 +42,6 @@ static int buscar_comando(char *instruccion);
 static void execute();
 static void check_interrupt();
 static void liberar_memoria();
-static void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char* parm1, char* parm2, char* parm3, char* parm4, char* parm5);
 static void set(char* registro, char* valor);
 static void sum(char* registro_destino, char* registro_origen);
 static void sub(char* registro_destino, char* registro_origen); 
@@ -247,8 +246,7 @@ static void sum(char* registro_destino, char* registro_origen){
 
     uint32_t suma = valor1 + valor2;
     
-    //convierte la suma a una cadena de caracteres antes de pasarlo a setear_registro
-    char suma_str[20]; // Tamaño suficiente para almacenar números enteros
+    char suma_str[12]; //Alcanza para almacenar un uint32_t
     snprintf(suma_str, sizeof(suma_str), "%" PRIu32, suma); //PRIu32 es para el tipo de dato uint32_t
 
     setear_registro(registro_destino, suma_str);
@@ -260,9 +258,8 @@ static void sub(char* registro_destino, char* registro_origen){
 
     uint32_t resta = valor1 - valor2;
     
-    //convierte la resta a una cadena de caracteres antes de pasarlo a setear_registro
-    char resta_str[20]; // Tamaño suficiente para almacenar números enteros
-    snprintf(resta_str, sizeof(resta_str), "%" PRIu32, resta); //PRIu32 es para el tipo de dato uint32_t
+    char resta_str[12]; 
+    snprintf(resta_str, sizeof(resta_str), "%" PRIu32, resta); 
 
     setear_registro(registro_destino, resta_str);
 }
@@ -282,12 +279,12 @@ static void io_gen_sleep(char* interfaz, char* unidades_trabajo)
 static void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio)
 {
     char direccion_fisica[12];
-    char tamanio[12]; //Alcanza para almacenar un uint32_t
+    char tamanio[12]; 
 
     uint32_t direccion_logica = buscar_registro(registro_direccion);
 
     sprintf(direccion_fisica, "%" PRIu32,traducir_de_logica_a_fisica(direccion_logica));
-    sprintf(direccion_fisica, "%" PRIu32, buscar_registro(registro_tamanio));//PRIu32 es para el tipo de dato uint32_t
+    sprintf(tamanio, "%" PRIu32, buscar_registro(registro_tamanio));
 
     modificar_motivo(IO_STDIN_READ, 3, interfaz, direccion_fisica, tamanio, "", "");
 }
@@ -295,12 +292,12 @@ static void io_stdin_read(char* interfaz, char* registro_direccion, char* regist
 static void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio)
 {
     char direccion_fisica[12];
-    char tamanio[12]; //Alcanza para almacenar un uint32_t
+    char tamanio[12]; 
 
     uint32_t direccion_logica = buscar_registro(registro_direccion);
 
     sprintf(direccion_fisica, "%" PRIu32,traducir_de_logica_a_fisica(direccion_logica));
-    sprintf(direccion_fisica, "%" PRIu32, buscar_registro(registro_tamanio));//PRIu32 es para el tipo de dato uint32_t
+    sprintf(tamanio, "%" PRIu32, buscar_registro(registro_tamanio));
 
     modificar_motivo(IO_STDOUT_WRITE, 3, interfaz, direccion_fisica, tamanio, "", "");
 }
@@ -317,17 +314,36 @@ static void io_fs_delete(char* interfaz, char* nombre_archivo)
 
 static void io_fs_truncate(char* interfaz, char* nombre_archivo, char* tamanio_registro)
 {
-    modificar_motivo(IO_FS_TRUNCATE, 3, interfaz, nombre_archivo, tamanio_registro, "", "");
+    char tamanio[12];
+    sprintf(tamanio, "%" PRIu32, buscar_registro(tamanio_registro));
+
+    modificar_motivo(IO_FS_TRUNCATE, 3, interfaz, nombre_archivo, tamanio, "", "");
 }
 
 static void io_fs_read(char* interfaz, char* nombre_archivo, char* registro_direccion, char* tamanio_registro, char* registro_puntero_archivo)
 {
-    modificar_motivo(IO_FS_READ, 5, interfaz, nombre_archivo, registro_direccion, tamanio_registro, registro_puntero_archivo);
+    char tamanio[12];
+    char direccion_fisica[12];
+    char puntero_archivo[12];
+
+    sprintf(puntero_archivo, "%" PRIu32, buscar_registro(registro_puntero_archivo));
+    sprintf(direccion_fisica, "%" PRIu32, traducir_de_logica_a_fisica(buscar_registro(registro_direccion)));
+    sprintf(tamanio, "%" PRIu32, buscar_registro(tamanio_registro));
+
+    modificar_motivo(IO_FS_READ, 5, interfaz, nombre_archivo, direccion_fisica, tamanio, puntero_archivo);
 }
 
 static void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_direccion, char* tamanio_registro, char* registro_puntero_archivo)
 {
-    modificar_motivo(IO_FS_WRITE, 5, interfaz, nombre_archivo, registro_direccion, tamanio_registro, registro_puntero_archivo);
+    char tamanio[12];
+    char direccion_fisica[12];
+    char puntero_archivo[12];
+
+    sprintf(puntero_archivo, "%" PRIu32, buscar_registro(registro_puntero_archivo));
+    sprintf(direccion_fisica, "%" PRIu32, traducir_de_logica_a_fisica(buscar_registro(registro_direccion)));
+    sprintf(tamanio, "%" PRIu32, buscar_registro(tamanio_registro));
+
+    modificar_motivo(IO_FS_WRITE, 5, interfaz, nombre_archivo, direccion_fisica, tamanio, puntero_archivo);
 }
 
 static void wait_c(char* recurso)
@@ -415,7 +431,7 @@ uint32_t buscar_registro(char *registro)
     return valor;
 }
 
-static void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char* parm1, char* parm2, char* parm3, char* parm4, char* parm5) { 
+void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char* parm1, char* parm2, char* parm3, char* parm4, char* parm5) { 
     char* (parametros[5]) = { parm1, parm2, parm3, parm4, parm5 };
     contexto_ejecucion->motivo_desalojo->comando = comando;
 

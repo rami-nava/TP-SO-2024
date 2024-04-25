@@ -60,12 +60,12 @@ void atender_dispatch()
 
 //================================================== Funciones Auxiliares =====================================================================
 bool no_es_bloqueante(codigo_instrucciones instruccion_actual) {
-	codigo_instrucciones instrucciones_bloqueantes[12] = {
-	RESIZE, IO_GEN_SLEEP, IO_STDIN_READ, IO_STDOUT_WRITE, IO_FS_CREATE,
+	codigo_instrucciones instrucciones_bloqueantes[11] = {
+	IO_GEN_SLEEP, IO_STDIN_READ, IO_STDOUT_WRITE, IO_FS_CREATE,
 	IO_FS_DELETE, IO_FS_TRUNCATE, IO_FS_WRITE, IO_FS_READ, EXIT, WAIT, SIGNAL
         };
 
-        for (int i = 0; i < 12; i++) 
+        for (int i = 0; i < 11; i++) 
 		if (instruccion_actual == instrucciones_bloqueantes[i]) return false;
 
 	return true;

@@ -74,6 +74,9 @@ void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion
             }
             exit_c(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
+        case OUT_OF_MEMORY:
+            exit_c(proceso, contexto_ejecucion->motivo_desalojo->parametros);
+            break;
         case EXIT_MAS_FIN_QUANTUM: //No necesita un sem, ya que el reloj se destruye anteriormente
             pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
             proceso_en_ejecucion_RR = false;
@@ -267,7 +270,6 @@ static void a_leer_o_escribir_archivo(op_code codigo, t_pcb * proceso, uint32_t 
 }
 
 static void exit_c(t_pcb* proceso, char **parametros){   
-
     mandar_a_EXIT(proceso, parametros[0]);
 }
 

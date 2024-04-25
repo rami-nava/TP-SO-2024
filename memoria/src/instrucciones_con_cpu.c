@@ -1,10 +1,7 @@
 #include "memoria.h"
 
-
 //================================================= Handshake =====================================================================
 void enviar_paquete_handshake(int socket_cliente) {
-
-    uint32_t tam_pagina = config_valores_memoria.tam_pagina;
 
 	t_paquete* handshake=crear_paquete(HANDSHAKE);
     agregar_entero_sin_signo_a_paquete(handshake,tam_pagina);
@@ -60,10 +57,12 @@ void traducir_pagina_a_marcos(uint32_t numero_pagina, int pid, int cliente)
 }
 
 t_marco *marco_desde_df(uint32_t dir_fisica){
-	int num_marco = floor(dir_fisica / config_valores_memoria.tam_pagina);
+	int num_marco = numero_marco(dir_fisica);
+
 	//pthread_mutex_lock(&mutex_marcos);
 	t_marco *marco_elegido = list_get(marcos, num_marco);
 	//pthread_mutex_unlock(&mutex_marcos);
+
 	return marco_elegido;
 }
 
@@ -71,38 +70,33 @@ t_marco *marco_desde_df(uint32_t dir_fisica){
 
 //ESTE SOLO SIRVE PARA LEER ENTEROS, PERO RECORDEMOS QUE EN ESTE TP SE PUEDEN LEER MAS DE UN SOLO BYTE
 // MOV_IN
-uint32_t leer_memoria(uint32_t dir_fisica)
+uint32_t leer_memoria(uint32_t dir_fisica, int pid)
 {
 	uint32_t valor_leido = -1;
+
+	acceso_a_espacio_usuario(pid, "LEER", dir_fisica, sizeof(uint32_t));
+
 	//pthread_mutex_lock(&mutex_memoria_usuario);
 	memcpy(&valor_leido, espacio_usuario + dir_fisica, sizeof(uint32_t));
 	//pthread_mutex_unlock(&mutex_memoria_usuario);
-
-	t_marco *marco = marco_desde_df(dir_fisica);
-
-	sleep(config_valores_memoria.retardo_respuesta / 1000);
-	log_info(memoria_logger, "ACCESO A ESPACIO USUARIO - PID [%d] - ACCION: [LEER] - DIRECCION FISICA: [%d]", marco->pid_proceso, dir_fisica); // LOG OBLIGATORIO falta  - Tamaño <TAMAÑO A LEER / ESCRIBIR>
 
 	return valor_leido;
 }
 
 //ESTE METODO NO SIRVE, NO TIENE EN CUENTA QUE PUEDE ESTAR SOBREESCRIBIENDO OTRAS PAGINAS, PERO PARA TESTEAR VA
 // MOV_OUT
-void escribir_memoria(uint32_t dir_fisica, uint32_t valor){
+void escribir_memoria(uint32_t dir_fisica, uint32_t valor, int pid){
+
+	acceso_a_espacio_usuario(pid, "ESCRIBIR", dir_fisica, sizeof(uint32_t));
 
 	//pthread_mutex_lock(&mutex_memoria_usuario);
 	memcpy(espacio_usuario + dir_fisica, &valor, sizeof(uint32_t));
 	//pthread_mutex_unlock(&mutex_memoria_usuario);
 
-	t_marco *marco = marco_desde_df(dir_fisica);
-
 	//TENGO QUE HACER ALGO CON LA PAGINAX????
-	sleep(config_valores_memoria.retardo_respuesta / 1000);
-	//TERMINAR LOG
-	log_info(memoria_logger, "ACCESO A ESPACIO USUARIO - PID [%d] - ACCION: [ESCRIBIR] - DIRECCION FISICA: [%d]", marco->pid_proceso, dir_fisica); // LOG OBLIGATORIO falta  - Tamaño <TAMAÑO A LEER / ESCRIBIR>
+	// Hay que hacerlos para strings
 }
 
-// Hay que hacerlos para strings
 
 //============================================== Resize ================================================================
 
@@ -112,8 +106,10 @@ void resize(int pid, uint32_t tamanio){
 	int cantidad_paginas_a_sacar;
 	int cantidad_marcos_necesarios = cantidad_de_marcos_necesarios(tamanio);
 
-	//RESIZE PARA COMPRIMIR TAMAÑO Y LUEGO PARA EXPANDIR
-	if(tamanio<tamanio_actual){
+	if(tamanio<tamanio_actual){ //REDUCCION
+		
+		log_info(memoria_logger, "PID: %d - TAMAÑO ACTUAL: %d - TAMAÑO A REDUCIR: %d", pid, tamanio_actual, tamanio);
+		
 		tamanio_reducido = tamanio_actual-tamanio;
 
 		//ACA TIENE QUE SER PISO
@@ -122,10 +118,11 @@ void resize(int pid, uint32_t tamanio){
 		//Si tiene 20B y el resize es a 15B -> tamañoreducido=20-15=5
 		//Si hay que sacar 5B -> solo se saca 1 pagina, y queda con 16B, sino estariamos sacando de mas y el proceso queda con 12B
 		//TODO Hacer una funcion para esto que sea cantmarcosnecesariosextencion y otra cantmarcosnecesarioscompresion
-		cantidad_paginas_a_sacar = tamanio_reducido/config_valores_memoria.tam_pagina; 
+		cantidad_paginas_a_sacar = tamanio_reducido/tam_pagina; 
 
 		quitar_marcos_a_proceso(pid, cantidad_paginas_a_sacar);
-	}else{
+	}else{ //AUMENTAR TAMAÑO
+		log_info(memoria_logger, "PID: %d - TAMAÑO ACTUAL: %d - TAMAÑO A AUMENTAR: %d", pid, tamanio_actual, tamanio);
 		asignar_marcos_a_proceso(pid, cantidad_marcos_necesarios); //cant_m_nec equivale a la cant_pags
 	}
 }
@@ -136,13 +133,35 @@ int out_of_memory(int pid, uint32_t tamanio){ //SOLO FUNCIONA PARA EXTENDER EL T
 
 	if(cantidad_marcos_libres >= cantidad_marcos_necesarios)
 		return 0;
-	else
+	else 
 		return 1; //OUT OF MEMORY
 }
 
 uint32_t tamanio_actual_proceso_en_memoria(int pid){
 	
 	t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
-	uint32_t tamanio_actual = list_size(proceso->paginas_en_memoria) * config_valores_memoria.tam_pagina;
+	uint32_t tamanio_actual = list_size(proceso->paginas_en_memoria) * tam_pagina;
 	return tamanio_actual;
 }
+
+//============================================== Copy String ================================================================
+
+void copy_string(int pid, uint32_t cantidad_bytes_a_copiar, uint32_t direccion_fisica_a_copiar, uint32_t direccion_fisica_destino)
+{
+	char* puntero_a_direccion_fisica_a_copiar = direccion_fisica_a_copiar + espacio_usuario;
+	char* puntero_a_direccion_fisica_destino = direccion_fisica_destino + espacio_usuario;
+	char* buffer = malloc(sizeof(char)*cantidad_bytes_a_copiar); 
+
+	acceso_a_espacio_usuario(pid, "LEER", direccion_fisica_a_copiar, cantidad_bytes_a_copiar);
+
+	memcpy(buffer, puntero_a_direccion_fisica_a_copiar, cantidad_bytes_a_copiar);
+
+	acceso_a_espacio_usuario(pid, "ESCRIBIR", direccion_fisica_destino, cantidad_bytes_a_copiar);
+
+	memcpy(puntero_a_direccion_fisica_destino, buffer, cantidad_bytes_a_copiar);
+
+	free(buffer);
+
+	//TODO: Que hacer con páginas? Se copia correctamente el string?
+}
+

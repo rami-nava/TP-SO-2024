@@ -6,7 +6,7 @@ t_config* config;
 int server_memoria;
 arch_config config_valores_memoria;
 int cantidad_marcos;
-int tam_pagina;
+uint32_t tam_pagina;
 
 int main(void) {
 	

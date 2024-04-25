@@ -5,14 +5,13 @@
 uint32_t tam_pagina;
 
 // FUNCIONES INTERNAS //
+static void enviar_handshake();
+static void recibir_handshake();
 static uint32_t traducir_pagina_a_marco(uint32_t numero_pagina);
 static void pedir_numero_frame(uint32_t numero_pagina);
 static uint32_t numero_marco_pagina();
-static void enviar_paquete_READ(uint32_t direccion_fisica);
-static uint32_t recibir_valor_a_insertar();
-static void enviar_paquete_WRITE(uint32_t direccion_fisica, uint32_t registro);
-static void enviar_handshake();
-static void recibir_handshake();
+static void pedir_MOV_IN(uint32_t direccion_fisica);
+static void pedir_MOV_OUT(uint32_t direccion_fisica, uint32_t registro);
 
 //================================================== Handshake =====================================================================
 void realizar_handshake()
@@ -114,22 +113,40 @@ void resize(char *tamanio)
     int tamanio_proceso = atoi(tamanio);
     int out_of_memory = -1;
     
-    t_paquete *paquete = crear_paquete(READ);
+    t_paquete *paquete = crear_paquete(PEDIDO_RESIZE);
     agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
     agregar_entero_a_paquete(paquete, tamanio_proceso);
     enviar_paquete(paquete, socket_cliente_memoria);
 
     recv(socket_cliente_memoria, &out_of_memory, sizeof(int), MSG_WAITALL);
-    //TESTEAR RESPUESTA SI ES OUT_OF_MEMORY DEBERIA SER 1 SINO 0
-    if(out_of_memory){
-        //DEVOLVER CONTEXTO DE EJECUCION A KERNEL
+    
+    //En el caso que se reciba un 1, significa que no hay memoria suficiente
+    if(out_of_memory == 1){
+        
+        pthread_mutex_lock(&seguir_ejecutando_mutex);
+        seguir_ejecutando = false;
+        pthread_mutex_unlock(&seguir_ejecutando_mutex);
+
+        modificar_motivo(OUT_OF_MEMORY, 1, "Out of memory", "", "", "", "");
+        enviar_contexto(socket_cliente_dispatch);
     }
 }
 
 void copy_string(char* tamanio)
 {
-    int tamanio_proceso = atoi(tamanio);
-    //TODO
+    uint32_t cantidad_bytes_a_copiar = atoi(tamanio);
+    uint32_t posicion_de_string_a_copiar = buscar_registro("SI");
+    uint32_t posicion_de_memoria_donde_copiar = buscar_registro("DI");
+
+    uint32_t direccion_fisica_a_copiar = traducir_de_logica_a_fisica(posicion_de_string_a_copiar);
+    uint32_t direccion_fisica_donde_copiar = traducir_de_logica_a_fisica(posicion_de_memoria_donde_copiar);
+    
+    t_paquete *paquete = crear_paquete(PEDIDO_COPY_STRING);
+    agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
+    agregar_entero_sin_signo_a_paquete(paquete, cantidad_bytes_a_copiar);
+    agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica_a_copiar);
+    agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica_donde_copiar);
+    enviar_paquete(paquete, socket_cliente_memoria);
 }
 
 void mov_in(char *registro, char *direccion_logica)
@@ -138,44 +155,18 @@ void mov_in(char *registro, char *direccion_logica)
 
     if (direccion_fisica != UINT32_MAX)
     {
-        enviar_paquete_READ(direccion_fisica);
+        pedir_MOV_IN(direccion_fisica);
 
-        int valor = recibir_valor_a_insertar(socket_cliente_memoria);
+        uint32_t valor_leido = 0;
+        recv(socket_cliente_memoria, &valor_leido, sizeof(uint32_t), MSG_WAITALL);
 
-        char valor_str[20]; // Tamaño suficiente para almacenar números enteros
-        snprintf(valor_str, sizeof(valor_str), "%d", valor);
+        char valor_str[12]; 
+        snprintf(valor_str, sizeof(valor_str), "%" PRIu32, valor_leido);
 
         setear_registro(registro, valor_str);
 
-        log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %d \n", contexto_ejecucion->pid, "LEER", direccion_fisica, valor);
+        log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %d \n", contexto_ejecucion->pid, "LEER", direccion_fisica, valor_leido);
     }
-}
-
-static void enviar_paquete_READ(uint32_t direccion_fisica)
-{
-    t_paquete *paquete = crear_paquete(READ);
-    agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
-    agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
-    enviar_paquete(paquete, socket_cliente_memoria);
-}
-
-static uint32_t recibir_valor_a_insertar()
-{
-    uint32_t valor_registro = 0;
-
-    t_paquete *paquete = recibir_paquete(socket_cliente_memoria);
-    void *stream = paquete->buffer->stream;
-    if (paquete->codigo_operacion == VALOR_READ)
-    {
-        valor_registro = sacar_entero_sin_signo_de_paquete(&stream);
-        return valor_registro;
-    }
-    else
-    {
-        log_error(cpu_logger, "No me enviaste el valor a leer:( \n");
-        abort();
-    }
-    eliminar_paquete(paquete);
 }
 
 void mov_out(char *direccion_logica, char *registro)
@@ -186,20 +177,28 @@ void mov_out(char *direccion_logica, char *registro)
 
     if (direccion_fisica != UINT32_MAX)
     {
-        enviar_paquete_WRITE(direccion_fisica, valor);
+        pedir_MOV_OUT(direccion_fisica, valor);
 
-        int se_ha_escrito = 1;
-        recv(socket_cliente_memoria, &se_ha_escrito, sizeof(int), MSG_WAITALL);
+        uint32_t se_ha_escrito;
+        recv(socket_cliente_memoria, &se_ha_escrito, sizeof(uint32_t), MSG_WAITALL);
 
         log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %d \n", contexto_ejecucion->pid, "ESCRIBIR", direccion_fisica, valor);
     }
 }
 
-static void enviar_paquete_WRITE(uint32_t direccion_fisica, uint32_t valor_registro)
+static void pedir_MOV_OUT(uint32_t direccion_fisica, uint32_t valor_registro)
 {
-    t_paquete *paquete = crear_paquete(WRITE);
+    t_paquete *paquete = crear_paquete(PEDIDO_MOV_OUT);
     agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
     agregar_entero_sin_signo_a_paquete(paquete, valor_registro);
+    enviar_paquete(paquete, socket_cliente_memoria);
+}
+
+static void pedir_MOV_IN(uint32_t direccion_fisica)
+{
+    t_paquete *paquete = crear_paquete(PEDIDO_MOV_IN);
+    agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
+    agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
     enviar_paquete(paquete, socket_cliente_memoria);
 }

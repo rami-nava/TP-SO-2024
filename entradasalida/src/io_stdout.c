@@ -38,7 +38,7 @@ void main_stdout(t_interfaz* interfaz_hilo)
     socket_kernel = crear_conexion(ip_kernel, puerto_kernel);
     socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
-    conectarse_a_kernel(socket_kernel, INTERFAZ_STDOUT,nombre, "STDOUT");
+    conectarse_a_kernel(socket_kernel, INTERFAZ_STDOUT, nombre, "STDOUT");
 
     // Realiza su IO_STDOUT_WRITE
     solicitar_informacion_memoria();

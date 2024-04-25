@@ -10,7 +10,6 @@ void creacion_espacio_usuario(){
 
 	if (espacio_usuario == NULL) {
         perror ("No se pudo alocar memoria al espacio de usuario.");
-		//log_error(memoria_logger, "No se pudo alocar memoria al espacio de usuario.");
         abort();
     } 
 
@@ -20,6 +19,13 @@ void creacion_espacio_usuario(){
 	marcos = list_create();
 
 	crear_marcos_memoria();
+}
+
+void acceso_a_espacio_usuario(int pid, char* accion, uint32_t dir_fisica, uint32_t tamanio)
+{
+	sleep(config_valores_memoria.retardo_respuesta / 1000);
+	
+	log_info(memoria_logger, "ACCESO A ESPACIO USUARIO - PID %d - ACCION: %s - DIRECCION FISICA: %d - TAMAÑO: %d", pid, accion, dir_fisica, tamanio); 
 }
 
 //============================================ CREACION DE PROCESOS && MARCOS DE MEMORIA ====================================================
@@ -286,7 +292,6 @@ static void mostrar_contenido() {
 
 static void escribir_contenido_en_partes(t_proceso_en_memoria* proceso, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido);
 static bool contenido_cabe_en_marcos(t_proceso_en_memoria* proceso, int tamanio_contenido_bytes);
-static int numero_marco(uint32_t direccion_fisica);
 static int desplazamiento(uint32_t direccion_fisica);
 static int lugar_restante_en_marco(uint32_t direccion_fisica);
 static uint32_t calcular_direccion_fisica_inicial_marco(t_marco* marco);
@@ -369,7 +374,7 @@ static bool contenido_cabe_en_marcos(t_proceso_en_memoria* proceso, int tamanio_
 
 }
 
-static int numero_marco(uint32_t direccion_fisica){
+int numero_marco(uint32_t direccion_fisica){
 	return floor(direccion_fisica / tam_pagina);
 }
 

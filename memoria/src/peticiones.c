@@ -103,9 +103,6 @@ static void manejo_conexiones(void* conexion)
 			realizar_escritura(direccion_fisica_fs_read, contenido, cantidad_bytes_a_escribir, cliente);
 			break;
 
-		case PEDIDO_COPY_STRING:
-			break;
-
 		//INSTRUCCIONES DE CPU
 		case TRADUCIR_PAGINA_A_MARCO:
 			uint32_t numero_pagina = sacar_entero_sin_signo_de_paquete(&stream);
@@ -114,33 +111,43 @@ static void manejo_conexiones(void* conexion)
 			break;
 
 		case PEDIDO_MOV_IN:
+			int pid_mov_in = sacar_entero_de_paquete(&stream);
 		    uint32_t direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
-			uint32_t valor_leido = leer_memoria(direccion_fisica);
-
-			send(cliente, &valor_leido, sizeof(uint32_t), 0); // MOV_IN_CPU
+			
+			uint32_t valor_leido = leer_memoria(direccion_fisica, pid_mov_in);
+			send(cliente, &valor_leido, sizeof(uint32_t), 0); 
 			break;
 
 		case PEDIDO_MOV_OUT:
+			int pid_mov_out = sacar_entero_de_paquete(&stream);
 		    uint32_t dir_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 			uint32_t valor = sacar_entero_sin_signo_de_paquete(&stream);
 
-			escribir_memoria(dir_fisica, valor);
+			escribir_memoria(dir_fisica, valor, pid_mov_out);
+			uint32_t se_ha_escrito = 1;
+			send(cliente, &se_ha_escrito, sizeof(uint32_t), 0);
 			break;
 
 		case PEDIDO_RESIZE:
 			int process_id = sacar_entero_de_paquete(&stream);
 			uint32_t tamanio = sacar_entero_sin_signo_de_paquete(&stream);
 			
-			int hay_out_of_memory = out_of_memory(process_id, tamanio); //NOMBRE: out_of_memory
+			int hay_out_of_memory = out_of_memory(process_id, tamanio); 
+			
+			//Le enviamos a la cpu si hay o no out of memory
+			send(cliente, &hay_out_of_memory, sizeof(int), 0);
 
-			if(hay_out_of_memory) {
-				send(cliente, &hay_out_of_memory, sizeof(int), 0);
-			} //DEVOLVER A CPU EL OUT_OF_MEMORY (ENTERO :) )
-			else{
-				resize(process_id, tamanio);	
-			}
+			//Si no hay out of memory lo redimensionamos
+			if (hay_out_of_memory == 0) resize(process_id, tamanio);
+
 			break;
-
+		case PEDIDO_COPY_STRING:
+			int pid_copy_string = sacar_entero_de_paquete(&stream);
+			uint32_t cantidad_bytes_a_copiar = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t direccion_fisica_a_copiar = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t direccion_fisica_destino = sacar_entero_sin_signo_de_paquete(&stream);
+			copy_string(pid_copy_string, cantidad_bytes_a_copiar, direccion_fisica_a_copiar, direccion_fisica_destino);
+			break;
 		default:
 			break;
 		}

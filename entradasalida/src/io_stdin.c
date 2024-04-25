@@ -34,7 +34,7 @@ void main_stdin(t_interfaz* interfaz_hilo)
     socket_kernel = crear_conexion(ip_kernel, puerto_kernel);
     socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
-    conectarse_a_kernel(socket_kernel, INTERFAZ_STDIN,nombre, "STDIN");
+    conectarse_a_kernel(socket_kernel, INTERFAZ_STDIN, nombre, "STDIN");
 
     realizar_escritura();
 }
@@ -94,9 +94,8 @@ static void guardar_escritura(uint32_t direccion_fisica, uint32_t tamanio_regist
     enviar_paquete(paquete, socket_memoria);
     
     //Memoria confirma que guardo el texto en la direccion especificada
-    int escritura_guardada = 0;
-    while (escritura_guardada == 0)
-    {
-        recv(socket_memoria, &escritura_guardada, sizeof(int), 0); 
-    }
+    int escritura_guardada;
+    recv(socket_memoria, &escritura_guardada, sizeof(int), 0); 
+
+    //log_info(stdin_logger, "Texto guardado en memoria: %s\n", texto_a_guardar);
 }

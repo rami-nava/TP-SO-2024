@@ -11,6 +11,7 @@
 #include <pthread.h>
 
 #include <commons/log.h>
+#include <commons/memory.h>
 
 #include "socket.h"
 #include "operaciones.h"
@@ -27,7 +28,7 @@ extern void* espacio_usuario; //Espacio contiguo
 extern t_list* procesos_en_memoria; //Lista de t_proceso_en_memoria con las tablas de paginas e instrucciones para cada proceso
 extern t_list* marcos; //Lista de los t_marco y su info
 extern int cantidad_marcos;
-extern int tam_pagina;
+extern uint32_t tam_pagina;
 
 
 //ESTRUCTURAS
@@ -79,7 +80,10 @@ void finalizar_en_memoria(int pid);
 void enviar_paquete_handshake(int socket_cliente);
 char* buscar_instruccion_proceso(uint32_t PC, int pid);
 void leer_instrucciones_desde_archivo(t_proceso_en_memoria* proceso, FILE* archivo);
-
+int out_of_memory(int pid, uint32_t tamanio);
+void resize(int pid, uint32_t tamanio);
+void copy_string(int pid, uint32_t cantidad_bytes_a_copiar, uint32_t direccion_fisica_a_copiar, uint32_t direccion_fisica_destino);
+void traducir_pagina_a_marcos(uint32_t numero_pagina, int pid, int cliente);
 
 /// @brief PETICIONES DE IO ///
 void realizar_lectura(uint32_t direccion_fisica, uint32_t tamanio_lectura, int cliente);
@@ -87,9 +91,10 @@ void realizar_escritura(uint32_t direccion_fisica, void* texto_a_guardar, uint32
 
 /// @brief ESPACIO USUARIO ///
 void creacion_espacio_usuario();
-void escribir_memoria(uint32_t dir_fisica, uint32_t valor);
+void escribir_memoria(uint32_t dir_fisica, uint32_t valor, int pid);
 t_marco *marco_desde_df(uint32_t dir_fisica);
-uint32_t leer_memoria(uint32_t dir_fisica);
+uint32_t leer_memoria(uint32_t dir_fisica, int pid);
+void acceso_a_espacio_usuario(int pid, char* accion, uint32_t dir_fisica, uint32_t tamanio);
 
 
 /// @brief  PROCESOS EN MEMORIA - MARCOS ///
@@ -103,20 +108,13 @@ void asignar_marcos_a_proceso(int pid, int cantidad_de_marcos_necesarios);
 void asignar_proceso_a_marco(int pid, t_marco* marco);
 void agregar_pagina_a_proceso(t_proceso_en_memoria* proceso, t_marco* marco);
 
-
-//INTRUCCIONES CPU ///
-int out_of_memory(int process_id, uint32_t tamanio);
-void resize(int pid, uint32_t tamanio);
-void traducir_pagina_a_marcos(uint32_t numero_pagina, int pid, int cliente);
-
-
 // FUNCIONES MARCOS/PAGINAS ///
 int cantidad_de_marcos_libres();
 int cantidad_de_marcos_necesarios(int tamanio);
 void asignar_marcos_a_proceso(int pid, int cantidad_de_marcos);
 t_marco* buscar_marco_por_numero(int numero_de_marco);
 uint32_t buscar_marco(uint32_t numero_pagina, int pid);
-
+int numero_marco(uint32_t direccion_fisica);
 
 //ESCRITURA Y LECTURA
 void escribir__contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido);
