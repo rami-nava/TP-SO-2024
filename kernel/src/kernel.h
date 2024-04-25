@@ -130,7 +130,7 @@ void cambio_de_estado (t_pcb *pcb, estado_proceso estado_nuevo);
 void loggear_cambio_de_estado(int pid, estado_proceso anterior, estado_proceso actual);
 void ingresar_a_READY(t_pcb *pcb);
 void ingresar_a_NEW(t_pcb *pcb);
-void ingresar_a_BLOCKED_IO(t_list* cola, t_pcb *pcb, char* motivo, pthread_mutex_t cola_bloqueado_mutex);
+void ingresar_a_BLOCKED_IO(t_list* cola, t_pcb *pcb, char* motivo, pthread_mutex_t cola_bloqueado_mutex, char* tipo_interfaz);
 void ingresar_a_BLOCKED_recursos(t_pcb *pcb, char* motivo);
 void ingresar_de_BLOCKED_a_READY_IO(t_list* cola, pthread_mutex_t mutex_cola_io);
 void ingresar_de_BLOCKED_a_READY_recursos(t_pcb* pcb_desbloqueado);

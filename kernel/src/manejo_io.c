@@ -189,7 +189,7 @@ void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion) {
         proceso->quantum = ciclo_actual_quantum;
     }
     
-    ingresar_a_BLOCKED_IO(interfaz->cola_bloqueados ,proceso, motivo, interfaz->cola_bloqueado_mutex);
+    ingresar_a_BLOCKED_IO(interfaz->cola_bloqueados ,proceso, motivo, interfaz->cola_bloqueado_mutex, interfaz->tipo_interfaz);
     logear_cola_io_bloqueados(interfaz); //NO es obligatorio
 
     sem_wait(&interfaz->sem_comunicacion_interfaz);
@@ -226,7 +226,7 @@ void crear_hilo_io_generica(t_pcb* proceso, t_interfaz* interfaz, t_paquete* pet
         proceso->quantum = ciclo_actual_quantum;
     }
 
-    ingresar_a_BLOCKED_IO(interfaz->cola_bloqueados ,proceso, motivo, interfaz->cola_bloqueado_mutex);
+    ingresar_a_BLOCKED_IO(interfaz->cola_bloqueados ,proceso, motivo, interfaz->cola_bloqueado_mutex, interfaz->tipo_interfaz);
     logear_cola_io_bloqueados(interfaz); //NO es obligatorio
 
     //Esperamos a que la interfaz se desbloquee

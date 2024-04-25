@@ -2,8 +2,9 @@
 
 int quantum;
 char* pids; 
+static void eliminar_de_cola_io(t_list* lista_interfaces, t_pcb* pcb);
 
-char *estados_procesos[5] = {"NEW", "READY", "EXEC", "BLOCK", "SALIDA"};
+char *estados_procesos[9] = {"NEW", "READY", "EXEC", "BLOCKED_RECURSO", "BLOCKED_IO_GENERICA", "BLOCKED_IO_STDIN", "BLOCKED_IO_STDOUT", "BLOCKED_IO_DIALFS", "SALIDA"};
 
 //==================================================== ENCOLAR Y DESENCOLAR ====================================================================================
 void encolar(t_list *cola, t_pcb *pcb){
@@ -64,6 +65,7 @@ void desalojo(int tipo_interrupcion){
 }
 
 void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb){
+    //TODO ver como hacer con la IO si finalizan el proceso que esta en IO
     
     estado_proceso estado_actual = pcb->estado;
 
@@ -74,12 +76,30 @@ void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb){
         case READY:
             eliminar_de_cola(cola_READY, pcb, mutex_READY);
             break;
-        //case BLOCKED:
-            //Usar buscar pcb y elementar, que le diga a las interfaces que saquen este pcb de sus colas
-            //eliminar_de_cola(interfaz->cola_bloqueados, pcb, interfaz->cola_bloqueado_mutex);
-            //break;
+        case BLOCKED_RECURSO:
+           //TODO traerlo desde el metodo mandar a exit?
+            break;
+        case BLOCKED_IO_GENERICA:
+            eliminar_de_cola_io(interfaces_genericas, pcb);
+            break;
+        case BLOCKED_IO_STDIN:
+            eliminar_de_cola_io(interfaces_stdin, pcb);
+            break;
+        case BLOCKED_IO_STDOUT:
+            eliminar_de_cola_io(interfaces_stdout, pcb);
+            break;
+        case BLOCKED_IO_DIALFS:
+            eliminar_de_cola_io(interfaces_dialfs, pcb);
+            break;
         default:
             break;
+    }
+}
+
+static void eliminar_de_cola_io(t_list* lista_interfaces, t_pcb* pcb){
+    for(int i = 0; i < list_size(lista_interfaces) ; i++){
+        t_interfaz* interfaz_lista = list_get(lista_interfaces,i);
+        eliminar_de_cola(interfaz_lista->cola_bloqueados,pcb ,interfaz_lista->cola_bloqueado_mutex);
     }
 }
 

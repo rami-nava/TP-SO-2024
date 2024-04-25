@@ -153,18 +153,31 @@ void ingresar_a_BLOCKED_recursos(t_pcb *pcb, char* motivo)
 {
     //no lo saco de ninguna lista porque no tenemos lista exec
     estado_proceso anterior = pcb->estado;
-    pcb->estado = BLOCKED;
+    pcb->estado = BLOCKED_RECURSO;
     loggear_cambio_de_estado(pcb->pid, anterior, pcb->estado); 
 
     loggear_motivo_bloqueo(pcb, motivo);
 }
 
 
-void ingresar_a_BLOCKED_IO(t_list* cola, t_pcb *pcb, char* motivo, pthread_mutex_t cola_bloqueado_mutex)
+void ingresar_a_BLOCKED_IO(t_list* cola, t_pcb *pcb, char* motivo, pthread_mutex_t cola_bloqueado_mutex, char* tipo_interfaz)
 {
     //Pasa de EXEC a BLOCKED
     estado_proceso anterior = pcb->estado;
-    pcb->estado = BLOCKED;
+
+    if (!strcmp(tipo_interfaz, "GENERICA")) {
+        pcb->estado = BLOCKED_IO_GENERICA;
+    } 
+    if (!strcmp(tipo_interfaz, "STDIN")) {
+        pcb->estado = BLOCKED_IO_STDIN;
+    } 
+    if (!strcmp(tipo_interfaz, "STDOUT")) {
+        pcb->estado = BLOCKED_IO_STDOUT;
+    } 
+    if (!strcmp(tipo_interfaz, "DIALFS")) {
+        pcb->estado = BLOCKED_IO_DIALFS;
+    }
+
     loggear_cambio_de_estado(pcb->pid, anterior, pcb->estado); 
 
     pthread_mutex_lock(&cola_bloqueado_mutex);
@@ -177,10 +190,11 @@ void ingresar_a_BLOCKED_IO(t_list* cola, t_pcb *pcb, char* motivo, pthread_mutex
 void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo) 
 {
     estado_proceso anterior = pcb_asociado->estado;
+   
+    sacar_proceso_de_cola_estado_donde_esta(pcb_asociado);
+
     pcb_asociado->estado = SALIDA;
     loggear_cambio_de_estado(pcb_asociado->pid, anterior, pcb_asociado->estado);
-
-    sacar_proceso_de_cola_estado_donde_esta(pcb_asociado);
 
     //Avisas pq finalizo el proceso
     loggear_finalizacion_proceso(pcb_asociado, motivo); 
