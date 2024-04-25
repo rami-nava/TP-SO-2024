@@ -4,6 +4,7 @@ void* bitmap;
 void* archivo_de_bloques_mapeado;
 t_bitarray* bitmap_bitarray;
 FILE* archivo_de_bloques;
+int tamanio_bitmap;
 
 //================================ ARCHIVOS DE BLOQUES ======================================================
 void crear_archivo_de_bloque(char* path_dial_fs, int tamanio_archivo_bloques)
@@ -94,21 +95,11 @@ void cargar_bitmap(int cantidad_bloques, char* path_dial_fs)
     }
 
     */
+
+    //guardo el tamanio del bitmap
+    tamanio_bitmap = (int) bitarray_get_max_bit(bitmap_bitarray);
+
     close(fd_bitmap);
-}
-
-uint32_t buscar_bloque_libre()
-{
-    int tamanio_bitmap = (int) bitarray_get_max_bit(bitmap_bitarray);
-
-    for (int i = 0; i < tamanio_bitmap; i++){
-        if (bitarray_test_bit(bitmap_bitarray, i) == false){
-            bitarray_set_bit(bitmap_bitarray, i);
-            msync(bitmap, tamanio_bitmap, MS_SYNC);
-            return i;
-        }
-    }
-    return -1;
 }
 
 void limpiar_posiciones(t_bitarray* un_espacio, int posicion_inicial, int tamanio_proceso) {
@@ -143,10 +134,60 @@ void compactar()
 // TODO
 }
 
-bool bloques_contiguos()
+//busco en todo el bitmap y devuelvo el primer bloque libre
+uint32_t buscar_bloque_libre()
 {
-    //TODO
-    return true;
+    for (int i = 0; i < tamanio_bitmap; i++){
+        if (bitarray_test_bit(bitmap_bitarray, i) == false){
+
+            //lo marco como ocupado
+            bitarray_set_bit(bitmap_bitarray, i);
+
+            //actualizo el bitmap para que se guarde como ocupado
+            msync(bitmap, tamanio_bitmap, MS_SYNC);
+            return i;
+        }
+    }
+    return -1;
+}
+
+//busco si hay esta cantidad de bloques contiguos
+bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar) {
+    uint32_t bloques_encontrados = 0;
+
+    //i es la posicion donde estoy dentro del bitmap
+    for (int i = 0; i < tamanio_bitmap; i++) {
+        if (bitarray_test_bit(bitmap_bitarray, i) == false) {
+
+            //cantidad de bloques disponibles contiguos que encuentro
+            bloques_encontrados++;
+
+            if (bloques_encontrados == cantidad_bloques_a_buscar) {
+
+                //j =  |x|x| | | | | EJ: si buscaba 4 bloques, cuando los consiga i = 6
+                //pero yo empiezo asignar desde el bloque 3. Hago 6 - 4 y como empiezo desde el primer bloque libre, +1
+                for (int j = i - cantidad_bloques_a_buscar + 1; j <= i; j++) {
+
+                    //marco todos los consecutivos como ocupados y actualizo el bitmap 
+                    marcar_bloque_ocupado(j);
+                }
+                
+                //devuelvo que habia contiguos y los pude asignar
+                return true;
+            }
+        } else {
+            //reinicio la busqueda si encuentro un bloque ocupado pero sigo desde la posicion donde estoy
+            bloques_encontrados = 0; 
+        }
+    }
+
+    //si no hay suficientes bloques contiguos
+    return false; 
+}
+
+void marcar_bloque_ocupado(int index) {
+    bitarray_set_bit(bitmap_bitarray, index);
+    msync(bitmap, tamanio_bitmap, MS_SYNC);
 }
 
 uint32_t buscar_bloque_en_fs(uint32_t cantidad_bloques, uint32_t bloque_inicial)
