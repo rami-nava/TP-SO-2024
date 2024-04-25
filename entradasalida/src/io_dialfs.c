@@ -223,11 +223,13 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
 {
    uint32_t bloques_a_agregar = ceil((tamanio_nuevo - tamanio_actual) / tamanio_bloque);
 
-   if(!bloques_contiguos()) {
+   //busco si hay la cantidad de bloques contiguos que me piden y si hay los asigno
+   if(!bloques_contiguos(bloques_a_agregar)) {
+        //si no hay contiguos compacto 
         compactar();
         usleep(1000 * retraso_compactacion);
-   }
-    //Agregamos los bloques
+   } else printf ("Se encontraron bloques contiguos suficientes \n");
+
    for (int i = 0; i < bloques_a_agregar; i++)
    {
        agregar_bloque(bloque_inicial + i);
