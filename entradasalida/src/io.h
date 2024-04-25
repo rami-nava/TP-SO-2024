@@ -67,7 +67,8 @@ uint32_t buscar_bloque_libre();
 void limpiar_posiciones(t_bitarray* un_espacio, int posicion_inicial, int tamanio_proceso);
 void ocupar_un_bloque_del_fs();
 void compactar();
-bool bloques_contiguos();
+void marcar_bloque_ocupado(int index);
+bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar);
 uint32_t buscar_bloque_en_fs(uint32_t bloque_a_leer, uint32_t bloque_inicial);
 
 
