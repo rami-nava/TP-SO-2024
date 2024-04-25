@@ -225,7 +225,7 @@ static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz)
     agregar_entero_a_paquete(paquete, proceso->pid);
     agregar_entero_a_paquete(paquete, tiempo_sleep);
 
-    crear_hilo_io_generica(proceso, interfaz, paquete);
+    crear_hilo_io(proceso, interfaz, paquete);
 }
 
 static void a_leer_o_escribir_interfaz(op_code codigo, t_pcb * proceso, uint32_t direccion, uint32_t tamanio, t_interfaz* interfaz) 

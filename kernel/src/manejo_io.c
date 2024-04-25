@@ -51,7 +51,6 @@ void atender_io(int* socket_io)
         switch(paquete->codigo_operacion) {
             case INTERFAZ_GENERICA:
                 pthread_mutex_lock(&mutex_INTERFAZ_GENERICA);
-                interfaz_nueva->tiempo_sleep = sacar_entero_de_paquete(&stream);
                 list_add(interfaces_genericas, interfaz_nueva);
                 pthread_mutex_unlock(&mutex_INTERFAZ_GENERICA);
                 log_info(kernel_logger, "Se agrego interfaz GENERICA: %s \n", interfaz_nueva->nombre);
@@ -205,9 +204,6 @@ void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion) {
     pthread_t hilo_manejo_io;
     pthread_create(&hilo_manejo_io, NULL, (void* ) esperar_io, interfaz);
     pthread_detach(hilo_manejo_io);
-
-    sem_post(&interfaz->sem_comunicacion_interfaz);
-
 }
 
 static void esperar_io(t_interfaz* interfaz)
@@ -217,6 +213,8 @@ int termino_io;
 recv(interfaz->socket_conectado, &termino_io, sizeof(int), MSG_WAITALL);
 
 ingresar_de_BLOCKED_a_READY_IO(interfaz->cola_bloqueados, interfaz->cola_bloqueado_mutex);
+
+sem_post(&interfaz->sem_comunicacion_interfaz);
 }
 
 void crear_hilo_io_generica(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion) {
