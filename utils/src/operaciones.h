@@ -49,7 +49,8 @@ typedef enum{
 	PEDIDO_MOV_IN,
 	PEDIDO_MOV_OUT,
 	PEDIDO_RESIZE,
-	PEDIDO_COPY_STRING
+	PEDIDO_COPY_STRING,
+	DESCONECTAR_IO
 } op_code;
 
 typedef enum{

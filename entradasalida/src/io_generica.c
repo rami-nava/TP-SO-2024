@@ -6,13 +6,14 @@ static char *puerto_kernel;
 static int socket_kernel;
 static int tiempo_unidad_de_trabajo;
 t_log* generica_logger;
+char* nombre_interfaz;
 
 static void realizar_sleep();
 static void conectarse_a_kernel_generica(char* nombre_interfaz);
 
 void main_generica(t_interfaz* interfaz){
 
-    char* nombre_interfaz = interfaz->nombre_interfaz;
+    nombre_interfaz = interfaz->nombre_interfaz;
     t_config* config_interfaz = interfaz->config_interfaz;
 
     char path[70] = "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/";
@@ -59,8 +60,6 @@ void realizar_sleep()
         proceso_conectado = sacar_entero_de_paquete(&stream);
         cantidad_tiempo = sacar_entero_de_paquete(&stream);
 
-        eliminar_paquete(paquete);
-
         log_info(generica_logger, "PID: %d - Operacion: IO_GEN_SLEEP\n", proceso_conectado);
 
         int tiempo_sleep = tiempo_unidad_de_trabajo * cantidad_tiempo * 1000;
@@ -68,13 +67,25 @@ void realizar_sleep()
 
         //int termino_io = 1;
         //send(socket_kernel, &termino_io, sizeof(int), 0);
-
         log_info(generica_logger, "El proceso: %d finalizo IO\n", proceso_conectado);
-
-        } else {
-            log_error(generica_logger, "Recibio una operacion desconocida");
-            eliminar_paquete(paquete);
-            abort();
         }
+        
+        eliminar_paquete(paquete);
+        
     }
+}
+
+void desconectarse(){
+
+    int socket_kernel_desconexion = crear_conexion(ip_kernel, puerto_kernel);
+
+    t_paquete* paquete = crear_paquete(DESCONECTAR_IO);
+    agregar_cadena_a_paquete(paquete, nombre_interfaz);
+    enviar_paquete(paquete, socket_kernel_desconexion);
+
+    int desconectarme = 0;
+
+    recv(socket_kernel_desconexion, &desconectarme , sizeof(int), MSG_WAITALL);
+    
+    abort();
 }

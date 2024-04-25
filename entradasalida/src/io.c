@@ -15,7 +15,17 @@ int main(int argc, char* argv[])
     
     interfaces = list_create();
 
+    signal(SIGINT, handle_sigint);
+
     iniciar_interfaz(nombre, path);
 
+
+
     return EXIT_SUCCESS;
+}
+
+void handle_sigint(int sig){
+    pthread_t hilo_desconexion;
+    pthread_create(&hilo_desconexion, NULL, (void* ) desconectarse, NULL);
+    pthread_detach(hilo_desconexion);
 }

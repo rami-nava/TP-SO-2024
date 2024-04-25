@@ -31,10 +31,6 @@ int crear_conexion(char *ip, char *puerto)
 }
 
 
-
-void liberar_conexion(int socket_cliente) {
-    close(socket_cliente);
-}
 //SERVIDOR
 
 int iniciar_servidor(char *ip, char *puerto)

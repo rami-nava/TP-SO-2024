@@ -1,12 +1,17 @@
 #include "io.h"
 
-static t_interfaz* crear_interfaz(char* nombre, t_config* config);
+static t_interfaz* crear_interfaz(char* nombre);
+
+t_config* config;
+char* nombre_parametro;
 
 void iniciar_interfaz(char* nombre, char* path_config) {
 
-    t_config* config = config_create(path_config); 
+    config = config_create(path_config); 
 
-    t_interfaz* interfaz = crear_interfaz(nombre, config);
+    nombre_parametro = nombre;
+
+    t_interfaz* interfaz = crear_interfaz(nombre);
 
     if(config == NULL) {
         perror("Error al leer el archivo de configuración");
@@ -29,7 +34,7 @@ void iniciar_interfaz(char* nombre, char* path_config) {
     }
 }
 
-static t_interfaz* crear_interfaz(char* nombre, t_config* config){
+static t_interfaz* crear_interfaz(char* nombre){
     t_interfaz* interfaz_creada = malloc(sizeof(t_interfaz));
 
     interfaz_creada->nombre_interfaz = nombre;

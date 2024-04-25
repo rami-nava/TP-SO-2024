@@ -50,6 +50,8 @@ void main_stdin(t_interfaz* interfaz_hilo);
 void main_stdout(t_interfaz* interfaz_hilo);
 void main_dialfs(t_interfaz* interfaz_hilo);
 void conectarse_a_kernel(int socket, op_code codigo_operacion ,char* nombre, char* tipo_interfaz);
+void handle_sigint(int sig);
+void desconectarse();
 
 //.................................. METADATA .....................................................................
 void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inicial, char* nombre_archivo, char* path_dial_fs);
