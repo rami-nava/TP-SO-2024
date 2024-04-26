@@ -18,7 +18,7 @@ int consultar_tlb(int pid, int pagina){
         if (entrada_actual->pid == pid && entrada_actual->pagina == pagina) {
 
             //Uso la entrada, por ende en FIFO no pasa nada, en LRU debo mover la entrada al tope de la cola
-            if(algoritmo_tlb == "LRU"){
+            if(algoritmo_tlb == (char*) "LRU"){
                 
                 list_remove(tlb->elements, i);
                 queue_push(tlb, entrada_actual);
@@ -36,7 +36,7 @@ int consultar_tlb(int pid, int pagina){
 
 void agregar_entrada_tlb(int pid, int pagina, int marco){
 
-    int tamanio_actual_tlb = list_size(tlb);
+    int tamanio_actual_tlb = queue_size(tlb);
 
     t_entrada* nueva_entrada = (t_entrada*) malloc(sizeof(t_entrada));
     nueva_entrada->pid = pid;
@@ -73,14 +73,14 @@ void agregar_entrada_tlb(int pid, int pagina, int marco){
 
 
 
-void imprimir_tlb(t_list *tlb) { //SOLO PARA TESTING
+void imprimir_tlb(t_queue* tlb) { //SOLO PARA TESTING
     
     if (tlb == NULL) {
         printf("TLB vacía\n");
         return;
     }
 
-    t_list_iterator *iterator = list_iterator_create(tlb);
+    t_list_iterator *iterator = list_iterator_create(tlb->elements);
     
     int index = 0;
 

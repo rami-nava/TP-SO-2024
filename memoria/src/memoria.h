@@ -9,7 +9,7 @@
 #include <CUnit/CUnit.h>
 #include <sys/types.h>
 #include <pthread.h>
-
+#include <commons/collections/list.h>
 #include <commons/log.h>
 #include <commons/memory.h>
 
