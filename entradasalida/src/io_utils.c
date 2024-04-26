@@ -3,13 +3,13 @@
 static t_interfaz* crear_interfaz(char* nombre);
 
 t_config* config;
-char* nombre_parametro;
+char* nombre_interfaz;
 
 void iniciar_interfaz(char* nombre, char* path_config) {
 
     config = config_create(path_config); 
 
-    nombre_parametro = nombre;
+    nombre_interfaz = nombre;
 
     t_interfaz* interfaz = crear_interfaz(nombre);
 
@@ -49,4 +49,23 @@ void conectarse_a_kernel(int socket_kernel, op_code codigo_operacion ,char* nomb
     agregar_cadena_a_paquete(paquete, nombre);
     agregar_cadena_a_paquete(paquete, tipo_interfaz);
     enviar_paquete(paquete, socket_kernel);
+}
+
+void desconectarse(){
+
+
+    char* ip_kernel = config_get_string_value(config, "IP_KERNEL");
+    char* puerto_kernel = config_get_string_value(config, "PUERTO_KERNEL");
+
+    int socket_kernel_desconexion = crear_conexion(ip_kernel, puerto_kernel);
+
+    t_paquete* paquete = crear_paquete(DESCONECTAR_IO);
+    agregar_cadena_a_paquete(paquete, nombre_interfaz);
+    enviar_paquete(paquete, socket_kernel_desconexion);
+
+    int desconectarme = 0;
+
+    recv(socket_kernel_desconexion, &desconectarme , sizeof(int), MSG_WAITALL);
+    
+    abort();
 }
