@@ -236,7 +236,7 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
    //le agrego al archivo lo bloques
    for (int i = 0; i < bloques_a_agregar; i++)
    {
-       agregar_bloque(bloque_inicial + i);
+       agregar_bloques(bloque_inicial + i);
    }
 }
 
@@ -247,7 +247,7 @@ static void reducir_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
     //Eliminamos los bloques
     for (int i = 0; i < bloques_a_eliminar; i++)
     {
-        eliminar_bloque(bloque_inicial + i);
+        eliminar_bloques(i, bloque_inicial + i);
     }
 }
 
