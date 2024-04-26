@@ -1,7 +1,7 @@
 #include "memoria.h"
 
 void* espacio_usuario;
-t_list* procesos_en_memoria;
+//t_list* procesos_en_memoria; creo que no va esto
 t_list* marcos;
 
 //============================================ ESPACIO DE USUARIO ===========================================================

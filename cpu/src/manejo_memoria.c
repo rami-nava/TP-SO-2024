@@ -57,6 +57,20 @@ uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica){
     numero_pagina = floor(direccion_logica / tam_pagina);
     offset = direccion_logica - (numero_pagina * tam_pagina);
 
+    //ACA VA LA PARTE DE TLB CUANDO PROBEMOS
+    /* 
+    int respuesta_tlb = consultar_tlb(int pid, int pagina); //-> pasar por parametro esta info
+    if (respuesta_tlb == -1){
+        //(logger tlb miss bla bla) 
+        traducir_pagina_a_marco(numero_pagina); //-> pedido a memoria
+        direccion_fisica = numero_marco * tam_pagina + offset;
+        agregar_entrada_tlb(pid, numero_pagina, numero_marco);
+    }else{
+        //(logger tlb hit bla bla)
+        direccion_fisica = respuesta_tlb * tam_pagina + offset;
+    }
+    */
+
     // Llamos a la  Memoria, para conseguir el número de marco correspondiente a la página
     numero_marco = traducir_pagina_a_marco(numero_pagina);
 

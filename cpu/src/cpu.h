@@ -12,7 +12,7 @@
 #include "socket.h"
 #include "operaciones.h"
 #include "contexto.h"
-#include "stack.h"
+
 
 
 // Estructuras //
@@ -74,7 +74,13 @@ void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, ch
                                 -TLB AJUSTA LISTAS SEGUN ALGORITMO
 */
 
-/*
+
+
+extern t_queue* tlb;
+extern int cantidad_entradas_tlb;
+extern char* algoritmo_tlb;
+
+
 typedef struct {
 	int pid;
    int pagina;
@@ -83,12 +89,10 @@ typedef struct {
 
 
 
-void crear_tlb(char * algoritmo_sustitucion, char * cantidad_entradas);
-
 int consultar_tlb(int pid, int pagina); //HIT: marco - MISS: -1
 void agregar_entrada_tlb(int pid, int pagina, int marco); 
-void imprimir_tlb(t_list *tlb);
-*/
+void imprimir_tlb(t_queue* tlb);
+
 
 
 
