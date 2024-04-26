@@ -41,7 +41,7 @@ typedef struct
 
 
 extern FILE* archivo_de_bloques;
-extern int tam_bloque;
+extern int tamanio_bloque;
 
 //.................................. INICIALIZACION IO .......................................................................
 void iniciar_interfaz(char* nombre, char* path_de_config);
@@ -62,8 +62,8 @@ metadata_archivo* levantar_metadata(char* nombre_archivo, char* path_dial_fs);
 FILE* levantar_archivo_bloque(char* path_archivo_bloques);
 void crear_archivo_de_bloque(char* path_archivo_bloques, int tamanio_archivo_bloques);
 void cargar_bitmap(int cantidad_bloques, char* path_bitmap);
-void agregar_bloque(uint32_t bloque_a_agregar);
-void eliminar_bloque(uint32_t bloque_a_eliminar);
+void agregar_bloques(uint32_t cantidad_bloques_a_agregar);
+void eliminar_bloques(uint32_t cantidad_bloques_a_eliminar, uint32_t bloque_inicial);
 uint32_t buscar_bloque_libre();
 void limpiar_posiciones(t_bitarray* un_espacio, int posicion_inicial, int tamanio_proceso);
 void compactar();
