@@ -62,14 +62,13 @@ metadata_archivo* levantar_metadata(char* nombre_archivo, char* path_dial_fs);
 FILE* levantar_archivo_bloque(char* path_archivo_bloques);
 void crear_archivo_de_bloque(char* path_archivo_bloques, int tamanio_archivo_bloques);
 void cargar_bitmap(int cantidad_bloques, char* path_bitmap);
-void liberar_un_bloque_del_fs();
 void agregar_bloque(uint32_t bloque_a_agregar);
 void eliminar_bloque(uint32_t bloque_a_eliminar);
 uint32_t buscar_bloque_libre();
 void limpiar_posiciones(t_bitarray* un_espacio, int posicion_inicial, int tamanio_proceso);
-void ocupar_un_bloque_del_fs();
 void compactar();
 void marcar_bloque_ocupado(int index);
+bool esta_libre(int index);
 bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar);
 uint32_t buscar_bloque_en_fs(uint32_t bloque_a_leer, uint32_t bloque_inicial);
 
