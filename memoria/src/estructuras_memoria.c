@@ -96,17 +96,16 @@ int cantidad_de_marcos_necesarios(int tamanio_contenido_bytes){
 }
 
 void quitar_marcos_a_proceso(t_proceso_en_memoria* proceso, uint32_t cantidad_marcos_a_liberar){
-	
-	t_pagina *pagina_removida = NULL;
 
 	log_info(memoria_logger, "Liberando paginas - PID: %d - Tamaño: %d", proceso->pid, cantidad_marcos_a_liberar); 
 	
 	//TODO preguntar si borramos las paginas cuando se hace resize menor o en que cambia si las dejamos con un bit no cargadas
 
 	for(int i = 0; i<cantidad_marcos_a_liberar; i++){
-
+		t_pagina *pagina_removida = malloc(sizeof(t_pagina));
+		int tamanio_tabla_paginas = list_size(proceso->paginas_en_memoria) - 1;
 		//Saca desde el final las paginas
-		pagina_removida = list_remove(proceso->paginas_en_memoria, list_size(proceso->paginas_en_memoria)); 
+		pagina_removida = list_remove(proceso->paginas_en_memoria, tamanio_tabla_paginas); 
 		liberar_marco(pagina_removida->nro_marco);
 
 		free(pagina_removida);
@@ -145,7 +144,7 @@ void asignar_marcos_a_proceso(t_proceso_en_memoria* proceso, int cantidad_de_mar
 	t_marco* marco_obtenido = NULL;
 	int contador=0;
 
-	log_info(memoria_logger, "Agregando paginas - PID: %d - Tamaño: %d", proceso->pid, cantidad_de_marcos_necesarios); 
+	log_info(memoria_logger, "Agregando paginas - PID: %d - Tamaño: %d marcos", proceso->pid, cantidad_de_marcos_necesarios); 
 
 	for(int i = 0; i<list_size(marcos); i++){
 		if(contador < cantidad_de_marcos_necesarios){
