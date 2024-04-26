@@ -22,7 +22,6 @@ char *comandos[] = {
     [IO_FS_WRITE] = "IO_FS_WRITE", //5p
     [IO_FS_READ] = "IO_FS_READ", //5p
     [EXIT] = "EXIT", //0
-    [7] = NULL
 };
 
 
