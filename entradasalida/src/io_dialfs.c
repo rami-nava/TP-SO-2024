@@ -7,7 +7,7 @@ static char *puerto_memoria;
 static int socket_kernel;
 static int socket_memoria;
 static char* path_dial_fs;
-static int tamanio_bloque;
+int tamanio_bloque;
 static int cantidad_bloques;
 static int tamanio_archivo_bloques;
 static int tiempo_unidad_trabajo;
@@ -164,7 +164,7 @@ static void crear_archivo(char *nombre_archivo)
         config_set_value(archivo_nuevo, "TAMANIO_ARCHIVO", "0");
         config_save_in_file(archivo_nuevo, path_archivo);
 
-        ocupar_un_bloque_del_fs();
+        agregar_bloques(1);
 
         config_destroy(archivo_nuevo);
         free(path_archivo);
@@ -175,20 +175,23 @@ static void crear_archivo(char *nombre_archivo)
 static void eliminar_archivo(char *nombre_archivo)
 {
     // Obtenemos el path del archivo a eliminar
-    char *path_archivo = string_from_format("%s/%s", path_dial_fs, nombre_archivo);
-
-    // Eliminamos el archivo 
-    remove(path_archivo);
-
-    //Hay que eliminar config?
+    metadata_archivo* metadata = levantar_metadata(nombre_archivo, path_dial_fs);
+    uint32_t bloque_inicial = metadata->bloque_inicial;
+    uint32_t tamanio_archivo = metadata->tamanio_archivo;
+    
+    free(metadata);
 
     // Liberamos el bloque
-    liberar_un_bloque_del_fs();
+    uint32_t cantidad_bloques_ocupados = tamanio_archivo / tamanio_bloque; //TODO revisar
+    eliminar_bloques(cantidad_bloques_ocupados, bloque_inicial);
+
+    //eliminamos el archivo
+    char *path_archivo = string_from_format("%s/%s", path_dial_fs, nombre_archivo);
+    remove(path_archivo);
 
     // Liberamos la memoria
     free(path_archivo);
     free(nombre_archivo);
-
 }
 
 static void truncar_archivo(char *nombre_archivo, uint32_t tamanio_nuevo)
@@ -223,13 +226,14 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
 {
    uint32_t bloques_a_agregar = ceil((tamanio_nuevo - tamanio_actual) / tamanio_bloque);
 
-   //busco si hay la cantidad de bloques contiguos que me piden y si hay los asigno
+   //busco si hay la cantidad de bloques contiguos que me piden y si hay los ocupo
    if(!bloques_contiguos(bloques_a_agregar)) {
         //si no hay contiguos compacto 
         compactar();
         usleep(1000 * retraso_compactacion);
    } else printf ("Se encontraron bloques contiguos suficientes \n");
 
+   //le agrego al archivo lo bloques
    for (int i = 0; i < bloques_a_agregar; i++)
    {
        agregar_bloque(bloque_inicial + i);
