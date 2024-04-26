@@ -9,6 +9,10 @@ int socket_cliente_dispatch;
 int socket_cliente_interrupt;
 t_log *cpu_logger;
 
+t_queue* tlb;
+int cantidad_entradas_tlb;
+char* algoritmo_tlb;
+
 
 int main(void)
 {
@@ -21,6 +25,10 @@ int main(void)
     socket_cliente_memoria = crear_conexion(config_valores_cpu.ip_memoria, config_valores_cpu.puerto_memoria);
 
     realizar_handshake();
+
+    cantidad_entradas_tlb =  config_valores_cpu.cantidad_entradas_tlb;
+    algoritmo_tlb = config_valores_cpu.algoritmo_tlb;  
+    tlb = queue_create();
 
     socket_servidor_dispatch = iniciar_servidor(config_valores_cpu.ip_cpu, config_valores_cpu.puerto_escucha_dispatch);
     socket_servidor_interrupt = iniciar_servidor(config_valores_cpu.ip_cpu, config_valores_cpu.puerto_escucha_interrupt);
@@ -35,4 +43,5 @@ int main(void)
     pthread_join(cpu, NULL);
 
     return 0;
+
 }
