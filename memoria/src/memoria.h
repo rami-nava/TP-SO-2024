@@ -9,7 +9,7 @@
 #include <CUnit/CUnit.h>
 #include <sys/types.h>
 #include <pthread.h>
-#include <commons/collections/list.h>
+
 #include <commons/log.h>
 #include <commons/memory.h>
 
@@ -83,6 +83,7 @@ int out_of_memory(int pid, uint32_t tamanio);
 void resize(int pid, uint32_t tamanio);
 void copy_string(int pid, uint32_t cantidad_bytes_a_copiar, uint32_t direccion_fisica_a_copiar, uint32_t direccion_fisica_destino);
 void traducir_pagina_a_marcos(uint32_t numero_pagina, int pid, int cliente);
+t_marco *marco_desde_df(uint32_t dir_fisica);
 
 /// @brief PETICIONES DE IO ///
 void realizar_lectura(uint32_t direccion_fisica, uint32_t tamanio_lectura, int cliente);
@@ -90,9 +91,8 @@ void realizar_escritura(uint32_t direccion_fisica, void* texto_a_guardar, uint32
 
 /// @brief ESPACIO USUARIO ///
 void creacion_espacio_usuario();
-void escribir_memoria(uint32_t dir_fisica, uint32_t valor, int pid);
-t_marco *marco_desde_df(uint32_t dir_fisica);
-uint32_t leer_memoria(uint32_t dir_fisica, int pid);
+void escribir_memoria(uint32_t dir_fisica, uint32_t valor, int pid, char* memoria);
+uint32_t leer_memoria(uint32_t dir_fisica, int pid, char* registro);
 void acceso_a_espacio_usuario(int pid, char* accion, uint32_t dir_fisica, uint32_t tamanio);
 
 /// @brief  PROCESOS EN MEMORIA - MARCOS ///

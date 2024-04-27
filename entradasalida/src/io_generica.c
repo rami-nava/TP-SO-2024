@@ -6,7 +6,7 @@ static char *puerto_kernel;
 static int socket_kernel;
 static int tiempo_unidad_de_trabajo;
 t_log* generica_logger;
-static char* nombre_interfaz;
+char* nombre_interfaz;
 
 static void realizar_sleep();
 static void conectarse_a_kernel_generica(char* nombre_interfaz);
@@ -64,4 +64,19 @@ void realizar_sleep()
         eliminar_paquete(paquete);
         
     }
+}
+
+void desconectarse(){
+
+    int socket_kernel_desconexion = crear_conexion(ip_kernel, puerto_kernel);
+
+    t_paquete* paquete = crear_paquete(DESCONECTAR_IO);
+    agregar_cadena_a_paquete(paquete, nombre_interfaz);
+    enviar_paquete(paquete, socket_kernel_desconexion);
+
+    int desconectarme = 0;
+
+    recv(socket_kernel_desconexion, &desconectarme , sizeof(int), MSG_WAITALL);
+    
+    abort();
 }

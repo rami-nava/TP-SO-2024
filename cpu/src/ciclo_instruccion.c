@@ -393,7 +393,7 @@ void setear_registro(char *registros, char* valor)
 uint32_t buscar_registro(char *registro)
 {
     uint32_t valor = 0;
-
+    
     if (string_equals_ignore_case(registro, "PC"))
         valor = contexto_ejecucion->PC;
 

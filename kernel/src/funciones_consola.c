@@ -109,6 +109,18 @@ void consola_proceso_estado() {
 
 }
 
+void consola_modificar_multiprogramacion(int nuevo_valor) 
+{
+  int grado_anterior = config_valores_kernel.grado_multiprogramacion;
+  config_valores_kernel.grado_multiprogramacion = nuevo_valor;
+
+  sem_destroy(&grado_multiprogramacion);
+
+  sem_init(&grado_multiprogramacion, 0, nuevo_valor);
+  printf("Grado Anterior: %d - Grado Actual: %d \n", grado_anterior, nuevo_valor);
+
+}
+
 void consola_finalizar_proceso(int pid) {
 
   printf("Finalizamos el proceso: %d \n", pid);

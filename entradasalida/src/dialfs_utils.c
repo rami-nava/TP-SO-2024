@@ -109,68 +109,24 @@ void limpiar_posiciones(t_bitarray* un_espacio, int posicion_inicial, int tamani
 	}
 }
 
-void agregar_bloques(uint32_t cantidad_bloques_a_agregar)
+void agregar_bloque(uint32_t bloque_a_agregar)
 {
-    char* bloque_ocupado[tamanio_bloque];
-    uint32_t desplazamiento = 0;
-    int j = 0;
-
-    //creo un bloque con todos sus elementos en '\0'
-    for(int i = 0; i < tamanio_bloque;i++){ 
-        bloque_ocupado[i] = '\0';
-    }
-
-    void *bloques_asignados = malloc(cantidad_bloques_a_agregar * sizeof(uint32_t));
-
-    while (desplazamiento < cantidad_bloques_a_agregar){
-
-        //busco bloques libres
-        while (esta_libre(j)){
-            j++;
-        }
-
-        //copio el numero de bloque al buffer para memoria
-        memcpy(bloques_asignados + (desplazamiento * sizeof(uint32_t)), &j ,sizeof(uint32_t));
-
-        //relleno el bloque con '\0'
-        memcpy(archivo_de_bloques_mapeado + ((j+1)*sizeof(uint32_t)), bloque_ocupado, tamanio_bloque);
-
-        //actualizo el archivo en memoria
-        msync(archivo_de_bloques_mapeado + ((j+1)*sizeof(uint32_t)), tamanio_bloque, MS_INVALIDATE);
-
-        marcar_bloque_ocupado(j);
-
-        j++;
-        desplazamiento++;
-    }
-
-    mem_hexdump((char*)bloques_asignados, cantidad_bloques_a_agregar*sizeof(uint32_t));
-
+// TODO
 }
 
-uint32_t buscar_bloque_en_fs(uint32_t cantidad_bloques, uint32_t bloque_inicial)
+void eliminar_bloque(uint32_t bloque_a_eliminar)
 {
-    //TODO
-    for(int i = bloque_inicial; i < cantidad_bloques; i++){
-        if (bitarray_test_bit(bitmap_bitarray, i) == true){
-            return i;
-        }
-    }
-    return 0;
+// TODO
 }
 
-void eliminar_bloques(uint32_t cantidad_bloques_a_eliminar, uint32_t bloque_inicial) {
+void ocupar_un_bloque_del_fs()
+{
+// TODO
+}
 
-    void *bloques_asignados = malloc(cantidad_bloques_a_eliminar * sizeof(uint32_t));
-
-    for (int i = bloque_inicial; i < cantidad_bloques_a_eliminar; i++) {
-
-        //copio el numero de bloque al buffer para memoria
-        memcpy(bloques_asignados + (i * sizeof(uint32_t)), &bloque_inicial ,sizeof(uint32_t));
-
-        limpiar_posiciones(bitmap_bitarray, bloque_inicial, tamanio_bloque);
-    }
-
+void liberar_un_bloque_del_fs()
+{
+// TODO
 }
 
 void compactar()
@@ -182,10 +138,13 @@ void compactar()
 uint32_t buscar_bloque_libre()
 {
     for (int i = 0; i < tamanio_bitmap; i++){
-        if (esta_libre(i)){
+        if (bitarray_test_bit(bitmap_bitarray, i) == false){
 
-            //lo marco como ocupado actualizo el bitmap para que se guarde como ocupado
-            marcar_bloque_ocupado(i);
+            //lo marco como ocupado
+            bitarray_set_bit(bitmap_bitarray, i);
+
+            //actualizo el bitmap para que se guarde como ocupado
+            msync(bitmap, tamanio_bitmap, MS_SYNC);
             return i;
         }
     }
@@ -198,7 +157,7 @@ bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar) {
 
     //i es la posicion donde estoy dentro del bitmap
     for (int i = 0; i < tamanio_bitmap; i++) {
-        if (esta_libre(i)) {
+        if (bitarray_test_bit(bitmap_bitarray, i) == false) {
 
             //cantidad de bloques disponibles contiguos que encuentro
             bloques_encontrados++;
@@ -231,6 +190,14 @@ void marcar_bloque_ocupado(int index) {
     msync(bitmap, tamanio_bitmap, MS_SYNC);
 }
 
-bool esta_libre(int index) {
-    bitarray_test_bit(bitmap_bitarray, index) == false;
+uint32_t buscar_bloque_en_fs(uint32_t cantidad_bloques, uint32_t bloque_inicial)
+{
+    //TODO
+    for(int i = bloque_inicial; i < cantidad_bloques; i++){
+        if (bitarray_test_bit(bitmap_bitarray, i) == true){
+            return i;
+        }
+    }
+    return 0;
 }
+

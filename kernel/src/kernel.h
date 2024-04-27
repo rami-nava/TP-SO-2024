@@ -142,10 +142,6 @@ void mandar_a_EXIT(t_pcb* proceso, char* motivo);
 void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb);
 bool ocurrio_IO(t_contexto* contexto_ejecucion);
 
-////======================================== MEMORIA ===========================================================================================================
-void enviar_pcb_a_memoria(t_pcb *, int, op_code);
-op_code esperar_respuesta_memoria(int);
-
 //================================================== PCB =====================================================================================================================
 t_pcb *crear_pcb(char*); 
 void enviar_pcb_a_cpu(t_pcb *);
@@ -159,6 +155,8 @@ void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion
 void loggear_finalizacion_proceso(t_pcb* proceso, char* motivo);
 void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo);
 void volver_a_CPU(t_pcb* proceso);
+t_pcb* buscar_pcb_en_lista (t_list* lista, int pid);
+t_pcb* buscar_pcb_de_lista_y_eliminar(t_list *lista, int pid_buscado, pthread_mutex_t mutex_cola);
 
 //================================================ Recursos =====================================================================================================================
 void liberacion_recursos(t_pcb* );
@@ -174,6 +172,7 @@ void parse_detener_planificacion (char* linea);
 void parse_iniciar_planificacion (char* linea);
 void parse_ejecutar_script(char *linea);
 void parse_proceso_estado (char* linea);
+void parse_multiprogramacion(char *linea);
 void consola_parsear_instruccion(char *leer_linea);
 void consola_finalizar_proceso(int pid);
 void consola_detener_planificacion();
@@ -183,9 +182,8 @@ void detener_planificacion();
 void consola_ejecutar_script(char *path);
 void consola_iniciar_proceso(char *path);
 void detener_planificacion();
-t_pcb* buscar_pcb_en_lista (t_list* lista, int pid);
-t_pcb* buscar_pcb_de_lista_y_eliminar(t_list *lista, int pid_buscado, pthread_mutex_t mutex_cola);
 void mostrar_lista_pids(t_list *cola, char *nombre_cola, pthread_mutex_t mutex_cola);
+void consola_modificar_multiprogramacion(int nuevo_valor); 
 
 ////======================================== IO ===========================================================================================================
 void servidor_kernel_io();

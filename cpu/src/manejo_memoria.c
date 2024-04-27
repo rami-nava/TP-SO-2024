@@ -3,6 +3,7 @@
 
 // Variables GLOBALES
 uint32_t tam_pagina;
+char* tipo_registro[4] = {"AX","BX","CX","DX"};
 
 // FUNCIONES INTERNAS //
 static void enviar_handshake();
@@ -10,8 +11,9 @@ static void recibir_handshake();
 static uint32_t traducir_pagina_a_marco(uint32_t numero_pagina);
 static void pedir_numero_frame(uint32_t numero_pagina);
 static uint32_t numero_marco_pagina();
-static void pedir_MOV_IN(uint32_t direccion_fisica);
-static void pedir_MOV_OUT(uint32_t direccion_fisica, uint32_t registro);
+static void pedir_MOV_IN(uint32_t direccion_fisica, char* registro);
+static void pedir_MOV_OUT(uint32_t direccion_fisica, uint32_t registro, char* registro_final);
+static char* es_de_un_byte(char* registro);
 
 //================================================== Handshake =====================================================================
 void realizar_handshake()
@@ -56,20 +58,6 @@ uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica){
     // Calculamos numero_pagina y offset
     numero_pagina = floor(direccion_logica / tam_pagina);
     offset = direccion_logica - (numero_pagina * tam_pagina);
-
-    //ACA VA LA PARTE DE TLB CUANDO PROBEMOS
-    /* 
-    int respuesta_tlb = consultar_tlb(int pid, int pagina); //-> pasar por parametro esta info
-    if (respuesta_tlb == -1){
-        //(logger tlb miss bla bla) 
-        traducir_pagina_a_marco(numero_pagina); //-> pedido a memoria
-        direccion_fisica = numero_marco * tam_pagina + offset;
-        agregar_entrada_tlb(pid, numero_pagina, numero_marco);
-    }else{
-        //(logger tlb hit bla bla)
-        direccion_fisica = respuesta_tlb * tam_pagina + offset;
-    }
-    */
 
     // Llamos a la  Memoria, para conseguir el número de marco correspondiente a la página
     numero_marco = traducir_pagina_a_marco(numero_pagina);
@@ -165,11 +153,14 @@ void copy_string(char* tamanio)
 
 void mov_in(char *registro, char *direccion_logica)
 {
+    //El registro es de 8  bits? 
+    char* registro_final = es_de_un_byte(registro);
+
     uint32_t direccion_fisica = traducir_de_logica_a_fisica(atoi(direccion_logica));
 
     if (direccion_fisica != UINT32_MAX)
     {
-        pedir_MOV_IN(direccion_fisica);
+        pedir_MOV_IN(direccion_fisica, registro_final);
 
         uint32_t valor_leido = 0;
         recv(socket_cliente_memoria, &valor_leido, sizeof(uint32_t), MSG_WAITALL);
@@ -187,11 +178,14 @@ void mov_out(char *direccion_logica, char *registro)
 {
     uint32_t valor = buscar_registro(registro);
 
+    //El registro es de 8  bits? 
+    char* registro_final = es_de_un_byte(registro);
+
     uint32_t direccion_fisica = traducir_de_logica_a_fisica(atoi(direccion_logica));
 
     if (direccion_fisica != UINT32_MAX)
     {
-        pedir_MOV_OUT(direccion_fisica, valor);
+        pedir_MOV_OUT(direccion_fisica, valor, registro_final);
 
         uint32_t se_ha_escrito;
         recv(socket_cliente_memoria, &se_ha_escrito, sizeof(uint32_t), MSG_WAITALL);
@@ -200,19 +194,33 @@ void mov_out(char *direccion_logica, char *registro)
     }
 }
 
-static void pedir_MOV_OUT(uint32_t direccion_fisica, uint32_t valor_registro)
+static void pedir_MOV_OUT(uint32_t direccion_fisica, uint32_t valor_registro, char* registro)
 {
     t_paquete *paquete = crear_paquete(PEDIDO_MOV_OUT);
     agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
     agregar_entero_sin_signo_a_paquete(paquete, valor_registro);
+    agregar_cadena_a_paquete(paquete, registro);
     enviar_paquete(paquete, socket_cliente_memoria);
 }
 
-static void pedir_MOV_IN(uint32_t direccion_fisica)
+static void pedir_MOV_IN(uint32_t direccion_fisica, char* registro)
 {
     t_paquete *paquete = crear_paquete(PEDIDO_MOV_IN);
     agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
+    agregar_cadena_a_paquete(paquete, registro);
     enviar_paquete(paquete, socket_cliente_memoria);
+}
+
+static char* es_de_un_byte(char* registro)
+{
+    char* registro_orignal = registro;
+    
+    for(int i = 0; i < 4; i++){
+        if(strcmp(tipo_registro[i], registro)){
+            registro_orignal = "byte";
+        }
+    }
+    return registro_orignal;
 }

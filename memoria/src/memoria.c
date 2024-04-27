@@ -7,7 +7,6 @@ int server_memoria;
 arch_config config_valores_memoria;
 int cantidad_marcos;
 uint32_t tam_pagina;
-t_list* procesos_en_memoria;
 
 int main(void) {
 	

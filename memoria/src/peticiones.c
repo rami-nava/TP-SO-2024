@@ -113,17 +113,19 @@ static void manejo_conexiones(void* conexion)
 		case PEDIDO_MOV_IN:
 			int pid_mov_in = sacar_entero_de_paquete(&stream);
 		    uint32_t direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+			char* tipo_registro_a_leer = sacar_cadena_de_paquete(&stream);
 			
-			uint32_t valor_leido = leer_memoria(direccion_fisica, pid_mov_in);
+			uint32_t valor_leido = leer_memoria(direccion_fisica, pid_mov_in, tipo_registro_a_leer);
 			send(cliente, &valor_leido, sizeof(uint32_t), 0); 
 			break;
 
 		case PEDIDO_MOV_OUT:
 			int pid_mov_out = sacar_entero_de_paquete(&stream);
 		    uint32_t dir_fisica = sacar_entero_sin_signo_de_paquete(&stream);
-			void* valor = sacar_entero_sin_signo_de_paquete(&stream); //ES VOID* PARA CONSERVAR LOS TIPOS DE DATO
+			uint32_t valor = sacar_entero_sin_signo_de_paquete(&stream);
+			char* tipo_registro_a_escribir = sacar_cadena_de_paquete(&stream);
 
-			escribir_contenido_espacio_usuario(pid_mov_out, dir_fisica, sizeof(valor), valor);
+			escribir_memoria(dir_fisica, valor, pid_mov_out, tipo_registro_a_escribir);
 			uint32_t se_ha_escrito = 1;
 			send(cliente, &se_ha_escrito, sizeof(uint32_t), 0);
 			break;

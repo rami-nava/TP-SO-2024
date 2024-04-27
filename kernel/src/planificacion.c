@@ -136,7 +136,7 @@ void ingresar_a_AUX_VRR(t_pcb *pcb)
 }
 
 void ingresar_de_BLOCKED_a_READY_IO(t_list* cola, pthread_mutex_t cola_bloqueado_mutex){
-    //lo saco de la lista blocked
+    
     detener_planificacion();
     pthread_mutex_lock(&cola_bloqueado_mutex);
     t_pcb* proceso_desbloqueado = desencolar(cola);

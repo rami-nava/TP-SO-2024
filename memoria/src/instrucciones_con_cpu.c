@@ -70,31 +70,51 @@ t_marco *marco_desde_df(uint32_t dir_fisica){
 
 //ESTE SOLO SIRVE PARA LEER ENTEROS, PERO RECORDEMOS QUE EN ESTE TP SE PUEDEN LEER MAS DE UN SOLO BYTE
 // MOV_IN
-uint32_t leer_memoria(uint32_t dir_fisica, int pid)
+uint32_t leer_memoria(uint32_t dir_fisica, int pid, char* registro)
 {
-	uint32_t valor_leido = -1;
+	//Si el registro es de 8 bits
+	if(string_equals_ignore_case(registro, "byte")) {
 
+		free(registro);
+
+		uint8_t valor_leido = -1;
+
+		acceso_a_espacio_usuario(pid, "LEER", dir_fisica, sizeof(uint8_t));
+
+		memcpy(&valor_leido, espacio_usuario + dir_fisica, sizeof(uint8_t));
+		return valor_leido;
+	} 
+
+	free(registro);
+
+	uint32_t valor_leido = -1;
+   
 	acceso_a_espacio_usuario(pid, "LEER", dir_fisica, sizeof(uint32_t));
 
-	//pthread_mutex_lock(&mutex_memoria_usuario);
 	memcpy(&valor_leido, espacio_usuario + dir_fisica, sizeof(uint32_t));
-	//pthread_mutex_unlock(&mutex_memoria_usuario);
 
 	return valor_leido;
 }
 
 //ESTE METODO NO SIRVE, NO TIENE EN CUENTA QUE PUEDE ESTAR SOBREESCRIBIENDO OTRAS PAGINAS, PERO PARA TESTEAR VA
 // MOV_OUT
-void escribir_memoria(uint32_t dir_fisica, uint32_t valor, int pid){
+void escribir_memoria(uint32_t dir_fisica, uint32_t valor, int pid, char* registro){
 
-	acceso_a_espacio_usuario(pid, "ESCRIBIR", dir_fisica, sizeof(uint32_t));
+	//Si el registro es de 8 bits
+	if(string_equals_ignore_case(registro, "byte")) {
 
-	//pthread_mutex_lock(&mutex_memoria_usuario);
-	memcpy(espacio_usuario + dir_fisica, &valor, sizeof(uint32_t));
-	//pthread_mutex_unlock(&mutex_memoria_usuario);
+		acceso_a_espacio_usuario(pid, "ESCRIBIR", dir_fisica, sizeof(uint8_t));
+
+		memcpy(espacio_usuario + dir_fisica, &valor, sizeof(uint8_t));
+	} else {
+		acceso_a_espacio_usuario(pid, "ESCRIBIR", dir_fisica, sizeof(uint32_t));
+
+		memcpy(espacio_usuario + dir_fisica, &valor, sizeof(uint32_t));
+	}
 
 	//TENGO QUE HACER ALGO CON LA PAGINAX????
 	// Hay que hacerlos para strings
+	free(registro);
 }
 
 
