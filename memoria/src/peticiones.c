@@ -121,9 +121,9 @@ static void manejo_conexiones(void* conexion)
 		case PEDIDO_MOV_OUT:
 			int pid_mov_out = sacar_entero_de_paquete(&stream);
 		    uint32_t dir_fisica = sacar_entero_sin_signo_de_paquete(&stream);
-			uint32_t valor = sacar_entero_sin_signo_de_paquete(&stream);
+			void* valor = sacar_entero_sin_signo_de_paquete(&stream); //ES VOID* PARA CONSERVAR LOS TIPOS DE DATO
 
-			escribir_memoria(dir_fisica, valor, pid_mov_out);
+			escribir_contenido_espacio_usuario(pid_mov_out, dir_fisica, sizeof(valor), valor);
 			uint32_t se_ha_escrito = 1;
 			send(cliente, &se_ha_escrito, sizeof(uint32_t), 0);
 			break;

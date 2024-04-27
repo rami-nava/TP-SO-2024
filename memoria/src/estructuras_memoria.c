@@ -163,7 +163,7 @@ void asignar_proceso_a_marco(t_proceso_en_memoria* proceso, t_marco* marco){
 	agregar_pagina_a_proceso(proceso, marco);
 	
 	marco->pid_proceso = proceso->pid;
-	marco->nro_pagina = list_size(proceso->paginas_en_memoria);
+	marco->nro_pagina = list_size(proceso->paginas_en_memoria)-1;
 	marco->libre = 0;
 }
 
@@ -185,7 +185,7 @@ void agregar_pagina_a_proceso(t_proceso_en_memoria* proceso, t_marco* marco){
 
 	pagina_nueva->pid_proceso = proceso->pid;
 	pagina_nueva->nro_marco = marco->nro_marco;
-	pagina_nueva->nro_pagina = list_size(proceso->paginas_en_memoria);
+	pagina_nueva->nro_pagina = list_size(proceso->paginas_en_memoria)-1;
 
 	list_add(proceso->paginas_en_memoria, pagina_nueva);
 }
@@ -222,58 +222,6 @@ uint32_t buscar_marco(uint32_t numero_pagina, int pid){
 
     return marco;
 }
-
-/*
-void asignar_marcos_a_proceso(int pid, int cantidad_de_marcos) {
- 	
-	t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
-	//if (proceso != -1)...
-
-	int marcos_ya_asignados = cantidad_de_marcos_del_proceso(proceso); //Ver si no choca al ya extender marcos con otros ya cargados
-
- 	t_list_iterator* iterador = list_iterator_create(marcos);
-
-	int marcos_asignando = 0;
-
- 	while (marcos_asignando < cantidad_de_marcos && list_iterator_has_next(iterador)) {
- 		t_marco* marco = list_iterator_next(iterador);
-
-		if (marco->libre == 1) {
- 			//Actualizo marco
-			marco->libre = 0; 
- 			marco->pid_proceso = pid; 
- 			marco->nro_pagina = marcos_ya_asignados; //Aca asigno el nropag a partir de la # de marcos que ya tenia asigandos antes
- 			
-			// Actualizo paginas 
-			t_pagina* pagina = malloc(sizeof(t_pagina));
-			pagina->pid = pid;
-			pagina->nro_pagina = marcos_ya_asignados; //Aca asigno el nropag a partir de la # de marcos que ya tenia asigandos antes sino se pisan los numeros de pag
-			pagina->marco = marco->nro_marco;
-			
-			list_add(proceso->paginas_en_memoria, pagina);
-			
-			//Actualizo contadores
-			marcos_asignando++;
-			marcos_ya_asignados++;
-			}
- 	}
-
- 	list_iterator_destroy(iterador);
-}
-
-int cantidad_de_marcos_del_proceso(t_proceso_en_memoria* proceso) { //Equivale a cantidad de paginas en memoria
-
-    int cantidad_marcos = 0;
-    for (int i = 0; i < list_size(proceso->paginas_en_memoria); i++) {
-        t_pagina* pagina = (t_pagina*)list_get(proceso->paginas_en_memoria, i);
-        if (pagina->marco != -1) { 
-            cantidad_marcos++;
-        }
-    }
-
-    return cantidad_marcos; 
-}
-*/
 
 /* // MUESTREA PARA TESTEAR MEMORIA -> NO USAR EN EL TP 
 static void mostrar_procesos_en_memoria() {
@@ -339,7 +287,7 @@ void escribir_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t taman
 */
 
 void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido){
-
+	uint32_t *valor = 1000;
 	//usleep(1000 * config_valores_memoria.retardo_respuesta); //TODO ver si poner el usleep aca o hacer otro escribir general para ambos metodos
 
 	t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
@@ -353,8 +301,9 @@ void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint
 		
 		//Entra en este marco
 			
-		memcpy((char*) espacio_usuario + direccion_fisica, contenido, (size_t) tamanio_escritura); //ver si funca con el casteo
-	
+		memcpy(espacio_usuario + direccion_fisica, &contenido, tamanio_escritura); //ver si funca con el casteo
+		memcpy(&valor, espacio_usuario + direccion_fisica, tamanio_escritura);
+		log_info(memoria_logger, "VALOR LEIDOO: %d", valor);
 	}else{
 
 		escribir_contenido_en_partes(proceso, direccion_fisica, tamanio_escritura, contenido);
@@ -399,11 +348,7 @@ int numero_marco(uint32_t direccion_fisica){
 }
 
 static int desplazamiento(uint32_t direccion_fisica){
-	
-	t_marco* marco_asociado = marco_desde_df(direccion_fisica); //Aca hay un leak?
-
-	return direccion_fisica - (tam_pagina*(marco_asociado->nro_pagina));
-
+	return direccion_fisica%tam_pagina;
 }
 
 static int lugar_restante_en_marco(uint32_t direccion_fisica){
@@ -416,9 +361,9 @@ static int lugar_restante_en_marco(uint32_t direccion_fisica){
 // Calcula la dirección física usando el número de marco y el tamaño de página
 static uint32_t calcular_direccion_fisica_inicial_marco(t_marco* marco) {
         
-	uint32_t direccion_fisica = marco->nro_marco * tam_pagina;
+	uint32_t direccion_fisica_a_retornar = marco->nro_marco * tam_pagina;
     
-	return direccion_fisica;
+	return direccion_fisica_a_retornar;
 }
 
 /*
@@ -461,7 +406,7 @@ static void copiar_contenido_en_partes_espacio_usuario(uint32_t direccion_fisica
 	//Trato la primer pagina por si no comienza en 0 la DF y hay que escribir desde la mitad del marco
 	
 	//Copio solo la parte que entra en el primer marco
-	memcpy((char *) espacio_usuario + direccion_fisica_inicial, contenido, (size_t) bytes_restantes_primer_marco);
+	memcpy(espacio_usuario + direccion_fisica_inicial, &contenido, bytes_restantes_primer_marco);
 	
 	bytes_copiados += bytes_restantes_primer_marco; 
 
@@ -473,11 +418,12 @@ static void copiar_contenido_en_partes_espacio_usuario(uint32_t direccion_fisica
         
 		t_marco* marco = buscar_marco_por_numero(pagina->nro_marco);
         
+		//HASTA ACA LLEGAMOS - 26/4
+
         // Calcular la dirección física dle marco actual en donde comenzar a escribir la parte
         uint32_t direccion_fisica = calcular_direccion_fisica_inicial_marco(marco);
-
         // Copiar los bytes en el espacio de usuario, al sumar bytes_copiados esta partiendo el string/entero
-        memcpy((char *) espacio_usuario + direccion_fisica, contenido + bytes_copiados, (size_t) bytes_por_marco);
+        //memcpy(espacio_usuario + direccion_fisica, &nuevo_contenido, bytes_por_marco);
 
         // Actualizar el número de bytes copiados
         bytes_copiados += bytes_por_marco;
