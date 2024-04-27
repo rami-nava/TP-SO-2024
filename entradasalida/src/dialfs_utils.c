@@ -148,9 +148,16 @@ void agregar_bloques(uint32_t cantidad_bloques_a_agregar)
 
 }
 
-void eliminar_bloque (uint32_t bloque_a_eliminar){}
-
-void agregar_bloque (uint32_t bloque_a_agregar){}
+uint32_t buscar_bloque_en_fs(uint32_t cantidad_bloques, uint32_t bloque_inicial)
+{
+    //TODO
+    for(int i = bloque_inicial; i < cantidad_bloques; i++){
+        if (bitarray_test_bit(bitmap_bitarray, i) == true){
+            return i;
+        }
+    }
+    return 0;
+}
 
 void eliminar_bloques(uint32_t cantidad_bloques_a_eliminar, uint32_t bloque_inicial) {
 
@@ -227,15 +234,3 @@ void marcar_bloque_ocupado(int index) {
 bool esta_libre(int index) {
     bitarray_test_bit(bitmap_bitarray, index) == false;
 }
-
-uint32_t buscar_bloque_en_fs(uint32_t cantidad_bloques, uint32_t bloque_inicial)
-{
-    //TODO
-    for(int i = bloque_inicial; i < cantidad_bloques; i++){
-        if (bitarray_test_bit(bitmap_bitarray, i) == true){
-            return i;
-        }
-    }
-    return 0;
-}
-
