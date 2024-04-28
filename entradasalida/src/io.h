@@ -57,24 +57,21 @@ void handle_sigint(int sig);
 void desconectarse();
 
 //.................................. METADATA .....................................................................
-void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inicial, char* nombre_archivo, char* path_dial_fs);
-void cargamos_cambios_a_metadata_reducir(int tamanio_nuevo, char* nombre_archivo, char* path_dial_fs);
-metadata_archivo* levantar_metadata(char* nombre_archivo, char* path_dial_fs);
+void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inicial, char* nombre_archivo);
+void cargamos_cambios_a_metadata_reducir(int tamanio_nuevo, char* nombre_archivo);
+metadata_archivo* levantar_metadata(char* nombre_archivo);
 
 //.................................. ARCHIVOS .......................................................................
 FILE* levantar_archivo_bloque();
 void crear_archivo_de_bloque();
 void cargar_bitmap();
-void agregar_bloques(uint32_t cantidad_bloques_a_agregar);
+void agregar_bloques(uint32_t cantidad_bloques_a_agregar, uint32_t bloque_inicial);
+uint32_t buscar_bloque_libre(uint32_t bloque_inicial);
 void eliminar_bloques(uint32_t cantidad_bloques_a_eliminar, uint32_t bloque_inicial);
-uint32_t buscar_bloque_libre();
-void limpiar_posiciones(t_bitarray* un_espacio, int posicion_inicial, int tamanio_proceso);
+uint32_t buscar_bloque_inicial_libre();
 void compactar();
 void marcar_bloque_ocupado(int index);
 bool esta_libre(int index);
 bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar);
-uint32_t buscar_bloque_en_fs(uint32_t bloque_a_leer, uint32_t bloque_inicial);
-
-
 
 #endif

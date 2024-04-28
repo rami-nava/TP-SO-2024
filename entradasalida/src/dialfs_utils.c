@@ -5,6 +5,8 @@ t_bitarray* bitmap_bitarray;
 FILE* archivo_de_bloques;
 int tamanio_bitmap;
 
+static void limpiar_posiciones(uint32_t posicion_inicial, int tamanio_proceso);
+
 //================================ ARCHIVOS DE BLOQUES ======================================================
 void crear_archivo_de_bloque()
 {
@@ -66,52 +68,45 @@ void cargar_bitmap()
     
     // Si el bitmap no existe o no tiene bloques marco libres todos las posiciones del array
     if (existe_bitmap == false){
-        limpiar_posiciones(bitmap_bitarray, 0, bytes);  // Si es la primera ejecución del sistema, se carga el bitmap con ceros, todos bloques libres
+        limpiar_posiciones(0, bytes);  // Si es la primera ejecución del sistema, se carga el bitmap con ceros, todos bloques libres
     }
-    /*
-    int contador =0;
-    // Descomentar esto de abajo si se quiere checkear los valores del bitarray en pantalla
-    for(int x =0;x<8000;x++){  // ESTO LO HICE PARA VER QUE HAY EN EL BITARRAY
-         bitarray_test_bit(bitmap_bitarray, x);
-         contador++;
-    }
-    log_info(dialfs_logger, "contador: %d", contador);*/
     
     int sincronizacion_completada = msync(bitmap, bytes, MS_SYNC);
     if (sincronizacion_completada == -1){
         log_error(dialfs_logger, "Error al sincronizar el bitmap de memoria");
         abort();
     }
-    /*
-    int finMmap = munmap(bitmap, bytes);
-    if (finMmap == -1){
-        log_info(dialfs_logger, "Error al unmapear el bitmap de memoria");
-        perror("munmap");
-    }
 
-    */
-
-    //guardo el tamanio del bitmap
+    //Guardar el tamanio del bitmap
     tamanio_bitmap = (int) bitarray_get_max_bit(bitmap_bitarray);
+
+    //Leer contenido del bitmap
+    for (int i = 0; i < 15; i++) {
+    if (bitarray_test_bit(bitmap_bitarray, i)) {
+            printf("Bit at index %d is 1\n", i);
+    } else {
+        printf("Bit at index %d is 0\n", i);
+    }
+    }
 
     close(fd_bitmap);
 }
 
-void limpiar_posiciones(t_bitarray* un_espacio, int posicion_inicial, int tamanio_proceso) {
-	int i = 0;
-	for (i = posicion_inicial; i < posicion_inicial + tamanio_proceso; i++) {
-		bitarray_clean_bit(un_espacio, i);
+static void limpiar_posiciones(uint32_t posicion_inicial, int tamanio_proceso) {
+	
+    for (int i = posicion_inicial; i < posicion_inicial + tamanio_proceso; i++) {
+		bitarray_clean_bit(bitmap_bitarray, i);
 	}
 }
 
-void agregar_bloques(uint32_t cantidad_bloques_a_agregar)
+void agregar_bloques(uint32_t cantidad_bloques_a_agregar, uint32_t bloque_inicial)
 {
     //char* bloque_ocupado = calloc(tamanio_bloque, sizeof(char));
     char* bloque_ocupado = malloc(tamanio_bloque); 
     memset(bloque_ocupado, 'a', tamanio_bloque);
 
     uint32_t desplazamiento = 0;
-    uint32_t bloque_libre = buscar_bloque_libre();
+    uint32_t bloque_libre = buscar_bloque_libre(bloque_inicial);
 
     marcar_bloque_ocupado(bloque_libre);
 
@@ -143,29 +138,24 @@ void agregar_bloques(uint32_t cantidad_bloques_a_agregar)
 
 }
 
-uint32_t buscar_bloque_en_fs(uint32_t cantidad_bloques, uint32_t bloque_inicial)
-{
-    //TODO
-    for(int i = bloque_inicial; i < cantidad_bloques; i++){
-        if (bitarray_test_bit(bitmap_bitarray, i) == true){
-            return i;
-        }
-    }
-    return 0;
-}
-
 void eliminar_bloques(uint32_t cantidad_bloques_a_eliminar, uint32_t bloque_inicial) {
+    
+    char* bloque_vacio = calloc(tamanio_bloque, sizeof(char));
+    memset(bloque_vacio, '\0', tamanio_bloque);
 
-    void *bloques_asignados = malloc(cantidad_bloques_a_eliminar * sizeof(uint32_t));
+    // Levanto el archivo de bloques
+    archivo_de_bloques = levantar_archivo_bloque();
 
+    // Limpio el archivo de bloques con bloques vacios
     for (int i = bloque_inicial; i < cantidad_bloques_a_eliminar; i++) {
+        fseek(archivo_de_bloques, (tamanio_bloque * i), SEEK_SET);
+        fwrite(bloque_vacio, sizeof(char), tamanio_bloque, archivo_de_bloques);
 
-        //copio el numero de bloque al buffer para memoria
-        memcpy(bloques_asignados + (i * sizeof(uint32_t)), &bloque_inicial ,sizeof(uint32_t));
-
-        limpiar_posiciones(bitmap_bitarray, bloque_inicial, tamanio_bloque);
+        limpiar_posiciones(bloque_inicial, cantidad_bloques_a_eliminar);
     }
 
+    fclose(archivo_de_bloques);
+    free(bloque_vacio);
 }
 
 void compactar()
@@ -173,10 +163,20 @@ void compactar()
 // TODO
 }
 
-// Busco en el bitmap y devuelvo el primer bloque libre
-uint32_t buscar_bloque_libre()
+// Busco el primer bloque libre para el bloque inicial 
+uint32_t buscar_bloque_inicial_libre()
 {
     for (int i = 0; i < tamanio_bitmap; i++){
+        if (esta_libre(i)){
+            return i;
+        }
+    }
+    return -1;
+}
+
+uint32_t buscar_bloque_libre(uint32_t bloque_inicial)
+{
+    for (int i = bloque_inicial; i < tamanio_bitmap; i++){
         if (esta_libre(i)){
             return i;
         }

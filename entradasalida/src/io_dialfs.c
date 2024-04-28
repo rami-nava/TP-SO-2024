@@ -145,6 +145,7 @@ static void aviso_de_operacion_finalizada_a_kernel(int proceso_conectado)
 static void crear_archivo(char *nombre_archivo)
 {
     char* bloque_inicial = NULL;
+    uint32_t buffer_bloque_inicial = buscar_bloque_inicial_libre();
 
     char *path_archivo = string_from_format("%s/%s", path_dial_fs, nombre_archivo);
 
@@ -155,21 +156,20 @@ static void crear_archivo(char *nombre_archivo)
     // Creamos la config del archivo nuevo
     t_config *archivo_nuevo = config_create(path_archivo);
 
-    uint32_t buffer_auxiliar = buscar_bloque_libre();
-
     //Agregamos los valores
     if (archivo_nuevo != NULL)
     {
         config_set_value(archivo_nuevo, "NOMBRE_ARCHIVO", nombre_archivo);
 
-        bloque_inicial = string_from_format("%d", buffer_auxiliar);
+        bloque_inicial = string_from_format("%d", buffer_bloque_inicial);
 	    config_set_value(archivo_nuevo, "BLOQUE_INICIAL", bloque_inicial);
         free(bloque_inicial);
 
         config_set_value(archivo_nuevo, "TAMANIO_ARCHIVO", "0");
+
         config_save_in_file(archivo_nuevo, path_archivo);
 
-        agregar_bloques(1);
+        agregar_bloques(1, buffer_bloque_inicial);
 
         config_destroy(archivo_nuevo);
         free(path_archivo);
@@ -180,15 +180,19 @@ static void crear_archivo(char *nombre_archivo)
 static void eliminar_archivo(char *nombre_archivo)
 {
     // Obtenemos el path del archivo a eliminar
-    metadata_archivo* metadata = levantar_metadata(nombre_archivo, path_dial_fs);
+    metadata_archivo* metadata = levantar_metadata(nombre_archivo);
     uint32_t bloque_inicial = metadata->bloque_inicial;
     uint32_t tamanio_archivo = metadata->tamanio_archivo;
     
     free(metadata);
 
     // Liberamos el bloque
-    uint32_t cantidad_bloques_ocupados = tamanio_archivo / tamanio_bloque; //TODO revisar
+    uint32_t cantidad_bloques_ocupados = ceil(tamanio_archivo / tamanio_bloque); 
     eliminar_bloques(cantidad_bloques_ocupados, bloque_inicial);
+
+    if(tamanio_archivo == 0){
+    eliminar_bloques(1, bloque_inicial);
+    }
 
     //eliminamos el archivo
     char *path_archivo = string_from_format("%s/%s", path_dial_fs, nombre_archivo);
@@ -202,7 +206,7 @@ static void eliminar_archivo(char *nombre_archivo)
 static void truncar_archivo(char *nombre_archivo, uint32_t tamanio_nuevo)
 {
     // Obtenemos de la metadata los valores inciales
-    metadata_archivo* metadata = levantar_metadata(nombre_archivo, path_dial_fs);
+    metadata_archivo* metadata = levantar_metadata(nombre_archivo);
     uint32_t bloque_inicial = metadata->bloque_inicial;
     uint32_t tamanio_actual = metadata->tamanio_archivo;
     free(metadata);
@@ -211,13 +215,13 @@ static void truncar_archivo(char *nombre_archivo, uint32_t tamanio_nuevo)
     {
        ampliar_archivo(tamanio_nuevo, tamanio_actual, bloque_inicial);
 
-       cargamos_cambios_a_metadata_ampliar(tamanio_nuevo, bloque_inicial, nombre_archivo, path_dial_fs);
+       cargamos_cambios_a_metadata_ampliar(tamanio_nuevo, bloque_inicial, nombre_archivo);
 
     } else if (tamanio_nuevo < tamanio_actual)
     {
         reducir_archivo(tamanio_nuevo, tamanio_actual, bloque_inicial);
 
-        cargamos_cambios_a_metadata_reducir(tamanio_nuevo, nombre_archivo, path_dial_fs);
+        cargamos_cambios_a_metadata_reducir(tamanio_nuevo, nombre_archivo);
     } else
     {
         //No hay que hacer nada
@@ -231,29 +235,26 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
 {
    uint32_t bloques_a_agregar = ceil((tamanio_nuevo - tamanio_actual) / tamanio_bloque);
 
-   //busco si hay la cantidad de bloques contiguos que me piden y si hay los ocupo
+   /*busco si hay la cantidad de bloques contiguos que me piden y si hay los ocupo
    if(!bloques_contiguos(bloques_a_agregar)) {
         //si no hay contiguos compacto 
         compactar();
         usleep(1000 * retraso_compactacion);
-   } else printf ("Se encontraron bloques contiguos suficientes \n");
+   } else printf ("Se encontraron bloques contiguos suficientes \n");*/
 
-   //le agrego al archivo lo bloques
-   for (int i = 0; i < bloques_a_agregar; i++)
-   {
-       agregar_bloques(bloque_inicial + i);
-   }
+   //Ampliamos el archivo
+    agregar_bloques(bloques_a_agregar, bloque_inicial);
+   
 }
 
 static void reducir_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uint32_t bloque_inicial)
 {
     uint32_t bloques_a_eliminar = ceil((tamanio_actual - tamanio_nuevo) / tamanio_bloque);
 
+    uint32_t primer_bloque_a_borrar = bloque_inicial + ceil(tamanio_nuevo / tamanio_bloque);
+
     //Eliminamos los bloques
-    for (int i = 0; i < bloques_a_eliminar; i++)
-    {
-        eliminar_bloques(i, bloque_inicial + i);
-    }
+    eliminar_bloques(bloques_a_eliminar, primer_bloque_a_borrar);
 }
 
 static void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t bytes_a_leer, uint32_t direccion_fisica)
@@ -264,7 +265,7 @@ static void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_
     reposicionamiento_del_puntero_de_archivo(puntero_archivo, nombre_archivo);
 
     //Leemos el bloque
-    fread(contenido, bytes_a_leer, 1, archivo_de_bloques);
+    fread(contenido, bytes_a_leer, 1, archivo_de_bloques); 
     fclose(archivo_de_bloques);
 
     //Escribimos el contenido en la memoria
@@ -283,6 +284,8 @@ static void escribir_en_memoria(void* contenido, uint32_t direccion_fisica, uint
 
 static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t cantidad_bytes, uint32_t direccion_fisica)
 {
+    //uint32_t cantidad_bloques = puntero_archivo + ceil(cantidad_bytes / tamanio_bloque);
+    
     solicitar_contenido_a_memoria(cantidad_bytes, direccion_fisica);
 
     void* contenido = obtener_contenido_a_escribir(cantidad_bytes);
@@ -290,7 +293,7 @@ static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uin
     reposicionamiento_del_puntero_de_archivo(puntero_archivo, nombre_archivo);
     
 	//Escribimos en el bloque
-	fwrite(contenido, tamanio_bloque, 1, archivo_de_bloques);
+	fwrite(contenido, cantidad_bytes, 1, archivo_de_bloques);
 	fclose(archivo_de_bloques);
 
 	free(contenido);
@@ -306,39 +309,34 @@ static void solicitar_contenido_a_memoria(uint32_t cantidad_bytes, uint32_t dire
 
 static void* obtener_contenido_a_escribir(uint32_t cantidad_bytes)
 {
-    while (1)
-    {
-        t_paquete* paquete = recibir_paquete(socket_memoria);
-        void* stream = paquete->buffer->stream;
+    t_paquete* paquete = recibir_paquete(socket_memoria);
+    void* stream = paquete->buffer->stream;
 
-        if (paquete->codigo_operacion == DEVOLVER_LECTURA)
-        {
-            void* contenido = sacar_bytes_de_paquete(&stream, cantidad_bytes);
-            return contenido;
-        } else
-        {
-            perror("Error al obtener el contenido a escribir");
-            return NULL;
-        }
-       eliminar_paquete(paquete);
+    if (paquete->codigo_operacion == DEVOLVER_LECTURA)
+    {
+        void* contenido = sacar_bytes_de_paquete(&stream, cantidad_bytes);
+        return contenido;
+    } else
+    {
+        perror("Error al obtener el contenido a escribir");
+        return NULL;
     }
-   
+    eliminar_paquete(paquete);
 }
+   
+
 
 static void reposicionamiento_del_puntero_de_archivo(uint32_t puntero_archivo, char *nombre_archivo)
 {
-    uint32_t bloque_objetivo = puntero_archivo/tamanio_bloque;
-
     // Obtenemos de la metadata los valores inciales
-    metadata_archivo* metadata = levantar_metadata(nombre_archivo, path_dial_fs);
+    metadata_archivo* metadata = levantar_metadata(nombre_archivo);
     uint32_t bloque_inicial = metadata->bloque_inicial;
+    uint32_t tamanio_archivo = metadata->tamanio_archivo;
     free(metadata);
     free(nombre_archivo);
 
-    uint32_t nro_bloque = buscar_bloque_en_fs(bloque_objetivo, bloque_inicial);
-
     //direccion ultimo bloque a leer
-	uint32_t direccion_bloque = tamanio_bloque * nro_bloque;
+	uint32_t direccion_bloque = tamanio_bloque * bloque_inicial;
 
 	//Obtemos el offset
 	uint32_t offset = direccion_bloque + puntero_archivo;

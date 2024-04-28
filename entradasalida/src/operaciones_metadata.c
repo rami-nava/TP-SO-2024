@@ -1,6 +1,6 @@
 #include "io.h"
 
-metadata_archivo* levantar_metadata (char* nombre, char* path_dial_fs) {
+metadata_archivo* levantar_metadata (char* nombre) {
 
     char* path = string_from_format ("%s/%s", path_dial_fs, nombre);
 
@@ -16,7 +16,7 @@ metadata_archivo* levantar_metadata (char* nombre, char* path_dial_fs) {
     return metadata_archivo;
 }
 
-void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inicial, char* nombre_archivo, char* path_dial_fs) 
+void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inicial, char* nombre_archivo) 
 {
 	char* puntero_auxiliar = NULL;
 
@@ -37,7 +37,7 @@ void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inic
     config_destroy(archivo);
 }
 
-void cargamos_cambios_a_metadata_reducir(int tamanio_nuevo, char* nombre_archivo, char* path_dial_fs) {
+void cargamos_cambios_a_metadata_reducir(int tamanio_nuevo, char* nombre_archivo) {
 
 	char* puntero_auxiliar = NULL;
 
