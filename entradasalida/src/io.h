@@ -23,7 +23,14 @@
 #include "operaciones.h"
 
 extern t_list* interfaces;
+
 extern t_log* dialfs_logger;
+extern char* path_dial_fs;
+extern FILE* archivo_de_bloques;
+extern int tamanio_bloque;
+extern int cantidad_bloques;
+extern int tamanio_archivo_bloques;
+extern int retraso_compactacion;
 
 //STRUCTS//
 typedef struct 
@@ -38,10 +45,6 @@ typedef struct
     char* nombre_interfaz;
     t_config* config_interfaz; 
 } t_interfaz;
-
-
-extern FILE* archivo_de_bloques;
-extern int tamanio_bloque;
 
 //.................................. INICIALIZACION IO .......................................................................
 void iniciar_interfaz(char* nombre, char* path_de_config);
@@ -59,9 +62,9 @@ void cargamos_cambios_a_metadata_reducir(int tamanio_nuevo, char* nombre_archivo
 metadata_archivo* levantar_metadata(char* nombre_archivo, char* path_dial_fs);
 
 //.................................. ARCHIVOS .......................................................................
-FILE* levantar_archivo_bloque(char* path_archivo_bloques);
-void crear_archivo_de_bloque(char* path_archivo_bloques, int tamanio_archivo_bloques);
-void cargar_bitmap(int cantidad_bloques, char* path_bitmap);
+FILE* levantar_archivo_bloque();
+void crear_archivo_de_bloque();
+void cargar_bitmap();
 void agregar_bloques(uint32_t cantidad_bloques_a_agregar);
 void eliminar_bloques(uint32_t cantidad_bloques_a_eliminar, uint32_t bloque_inicial);
 uint32_t buscar_bloque_libre();

@@ -1,18 +1,15 @@
 #include "io.h"
 
 void* bitmap;
-void* archivo_de_bloques_mapeado;
 t_bitarray* bitmap_bitarray;
 FILE* archivo_de_bloques;
 int tamanio_bitmap;
 
 //================================ ARCHIVOS DE BLOQUES ======================================================
-void crear_archivo_de_bloque(char* path_dial_fs, int tamanio_archivo_bloques)
+void crear_archivo_de_bloque()
 {
 	uint32_t fd;
     char* path_archivo_bloques = string_from_format ("%s/bloques.dat", path_dial_fs);
-
-    printf("CREANDO ARCHIVO DE BLOQUES %s\n", path_archivo_bloques);
 
     fd = open(path_archivo_bloques, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     
@@ -26,12 +23,10 @@ void crear_archivo_de_bloque(char* path_dial_fs, int tamanio_archivo_bloques)
         log_error(dialfs_logger,"Error al truncar el Archivo de Bloques");
     }
 
-    archivo_de_bloques_mapeado = mmap(&archivo_de_bloques_mapeado, tamanio_archivo_bloques, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-
     close (fd);
 }
 
-FILE* levantar_archivo_bloque(char* path_dial_fs) {
+FILE* levantar_archivo_bloque() {
 	
     char* path_archivo_bloques = string_from_format ("%s/bloques.dat", path_dial_fs);
 
@@ -46,7 +41,7 @@ FILE* levantar_archivo_bloque(char* path_dial_fs) {
 }
 
 //================================ BITMAP ======================================================
-void cargar_bitmap(int cantidad_bloques, char* path_dial_fs)
+void cargar_bitmap()
 {
     char* path_bitmap = string_from_format ("%s/bitmap.dat", path_dial_fs);
     int bytes =  cantidad_bloques / 8;  // Dividis cantidad de bloques por 8 para obtener los bytes
@@ -111,40 +106,40 @@ void limpiar_posiciones(t_bitarray* un_espacio, int posicion_inicial, int tamani
 
 void agregar_bloques(uint32_t cantidad_bloques_a_agregar)
 {
-    char* bloque_ocupado[tamanio_bloque];
+    //char* bloque_ocupado = calloc(tamanio_bloque, sizeof(char));
+    char* bloque_ocupado = malloc(tamanio_bloque); 
+    memset(bloque_ocupado, 'a', tamanio_bloque);
+
     uint32_t desplazamiento = 0;
-    int j = 0;
+    uint32_t bloque_libre = buscar_bloque_libre();
 
+    marcar_bloque_ocupado(bloque_libre);
+
+    /*
     //creo un bloque con todos sus elementos en '\0'
-    for(int i = 0; i < tamanio_bloque;i++){ 
-        bloque_ocupado[i] = '\0';
-    }
+    for(int i = 0; i < tamanio_bloque; i++){ 
+    bloque_ocupado[i] = 'a';
+    }*/
 
-    void *bloques_asignados = malloc(cantidad_bloques_a_agregar * sizeof(uint32_t));
-
+    //Levanto el archivo de bloques
+    archivo_de_bloques = levantar_archivo_bloque();
+    
     while (desplazamiento < cantidad_bloques_a_agregar){
 
-        //busco bloques libres
-        while (esta_libre(j)){
-            j++;
-        }
+        // Nos poscionamos en el archivo de bloques
+        fseek(archivo_de_bloques, (tamanio_bloque * bloque_libre), SEEK_SET);
 
-        //copio el numero de bloque al buffer para memoria
-        memcpy(bloques_asignados + (desplazamiento * sizeof(uint32_t)), &j ,sizeof(uint32_t));
+        //Escribimos el bloque en el archivo
+        fwrite(bloque_ocupado, sizeof(char), tamanio_bloque, archivo_de_bloques);
 
-        //relleno el bloque con '\0'
-        memcpy(archivo_de_bloques_mapeado + ((j+1)*sizeof(uint32_t)), bloque_ocupado, tamanio_bloque);
+        //fwrite(&bloque_ocupado[0], sizeof(char), 1, archivo_de_bloques);
 
-        //actualizo el archivo en memoria
-        msync(archivo_de_bloques_mapeado + ((j+1)*sizeof(uint32_t)), tamanio_bloque, MS_INVALIDATE);
-
-        marcar_bloque_ocupado(j);
-
-        j++;
+        bloque_libre++;
         desplazamiento++;
     }
 
-    mem_hexdump((char*)bloques_asignados, cantidad_bloques_a_agregar*sizeof(uint32_t));
+    free(bloque_ocupado);
+    fclose(archivo_de_bloques);
 
 }
 
@@ -178,14 +173,11 @@ void compactar()
 // TODO
 }
 
-//busco en todo el bitmap y devuelvo el primer bloque libre
+// Busco en el bitmap y devuelvo el primer bloque libre
 uint32_t buscar_bloque_libre()
 {
     for (int i = 0; i < tamanio_bitmap; i++){
         if (esta_libre(i)){
-
-            //lo marco como ocupado actualizo el bitmap para que se guarde como ocupado
-            marcar_bloque_ocupado(i);
             return i;
         }
     }
@@ -232,5 +224,5 @@ void marcar_bloque_ocupado(int index) {
 }
 
 bool esta_libre(int index) {
-    bitarray_test_bit(bitmap_bitarray, index) == false;
+    return bitarray_test_bit(bitmap_bitarray, index) == false;
 }

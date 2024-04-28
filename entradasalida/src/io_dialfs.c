@@ -6,13 +6,12 @@ static char *ip_memoria;
 static char *puerto_memoria;
 static int socket_kernel;
 static int socket_memoria;
-static char* path_dial_fs;
+char* path_dial_fs;
 int tamanio_bloque;
-static int cantidad_bloques;
-static int tamanio_archivo_bloques;
-static int tiempo_unidad_trabajo;
-static int retraso_compactacion;
-
+int cantidad_bloques;
+int tamanio_archivo_bloques;
+int tiempo_unidad_trabajo;
+int retraso_compactacion;
 t_log *dialfs_logger;
 
 static void recibir_peticiones_de_kernel();
@@ -62,11 +61,9 @@ void main_dialfs(t_interfaz *interfaz_hilo)
 
     conectarse_a_kernel(socket_kernel, INTERFAZ_DIALFS, nombre, "DIALFS");
 
-    printf("Obtengo como path de DIALFS: %s \n", path_dial_fs);
+    crear_archivo_de_bloque(tamanio_archivo_bloques);
 
-    crear_archivo_de_bloque(path_dial_fs, tamanio_archivo_bloques);
-
-    cargar_bitmap(cantidad_bloques, path_dial_fs);
+    cargar_bitmap(cantidad_bloques);
 
     recibir_peticiones_de_kernel();
 }
@@ -147,6 +144,8 @@ static void aviso_de_operacion_finalizada_a_kernel(int proceso_conectado)
 
 static void crear_archivo(char *nombre_archivo)
 {
+    char* bloque_inicial = NULL;
+
     char *path_archivo = string_from_format("%s/%s", path_dial_fs, nombre_archivo);
 
     // Creamos el archivo vacio
@@ -156,11 +155,17 @@ static void crear_archivo(char *nombre_archivo)
     // Creamos la config del archivo nuevo
     t_config *archivo_nuevo = config_create(path_archivo);
 
+    uint32_t buffer_auxiliar = buscar_bloque_libre();
+
     //Agregamos los valores
     if (archivo_nuevo != NULL)
     {
         config_set_value(archivo_nuevo, "NOMBRE_ARCHIVO", nombre_archivo);
-        config_set_value(archivo_nuevo, "BLOQUE_INICIAL", "");
+
+        bloque_inicial = string_from_format("%d", buffer_auxiliar);
+	    config_set_value(archivo_nuevo, "BLOQUE_INICIAL", bloque_inicial);
+        free(bloque_inicial);
+
         config_set_value(archivo_nuevo, "TAMANIO_ARCHIVO", "0");
         config_save_in_file(archivo_nuevo, path_archivo);
 
@@ -339,7 +344,7 @@ static void reposicionamiento_del_puntero_de_archivo(uint32_t puntero_archivo, c
 	uint32_t offset = direccion_bloque + puntero_archivo;
 	
 	//Abrimos archivo
-	archivo_de_bloques = levantar_archivo_bloque(path_dial_fs);
+	archivo_de_bloques = levantar_archivo_bloque();
 
 	//Nos posicionamos en el dato
 	fseek(archivo_de_bloques, offset, SEEK_SET);

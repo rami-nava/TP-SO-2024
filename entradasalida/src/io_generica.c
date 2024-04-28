@@ -9,7 +9,6 @@ t_log* generica_logger;
 static char* nombre_interfaz;
 
 static void realizar_sleep();
-static void conectarse_a_kernel_generica(char* nombre_interfaz);
 
 void main_generica(t_interfaz* interfaz){
 
