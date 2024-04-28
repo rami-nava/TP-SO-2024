@@ -159,8 +159,41 @@ void eliminar_bloques(uint32_t cantidad_bloques_a_eliminar, uint32_t bloque_inic
 }
 
 void compactar()
-{
-// TODO
+{    
+    //Levanto el archivo de bloques
+    archivo_de_bloques = levantar_archivo_bloque();
+    t_list *lista_indices_bloques_libres = list_create();
+    int aux_recorrer_bitmap = 0;
+    uint32_t indice_bloque_libre = 0;
+
+    //busco en el bitmap todos los bloques libres y guardo los indices en mi lista
+    while(aux_recorrer_bitmap < tamanio_bitmap) {
+        indice_bloque_libre = buscar_bloque_libre();
+
+        if(indice_bloque_libre == -1) {
+            //si no hay bloques libres, salgo
+            break; 
+        }
+
+        list_add(lista_indices_bloques_libres, indice_bloque_libre);
+
+        aux_recorrer_bitmap++;
+    }
+
+    //junto todos los bloques libres en el archivo de bloques
+    for (int i = 0; i < list_size(lista_indices_bloques_libres); i++) {
+        uint32_t bloque_libre = (uint32_t)list_get(lista_indices_bloques_libres, i);
+
+        //actualizo el bitmap para que los bloques libres vayan al comienzo
+        //actualizar_bloques_libres_comienzo(bloque_libre);
+
+        //Nos poscionamos en el archivo de bloques apartir del primer bloque y los escribo
+        fseek(archivo_de_bloques, (tamanio_bloque * i), SEEK_SET);
+        fwrite(&bloque_libre, sizeof(uint32_t), 1, archivo_de_bloques);
+    }
+
+    list_destroy(lista_indices_bloques_libres);
+    fclose(archivo_de_bloques);
 }
 
 // Busco el primer bloque libre para el bloque inicial 
