@@ -149,6 +149,18 @@ static void eliminar_proceso_colas_bloqueo(t_pcb* proceso){
     }
 }
 
+static t_list* buscar_proceso_colas_bloqueo(t_pcb* proceso){
+    t_list* recursos_pedidos = list_create();
+
+     for(int i = 0 ; i < list_size(lista_recursos); i++){
+        char* recurso = nombres_recursos[i];
+        if(buscar_pcb_en_lista(obtener_lista_recurso_buscado(i), proceso->pid) != NULL){
+            list_add(recursos_pedidos, recurso);
+        }
+     }
+    return recursos_pedidos;
+}
+
 static t_list* obtener_lista_recurso_buscado(int indice){
     t_list *lista_buscada = (t_list *)list_get(lista_recursos, indice);
     return lista_buscada;
@@ -192,4 +204,16 @@ void liberar_recursos_asignados(t_pcb* proceso) {
 
         list_destroy(recursos_a_liberar);
     }
+
+    //De esta manera, si lo finalizan, hace signal en todos los recursos donde hizo wait
+    t_list* recursos_a_signal = buscar_proceso_colas_bloqueo(proceso);
+
+    if(!list_is_empty(recursos_a_signal)){
+        for (int i = 0; i < list_size(recursos_a_signal); i++) {
+            char* recurso = (char*)list_get(recursos_a_signal, i);
+            char* parametros[3] = {recurso, "", "EXIT"};
+            signal_s(proceso, parametros);
+        }
+    }
+    list_destroy(recursos_a_signal);
 }

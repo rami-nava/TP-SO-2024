@@ -86,9 +86,6 @@ void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb){
         case READY:
             eliminar_de_cola(cola_READY, pcb, mutex_READY);
             break;
-        case BLOCKED_RECURSO:
-           //TODO traerlo desde el metodo mandar a exit?
-            break;
         case BLOCKED_IO_GENERICA:
             eliminar_de_cola_io(interfaces_genericas, pcb);
             break;
