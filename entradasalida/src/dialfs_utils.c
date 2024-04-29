@@ -119,7 +119,7 @@ void agregar_bloques(uint32_t cantidad_bloques_a_agregar, uint32_t bloque_inicia
     //Levanto el archivo de bloques
     archivo_de_bloques = levantar_archivo_bloque();
     
-    while (desplazamiento < cantidad_bloques_a_agregar){
+    while (desplazamiento < cantidad_bloques_a_agregar) {
 
         // Nos poscionamos en el archivo de bloques
         fseek(archivo_de_bloques, (tamanio_bloque * bloque_libre), SEEK_SET);
@@ -158,38 +158,53 @@ void eliminar_bloques(uint32_t cantidad_bloques_a_eliminar, uint32_t bloque_inic
     free(bloque_vacio);
 }
 
-void compactar()
+void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_archivo)
 {    
     //Levanto el archivo de bloques
     archivo_de_bloques = levantar_archivo_bloque();
     t_list *lista_indices_bloques_libres = list_create();
     int aux_recorrer_bitmap = 0;
     uint32_t indice_bloque_libre = 0;
+    int cantidad_bloques_libres_encontrados = 0;
 
-    //busco en el bitmap todos los bloques libres y guardo los indices en mi lista
-    while(aux_recorrer_bitmap < tamanio_bitmap) {
-        indice_bloque_libre = buscar_bloque_libre();
+    //busco en el bitmap los bloques libres que necesito y guardo los indices en mi lista (siempre van a haber bloques disponibles)
+    while(cantidad_bloques_libres_encontrados <= cantidad_bloques_a_compactar) {
+
+        //busco bloques libres apartir del ultimo bloque del archivo
+        indice_bloque_libre = buscar_bloque_libre(bloque_final_archivo);
 
         if(indice_bloque_libre == -1) {
             //si no hay bloques libres, salgo
             break; 
         }
 
-        list_add(lista_indices_bloques_libres, indice_bloque_libre);
+        list_add(lista_indices_bloques_libres, (void*)(intptr_t)indice_bloque_libre);
 
         aux_recorrer_bitmap++;
+        cantidad_bloques_libres_encontrados++;
     }
 
-    //junto todos los bloques libres en el archivo de bloques
+    //junto los bloques libres
     for (int i = 0; i < list_size(lista_indices_bloques_libres); i++) {
-        uint32_t bloque_libre = (uint32_t)list_get(lista_indices_bloques_libres, i);
 
-        //actualizo el bitmap para que los bloques libres vayan al comienzo
-        //actualizar_bloques_libres_comienzo(bloque_libre);
+        /*intptr_t es un tipo de dato que puede contener un puntero o un entero lo suficientemente grande
+        como para almacenar un puntero en la arquitectura actual. Se utiliza para realizar conversiones
+        seguras entre punteros y enteros, especialmente en situaciones donde se necesite almacenar un 
+        puntero en un entero y luego recuperarlo.*/
+        uint32_t bloque_libre = (uint32_t)(intptr_t)list_get(lista_indices_bloques_libres, i);
 
-        //Nos poscionamos en el archivo de bloques apartir del primer bloque y los escribo
-        fseek(archivo_de_bloques, (tamanio_bloque * i), SEEK_SET);
+        //posicion donde se van a escribir los nuevos bloques
+        uint32_t posicion_final = bloque_final_archivo * tamanio_bloque;
+
+        //me posiciono en el archivo de bloques en la posición final del archivo
+        fseek(archivo_de_bloques, posicion_final, SEEK_SET);
         fwrite(&bloque_libre, sizeof(uint32_t), 1, archivo_de_bloques);
+
+        //el bloque libre que escribi pasa a ser el bloque final del archivo
+        bloque_libre = bloque_final_archivo;
+
+        //actualizo el bitmap
+        marcar_bloque_ocupado(bloque_libre);
     }
 
     list_destroy(lista_indices_bloques_libres);
@@ -207,7 +222,7 @@ uint32_t buscar_bloque_inicial_libre()
     return -1;
 }
 
-uint32_t buscar_bloque_libre(uint32_t bloque_inicial)
+uint32_t buscar_bloque_libre(uint32_t bloque_inicial) //no es desde el final?
 {
     for (int i = bloque_inicial; i < tamanio_bitmap; i++){
         if (esta_libre(i)){
@@ -218,11 +233,11 @@ uint32_t buscar_bloque_libre(uint32_t bloque_inicial)
 }
 
 //busco si hay esta cantidad de bloques contiguos
-bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar) {
+bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar, uint32_t bloque_final_archivo) {
     uint32_t bloques_encontrados = 0;
 
     //i es la posicion donde estoy dentro del bitmap
-    for (int i = 0; i < tamanio_bitmap; i++) {
+    for (int i = bloque_final_archivo; i < tamanio_bitmap; i++) {
         if (esta_libre(i)) {
 
             //cantidad de bloques disponibles contiguos que encuentro
@@ -244,11 +259,13 @@ bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar) {
         } else {
             //reinicio la busqueda si encuentro un bloque ocupado pero sigo desde la posicion donde estoy
             bloques_encontrados = 0; 
+
+            //si no hay suficientes bloques contiguos tenog que compactar
+            return false; 
         }
     }
 
-    //si no hay suficientes bloques contiguos
-    return false; 
+    return -1;
 }
 
 void marcar_bloque_ocupado(int index) {

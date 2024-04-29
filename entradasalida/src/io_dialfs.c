@@ -234,13 +234,16 @@ static void truncar_archivo(char *nombre_archivo, uint32_t tamanio_nuevo)
 static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uint32_t bloque_inicial)
 {
    uint32_t bloques_a_agregar = ceil((tamanio_nuevo - tamanio_actual) / tamanio_bloque);
+    uint32_t bloque_final_archivo = bloque_inicial + ceil(tamanio_actual / tamanio_bloque);
 
-   /*busco si hay la cantidad de bloques contiguos que me piden y si hay los ocupo
-   if(!bloques_contiguos(bloques_a_agregar)) {
-        //si no hay contiguos compacto 
-        compactar();
+   //busco si hay la cantidad de bloques contiguos que me piden y si hay los ocupo
+   if(!bloques_contiguos(bloques_a_agregar, bloque_final_archivo)) {
+
+        //si no hay compacto
+        compactar(bloques_a_agregar, bloque_final_archivo);
         usleep(1000 * retraso_compactacion);
-   } else printf ("Se encontraron bloques contiguos suficientes \n");*/
+        
+   } else printf ("Se encontraron bloques contiguos suficientes \n");
 
    //Ampliamos el archivo
     agregar_bloques(bloques_a_agregar, bloque_inicial);

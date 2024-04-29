@@ -69,9 +69,9 @@ void agregar_bloques(uint32_t cantidad_bloques_a_agregar, uint32_t bloque_inicia
 uint32_t buscar_bloque_libre(uint32_t bloque_inicial);
 void eliminar_bloques(uint32_t cantidad_bloques_a_eliminar, uint32_t bloque_inicial);
 uint32_t buscar_bloque_inicial_libre();
-void compactar();
+void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_archivo);
 void marcar_bloque_ocupado(int index);
 bool esta_libre(int index);
-bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar);
+bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar, uint32_t bloque_final_archivo);
 
 #endif
