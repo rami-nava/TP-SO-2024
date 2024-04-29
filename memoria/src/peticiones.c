@@ -148,6 +148,10 @@ static void manejo_conexiones(void* conexion)
 			uint32_t direccion_fisica_destino = sacar_entero_sin_signo_de_paquete(&stream);
 			copy_string(pid_copy_string, cantidad_bytes_a_copiar, direccion_fisica_a_copiar, direccion_fisica_destino);
 			break;
+		case DESCONECTAR_IO:
+        	sacar_entero_de_paquete(&stream);
+			close(cliente);
+			break;
 		default:
 			break;
 		}

@@ -5,7 +5,7 @@ pthread_mutex_t mutex_INTERFAZ_STDIN;
 pthread_mutex_t mutex_INTERFAZ_STDOUT;
 pthread_mutex_t mutex_INTERFAZ_DIALFS;
 
-static void esperar_io(t_interfaz* interfaz);
+static void esperar_io(t_paquete_io* paquete_io);
 static void eliminar_interfaz(t_interfaz* interfaz);
 static void manejar_desconexion(int socket, char* nombre);
 static void liberar_memoria(t_interfaz* interfaz);
@@ -197,30 +197,38 @@ void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion) {
     ingresar_a_BLOCKED_IO(interfaz->cola_bloqueados ,proceso, motivo, interfaz->cola_bloqueado_mutex, interfaz->tipo_interfaz);
     logear_cola_io_bloqueados(interfaz); //NO es obligatorio
 
-    sem_wait(&interfaz->sem_comunicacion_interfaz);
-    enviar_paquete(peticion, interfaz->socket_conectado);
+    t_paquete_io* paquete_io = malloc(sizeof(paquete_io));
+    paquete_io->interfaz = interfaz;
+    paquete_io->paquete = peticion;
+    paquete_io->pid = proceso->pid;
 
     pthread_t hilo_manejo_io;
-    pthread_create(&hilo_manejo_io, NULL, (void* ) esperar_io, interfaz);
+    pthread_create(&hilo_manejo_io, NULL, (void* ) esperar_io, paquete_io);
     pthread_detach(hilo_manejo_io);
 }
 
-static void esperar_io(t_interfaz* interfaz)
+static void esperar_io(t_paquete_io* paquete_io)
 {
 int termino_io;
 
-recv(interfaz->socket_conectado, &termino_io, sizeof(int), MSG_WAITALL);
+sem_wait(&paquete_io->interfaz->sem_comunicacion_interfaz);
 
-ingresar_de_BLOCKED_a_READY_IO(interfaz->cola_bloqueados, interfaz->cola_bloqueado_mutex);
+if(existe_proceso(paquete_io->pid)){ //Si fue finalizado el proceso, el hilo no hace nada
+    enviar_paquete(paquete_io->paquete, paquete_io->interfaz->socket_conectado);
+    recv(paquete_io->interfaz->socket_conectado, &termino_io, sizeof(int), MSG_WAITALL);
+    if(termino_io == 1){ //Si no recibe 1 es porque el proceso fue finalizado durante el IO
+        ingresar_de_BLOCKED_a_READY_IO(paquete_io->interfaz->cola_bloqueados, paquete_io->interfaz->cola_bloqueado_mutex);
+    }
+}
 
-sem_post(&interfaz->sem_comunicacion_interfaz);
+sem_post(&paquete_io->interfaz->sem_comunicacion_interfaz);
+free(paquete_io);
 }
 
 static void manejar_desconexion(int socket, char* nombre){
     t_interfaz* interfaz_a_eliminar = obtener_interfaz_por_nombre(nombre);
     free(nombre);
 
-    //Mandar a EXIT Procesos bloqueados por esta IO
     eliminar_interfaz(interfaz_a_eliminar);
 
     int desconectado = 1;
@@ -299,4 +307,12 @@ static void liberar_memoria(t_interfaz* interfaz){
         sem_destroy(&interfaz->sem_comunicacion_interfaz);
         pthread_mutex_destroy(&interfaz->cola_bloqueado_mutex);
         list_destroy(interfaz->cola_bloqueados);
+}
+
+void interrumpir_io(t_interfaz* interfaz){
+    
+    //AVISARLE A IO QUE FINALIZE LA OPERACION ACTUAL
+    t_paquete* paquete = crear_paquete(FINALIZAR_OPERACION_IO);
+    agregar_entero_a_paquete(paquete,1);
+    enviar_paquete(paquete, interfaz->socket_conectado);
 }

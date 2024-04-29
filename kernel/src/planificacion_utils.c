@@ -20,6 +20,16 @@ void eliminar_de_cola(t_list *cola, t_pcb *pcb, pthread_mutex_t mutex_cola){
     list_remove_element(cola,pcb);
     pthread_mutex_unlock(&mutex_cola);
 }
+
+bool existe_proceso(int pid){
+    for(int i = 0; i < list_size(cola_PROCESOS_DEL_SISTEMA); i++){
+        t_pcb* proceso_existente = list_get(cola_PROCESOS_DEL_SISTEMA,i);
+        if(proceso_existente->pid == pid){
+            return true;
+        }
+    }
+    return false;
+}
   
 
 t_pcb* buscar_pcb_de_lista_y_eliminar(t_list *lista, int pid_buscado, pthread_mutex_t mutex_lista)
@@ -97,8 +107,14 @@ void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb){
 }
 
 static void eliminar_de_cola_io(t_list* lista_interfaces, t_pcb* pcb){
-    for(int i = 0; i < list_size(lista_interfaces) ; i++){
+    for(int i = 0; i < list_size(lista_interfaces) ; i++){ //Recorre todas las colas de bloqueados de interfaces del tipo en la que se bloqueo
         t_interfaz* interfaz_lista = list_get(lista_interfaces,i);
+        t_pcb* proceso_en_io = list_get(interfaz_lista->cola_bloqueados, 0);
+
+        if(proceso_en_io->pid == pcb->pid){ //Si es el proceso que esta actualmente en IO le aviso a IO que deje de procesarlo
+            interrumpir_io(interfaz_lista);
+        }
+
         eliminar_de_cola(interfaz_lista->cola_bloqueados,pcb ,interfaz_lista->cola_bloqueado_mutex);
     }
 }

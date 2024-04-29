@@ -351,3 +351,9 @@ static void reposicionamiento_del_puntero_de_archivo(uint32_t puntero_archivo, c
 	fseek(archivo_de_bloques, offset, SEEK_SET);
 
 }
+
+void desconectar_memoria_dialfs(){
+    t_paquete* paquete = crear_paquete(DESCONECTAR_IO);
+    agregar_entero_a_paquete(paquete,1);
+    enviar_paquete(paquete, socket_memoria);
+}

@@ -9,11 +9,16 @@ static int socket_kernel;
 static int socket_memoria;
 static int tiempo_unidad_de_trabajo;
 t_log* stdout_logger;
+static t_temporal* reloj;
+static bool proceso_eliminado;
+static uint32_t direccion_fisica;
+static uint32_t tamanio_registro;
 
 // Funciones Locales //
 static void solicitar_informacion_memoria();
 static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio); 
-static char* recibir_lectura(uint32_t tamanio); 
+static char* recibir_lectura(uint32_t tamanio);
+static void leer_memoria(); 
 
 void main_stdout(t_interfaz* interfaz_hilo) 
 {
@@ -55,37 +60,56 @@ static void solicitar_informacion_memoria ()
         if(paquete->codigo_operacion == STDOUT_WRITE)
         {
             int proceso_conectado = sacar_entero_de_paquete(&stream);
-            uint32_t direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
-            uint32_t tamanio = sacar_entero_sin_signo_de_paquete(&stream);
-            
-            eliminar_paquete(paquete);
+            direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+            tamanio_registro = sacar_entero_sin_signo_de_paquete(&stream);
 
             log_info(stdout_logger, "PID: %d - Operacion: IO_STDOUT_WRITE\n", proceso_conectado);
 
-            //Tarda una unidad de trabajo
-            usleep(tiempo_unidad_de_trabajo * 1000);
-
-            //Le pide la lectura de esa direccion a la memoria 
-            pedir_lectura(direccion_fisica, tamanio);
-
-            //Recibe la lectura de la memoria
-            char* lectura = recibir_lectura(tamanio);
-
-            //Mostramos por pantalla la lectura
-            printf("Lectura realizada: %s\n", lectura);
-
-            free(lectura);
-            
-            //Le avisa a Kernel que ya se realizo la lectura, y ya se mostro por pantalla
-            send(socket_kernel, &proceso_conectado, sizeof(int), 0); 
+            pthread_t hilo_stdout;
+            pthread_create(&hilo_stdout, NULL, leer_memoria, NULL);
+            pthread_detach(&hilo_stdout);
         } 
-        else { 
-            eliminar_paquete(paquete);
-            log_error(stdout_logger, "El paquete no es de tipo STDOUT_WRITE");
-            abort();
+        else if(paquete->codigo_operacion == FINALIZAR_OPERACION_IO){
+            sacar_entero_de_paquete(&stream);
+            proceso_eliminado = true;
+            
+            //Enviar paquete para que el hilo de kernel no quede esperando 
+            int termino_io = -1;
+            send(socket_kernel, &termino_io, sizeof(int), 0);
         }
+        eliminar_paquete(paquete);
     }
     
+}
+
+static void leer_memoria(){
+    //Tarda una unidad de trabajo
+    reloj = temporal_create();
+
+    while(temporal_gettime(reloj) <= tiempo_unidad_de_trabajo){
+        if(proceso_eliminado){
+                log_info(stdout_logger, "El proceso fue finalizado\n");
+                temporal_destroy(reloj);
+                return;
+        }
+
+    }
+    //Si el proceso se finaliza luego del sleep, la IO continua su ejecucion
+
+    //Le pide la lectura de esa direccion a la memoria 
+    pedir_lectura(direccion_fisica, tamanio_registro);
+
+    //Recibe la lectura de la memoria
+    char* lectura = recibir_lectura(tamanio_registro);
+
+    //Mostramos por pantalla la lectura
+    printf("Lectura realizada: %s\n", lectura);
+
+    free(lectura);
+            
+    //Le avisa a Kernel que ya se realizo la lectura, y ya se mostro por pantalla
+    int termino_io = 1;
+    send(socket_kernel, &termino_io, sizeof(int), 0); 
 }
 
 static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio) 
@@ -115,4 +139,10 @@ static char* recibir_lectura(uint32_t tamanio)
 
         eliminar_paquete(paquete);
     }
+}
+
+void desconectar_memoria_stdout(){
+    t_paquete* paquete = crear_paquete(DESCONECTAR_IO);
+    agregar_entero_a_paquete(paquete,1);
+    enviar_paquete(paquete, socket_memoria);
 }

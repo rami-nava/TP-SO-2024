@@ -101,6 +101,13 @@ typedef struct
     t_list* cola_bloqueados;
 } t_interfaz;    
 
+typedef struct
+{
+    t_interfaz* interfaz;
+    t_paquete* paquete;
+    int pid;
+} t_paquete_io;  
+
 extern t_interfaz interfaz;
 extern arch_config_kernel config_valores_kernel;
 
@@ -159,6 +166,7 @@ void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion
 void loggear_finalizacion_proceso(t_pcb* proceso, char* motivo);
 void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo);
 void volver_a_CPU(t_pcb* proceso);
+bool existe_proceso(int pid);
 
 //================================================ Recursos =====================================================================================================================
 void liberacion_recursos(t_pcb* );
@@ -195,6 +203,7 @@ bool admite_operacion_interfaz(t_interfaz* interfaz, codigo_instrucciones operac
 t_interfaz* obtener_interfaz_por_nombre(char* nombre_interfaz);
 void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion);
 void crear_hilo_io_generica(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion);
+void interrumpir_io(t_interfaz* interfaz);
 
 
 #endif

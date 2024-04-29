@@ -17,6 +17,7 @@
 #include <commons/collections/list.h>
 #include <commons/bitarray.h>
 #include <commons/memory.h>
+#include <commons/temporal.h>
 
 #include "socket.h"
 #include "contexto.h"
@@ -55,6 +56,9 @@ void main_dialfs(t_interfaz* interfaz_hilo);
 void conectarse_a_kernel(int socket, op_code codigo_operacion ,char* nombre, char* tipo_interfaz);
 void handle_sigint(int sig);
 void desconectarse();
+void desconectar_memoria_stdin();
+void desconectar_memoria_stdout();
+void desconectar_memoria_dialfs();
 
 //.................................. METADATA .....................................................................
 void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inicial, char* nombre_archivo);
