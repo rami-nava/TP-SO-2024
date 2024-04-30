@@ -125,9 +125,6 @@ void signal_s(t_pcb *proceso, char **parametros){
 
     //si llega como instruccion algo distinto de EXIT, el proceso sigue su ejecucion 
     if (strncmp (parametros[2], "EXIT", 4)) volver_a_CPU(proceso);
-    else{
-        eliminar_proceso_colas_bloqueo(proceso);
-    }
 }
 
 /*Si el proceso hizo un wait pero nunca le di el recurso, tengo que igualmente sacarlo de la cola
@@ -193,6 +190,6 @@ void liberar_recursos_asignados(t_pcb* proceso) {
 
         list_destroy(recursos_a_liberar);
     }
-        
+
     eliminar_proceso_colas_bloqueo(proceso);
 }

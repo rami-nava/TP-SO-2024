@@ -16,7 +16,7 @@ t_log *dialfs_logger;
 
 static void recibir_peticiones_de_kernel();
 static void consumir_una_unidad_de_tiempo_de_trabajo();
-static void aviso_de_operacion_finalizada_a_kernel(int proceso_conectado);
+static void aviso_de_operacion_finalizada_a_kernel();
 static void crear_archivo(char *nombre_archivo);
 static void eliminar_archivo(char *nombre_archivo);
 static void truncar_archivo(char *nombre_archivo, uint32_t tamanio_nuevo);
@@ -128,7 +128,7 @@ static void recibir_peticiones_de_kernel()
 
         eliminar_paquete(paquete);
 
-        aviso_de_operacion_finalizada_a_kernel(proceso_conectado);
+        aviso_de_operacion_finalizada_a_kernel();
     }
 }
 
@@ -137,9 +137,10 @@ static void consumir_una_unidad_de_tiempo_de_trabajo()
     usleep(tiempo_unidad_trabajo * 1000);
 }
 
-static void aviso_de_operacion_finalizada_a_kernel(int proceso_conectado)
+static void aviso_de_operacion_finalizada_a_kernel()
 {
-    send(socket_kernel, &proceso_conectado, sizeof(int), 0);
+    int termino_io = 1;
+    send(socket_kernel, &termino_io, sizeof(int), 0);
 }
 
 static void crear_archivo(char *nombre_archivo)
