@@ -113,18 +113,24 @@ static void manejo_conexiones(void* conexion)
 		case PEDIDO_MOV_IN:
 			int pid_mov_in = sacar_entero_de_paquete(&stream);
 		    uint32_t direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t tamanio_lectura = sacar_entero_sin_signo_de_paquete(&stream);
+
+			//Como recibimos void* convertimos el valor ya que debe ser siempre uint32_t viniendo de movin
+			void* puntero_contenido = leer_contenido_espacio_usuario(pid_mov_in, direccion_fisica, tamanio_lectura);
+			uint32_t* ptr_contenido = (uint32_t*) puntero_contenido;
+			uint32_t valor_leido = *ptr_contenido;
 			
-			uint32_t valor_leido = leer_memoria(direccion_fisica, pid_mov_in);
 			send(cliente, &valor_leido, sizeof(uint32_t), 0); 
 			break;
 
 		case PEDIDO_MOV_OUT:
 			int pid_mov_out = sacar_entero_de_paquete(&stream);
 		    uint32_t dir_fisica = sacar_entero_sin_signo_de_paquete(&stream);
-			void* valor = sacar_entero_sin_signo_de_paquete(&stream); //ES VOID* PARA CONSERVAR LOS TIPOS DE DATO
-
-			escribir_contenido_espacio_usuario(pid_mov_out, dir_fisica, sizeof(valor), valor);
-			uint32_t se_ha_escrito = 1;
+			uint32_t tamanio_registro = sacar_entero_sin_signo_de_paquete(&stream);
+			void* valor = sacar_bytes_de_paquete(&stream, tamanio_registro); 
+			
+			escribir_contenido_espacio_usuario(pid_mov_out, dir_fisica, tamanio_registro, valor);
+			uint32_t se_ha_escrito = 1; // TODO darle una linda respuesta
 			send(cliente, &se_ha_escrito, sizeof(uint32_t), 0);
 			break;
 
@@ -138,8 +144,9 @@ static void manejo_conexiones(void* conexion)
 			send(cliente, &hay_out_of_memory, sizeof(int), 0);
 
 			//Si no hay out of memory lo redimensionamos
-			if (hay_out_of_memory == 0) resize(process_id, tamanio);
-
+			if (hay_out_of_memory == 0) {
+				resize(process_id, tamanio);
+			}
 			break;
 		case PEDIDO_COPY_STRING:
 			int pid_copy_string = sacar_entero_de_paquete(&stream);

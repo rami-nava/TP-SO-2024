@@ -430,6 +430,48 @@ uint32_t buscar_registro(char *registro)
     return valor;
 }
 
+void* buscar_valor_registro_generico(char* registro) {
+    
+    void* ptr_registro = NULL;
+
+    if (strcmp(registro, "PC") == 0) {
+        ptr_registro = (void*)&(contexto_ejecucion->PC);
+    } else if (strcmp(registro, "AX") == 0) {
+        ptr_registro = (void*)&(contexto_ejecucion->AX);
+    } else if (strcmp(registro, "BX") == 0) {
+        ptr_registro = (void*)&(contexto_ejecucion->BX);
+    } else if (strcmp(registro, "CX") == 0) {
+        ptr_registro = (void*)&(contexto_ejecucion->CX);
+    } else if (strcmp(registro, "DX") == 0) {
+        ptr_registro = (void*)&(contexto_ejecucion->DX);
+    } else if (strcmp(registro, "EAX") == 0) {
+        ptr_registro = (void*)&(contexto_ejecucion->EAX);
+    } else if (strcmp(registro, "EBX") == 0) {
+        ptr_registro = (void*)&(contexto_ejecucion->EBX);
+    } else if (strcmp(registro, "ECX") == 0) {
+        ptr_registro = (void*)&(contexto_ejecucion->ECX);
+    } else if (strcmp(registro, "EDX") == 0) {
+        ptr_registro = (void*)&(contexto_ejecucion->EDX);
+    } else if (strcmp(registro, "SI") == 0) {
+        ptr_registro = (void*)&(contexto_ejecucion->SI);
+    } else if (strcmp(registro, "DI") == 0) {
+        ptr_registro = (void*)&(contexto_ejecucion->DI);
+    }
+
+    return ptr_registro;
+}
+
+uint32_t tamanio_registro(char* registro) {
+    
+    // Comprueba el nombre del registro y devuelve el tamaño correspondiente
+    
+    if (strcmp(registro, "AX") == 0 || strcmp(registro, "BX") == 0 || strcmp(registro, "CX") == 0 || strcmp(registro, "DX") == 0 || strcmp(registro, "PC") == 0) {
+        return 1; // Registros de 1 byte
+    } else {
+        return 4; // Resto de los registros de 4 bytes
+    }
+}
+
 void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char* parm1, char* parm2, char* parm3, char* parm4, char* parm5) { 
     char* (parametros[5]) = { parm1, parm2, parm3, parm4, parm5 };
     contexto_ejecucion->motivo_desalojo->comando = comando;

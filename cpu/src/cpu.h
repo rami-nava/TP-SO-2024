@@ -62,6 +62,8 @@ void inicializar_semaforos();
 void realizar_handshake();
 uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica);
 void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char* parm1, char* parm2, char* parm3, char* parm4, char* parm5);
+void* buscar_valor_registro_generico(char* registro);
+uint32_t tamanio_registro(char* registro);
 
 
 //TLB

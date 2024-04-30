@@ -43,7 +43,7 @@ char* buscar_instruccion_proceso(uint32_t PC, int pid)
 	return instruccion;
 }
 
-//=============================================== MMU ================================================================
+//=============================================== PEDIDOS MMU ================================================================
 
 void traducir_pagina_a_marcos(uint32_t numero_pagina, int pid, int cliente)
 {
@@ -66,36 +66,6 @@ t_marco *marco_desde_df(uint32_t dir_fisica){
 	return marco_elegido;
 }
 
-///============================================== MOV_IN && MOV_OUT ================================================================
-
-//ESTE SOLO SIRVE PARA LEER ENTEROS, PERO RECORDEMOS QUE EN ESTE TP SE PUEDEN LEER MAS DE UN SOLO BYTE
-// MOV_IN
-uint32_t leer_memoria(uint32_t dir_fisica, int pid)
-{
-	uint32_t valor_leido = -1;
-
-	acceso_a_espacio_usuario(pid, "LEER", dir_fisica, sizeof(uint32_t));
-
-	//pthread_mutex_lock(&mutex_memoria_usuario);
-	memcpy(&valor_leido, espacio_usuario + dir_fisica, sizeof(uint32_t));
-	//pthread_mutex_unlock(&mutex_memoria_usuario);
-
-	return valor_leido;
-}
-
-//ESTE METODO NO SIRVE, NO TIENE EN CUENTA QUE PUEDE ESTAR SOBREESCRIBIENDO OTRAS PAGINAS, PERO PARA TESTEAR VA
-// MOV_OUT
-void escribir_memoria(uint32_t dir_fisica, uint32_t valor, int pid){
-
-	acceso_a_espacio_usuario(pid, "ESCRIBIR", dir_fisica, sizeof(uint32_t));
-
-	//pthread_mutex_lock(&mutex_memoria_usuario);
-	memcpy(espacio_usuario + dir_fisica, &valor, sizeof(uint32_t));
-	//pthread_mutex_unlock(&mutex_memoria_usuario);
-
-	//TENGO QUE HACER ALGO CON LA PAGINAX????
-	// Hay que hacerlos para strings
-}
 
 
 //============================================== Resize ================================================================

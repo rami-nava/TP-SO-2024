@@ -163,13 +163,14 @@ void copy_string(char* tamanio)
     enviar_paquete(paquete, socket_cliente_memoria);
 }
 
-void mov_in(char *registro, char *direccion_logica)
-{
+void mov_in(char *registro, char *direccion_logica){
+
     uint32_t direccion_fisica = traducir_de_logica_a_fisica(atoi(direccion_logica));
 
     if (direccion_fisica != UINT32_MAX)
     {
-        pedir_MOV_IN(direccion_fisica);
+        uint32_t tamanio = tamanio_registro(registro);
+        pedir_MOV_IN(direccion_fisica, tamanio);
 
         uint32_t valor_leido = 0;
         recv(socket_cliente_memoria, &valor_leido, sizeof(uint32_t), MSG_WAITALL);
@@ -183,15 +184,17 @@ void mov_in(char *registro, char *direccion_logica)
     }
 }
 
-void mov_out(char *direccion_logica, char *registro)
-{
-    uint32_t valor = buscar_registro(registro);
+void mov_out(char *direccion_logica, char *registro){
+
+    void* valor = buscar_valor_registro_generico(registro);
+
+    uint32_t tamanio = tamanio_registro(registro);
 
     uint32_t direccion_fisica = traducir_de_logica_a_fisica(atoi(direccion_logica));
 
     if (direccion_fisica != UINT32_MAX)
     {
-        pedir_MOV_OUT(direccion_fisica, valor);
+        pedir_MOV_OUT(direccion_fisica, valor, tamanio);
 
         uint32_t se_ha_escrito;
         recv(socket_cliente_memoria, &se_ha_escrito, sizeof(uint32_t), MSG_WAITALL);
@@ -200,19 +203,21 @@ void mov_out(char *direccion_logica, char *registro)
     }
 }
 
-static void pedir_MOV_OUT(uint32_t direccion_fisica, uint32_t valor_registro)
-{
+static void pedir_MOV_OUT(uint32_t direccion_fisica, void* valor_registro, uint32_t tamanio_registro){
+    
     t_paquete *paquete = crear_paquete(PEDIDO_MOV_OUT);
     agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
-    agregar_entero_sin_signo_a_paquete(paquete, valor_registro);
+    agregar_entero_sin_signo_a_paquete(paquete, tamanio_registro);
+    agregar_bytes_a_paquete(paquete, valor_registro, tamanio_registro);
     enviar_paquete(paquete, socket_cliente_memoria);
 }
 
-static void pedir_MOV_IN(uint32_t direccion_fisica)
-{
+static void pedir_MOV_IN(uint32_t direccion_fisica, uint32_t tamanio){
+
     t_paquete *paquete = crear_paquete(PEDIDO_MOV_IN);
     agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
+    agregar_entero_sin_signo_a_paquete(paquete, tamanio);
     enviar_paquete(paquete, socket_cliente_memoria);
 }
