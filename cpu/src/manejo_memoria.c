@@ -10,8 +10,8 @@ static void recibir_handshake();
 static uint32_t traducir_pagina_a_marco(uint32_t numero_pagina);
 static void pedir_numero_frame(uint32_t numero_pagina);
 static uint32_t numero_marco_pagina();
-static void pedir_MOV_IN(uint32_t direccion_fisica);
-static void pedir_MOV_OUT(uint32_t direccion_fisica, uint32_t registro);
+static void pedir_MOV_IN(uint32_t direccion_fisica, uint32_t tamanio);
+static void pedir_MOV_OUT(uint32_t direccion_fisica, void* valor_registro, uint32_t tamanio_registro);
 
 //================================================== Handshake =====================================================================
 void realizar_handshake()
@@ -199,7 +199,8 @@ void mov_out(char *direccion_logica, char *registro){
         uint32_t se_ha_escrito;
         recv(socket_cliente_memoria, &se_ha_escrito, sizeof(uint32_t), MSG_WAITALL);
 
-        log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %d \n", contexto_ejecucion->pid, "ESCRIBIR", direccion_fisica, valor);
+        //VER LOG CON VOID*
+        //log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %d \n", contexto_ejecucion->pid, "ESCRIBIR", direccion_fisica, valor);
     }
 }
 

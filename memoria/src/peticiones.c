@@ -113,10 +113,10 @@ static void manejo_conexiones(void* conexion)
 		case PEDIDO_MOV_IN:
 			int pid_mov_in = sacar_entero_de_paquete(&stream);
 		    uint32_t direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
-			uint32_t tamanio_lectura = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t tam_lectura = sacar_entero_sin_signo_de_paquete(&stream);
 
 			//Como recibimos void* convertimos el valor ya que debe ser siempre uint32_t viniendo de movin
-			void* puntero_contenido = leer_contenido_espacio_usuario(pid_mov_in, direccion_fisica, tamanio_lectura);
+			void* puntero_contenido = leer_contenido_espacio_usuario(pid_mov_in, direccion_fisica, tam_lectura);
 			uint32_t* ptr_contenido = (uint32_t*) puntero_contenido;
 			uint32_t valor_leido = *ptr_contenido;
 			

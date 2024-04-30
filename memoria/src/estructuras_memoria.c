@@ -290,7 +290,7 @@ void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint
 
 		//memcpy(&valor, espacio_usuario + direccion_fisica, tamanio_escritura); 
 		
-		log_info(memoria_logger, "VALOR LEIDOO: %d", valor);
+		//slog_info(memoria_logger, "VALOR LEIDOO: %d", valor);
 	}else{
 
 		escribir_contenido_en_partes(proceso, direccion_fisica, tamanio_escritura, contenido);
@@ -393,8 +393,8 @@ static void copiar_contenido_en_partes_espacio_usuario(uint32_t direccion_fisica
         uint32_t direccion_fisica = calcular_direccion_fisica_inicial_marco(marco);
 		
 		bytes_por_marco = tam_pagina - (direccion_fisica % tam_pagina);
-		if (bytes_por_marco > tamanio_lectura - bytes_leidos) {
-   			bytes_por_marco = tamanio_lectura - bytes_leidos;
+		if (bytes_por_marco > tam_contenido - bytes_copiados) {
+   			bytes_por_marco = tam_contenido - bytes_copiados;
 		} //VER ESTOOOOOO
 
 		// Copiar los bytes en el espacio de usuario, al sumar bytes_copiados esta partiendo el string/entero
@@ -486,7 +486,7 @@ PERO EN LOS SIGUIENTES HAY QUE VER DONDE ARRANCAN, ES DECIR LA DF DE LA PRIMERA 
         
 */
 
-static void* leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_lectura){
+void* leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_lectura){
     
 	t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
 
