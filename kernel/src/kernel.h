@@ -149,10 +149,6 @@ void mandar_a_EXIT(t_pcb* proceso, char* motivo);
 void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb);
 bool ocurrio_IO(t_contexto* contexto_ejecucion);
 
-////======================================== MEMORIA ===========================================================================================================
-void enviar_pcb_a_memoria(t_pcb *, int, op_code);
-op_code esperar_respuesta_memoria(int);
-
 //================================================== PCB =====================================================================================================================
 t_pcb *crear_pcb(char*); 
 void enviar_pcb_a_cpu(t_pcb *);
@@ -167,6 +163,9 @@ void loggear_finalizacion_proceso(t_pcb* proceso, char* motivo);
 void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo);
 void volver_a_CPU(t_pcb* proceso);
 bool existe_proceso(int pid);
+t_pcb* buscar_pcb_en_lista (t_list* lista, int pid);
+t_pcb* buscar_pcb_de_lista_y_eliminar(t_list *lista, int pid_buscado, pthread_mutex_t mutex_cola);
+void mostrar_lista_pids(t_list *cola, char *nombre_cola, pthread_mutex_t mutex_cola);
 
 //================================================ Recursos =====================================================================================================================
 void liberacion_recursos(t_pcb* );
@@ -191,9 +190,10 @@ void detener_planificacion();
 void consola_ejecutar_script(char *path);
 void consola_iniciar_proceso(char *path);
 void detener_planificacion();
-t_pcb* buscar_pcb_en_lista (t_list* lista, int pid);
-t_pcb* buscar_pcb_de_lista_y_eliminar(t_list *lista, int pid_buscado, pthread_mutex_t mutex_cola);
-void mostrar_lista_pids(t_list *cola, char *nombre_cola, pthread_mutex_t mutex_cola);
+void parse_multiprogramacion(char *linea);
+void consola_modificar_multiprogramacion(int nuevo_valor); 
+void consola_leer_bitmap();
+void parse_leer_bitmap(char *linea);
 
 ////======================================== IO ===========================================================================================================
 void servidor_kernel_io();

@@ -13,6 +13,7 @@ int tamanio_archivo_bloques;
 int tiempo_unidad_trabajo;
 int retraso_compactacion;
 t_log *dialfs_logger;
+t_list* bloques_iniciales;
 
 static void recibir_peticiones_de_kernel();
 static void consumir_una_unidad_de_tiempo_de_trabajo();
@@ -34,6 +35,7 @@ void main_dialfs(t_interfaz *interfaz_hilo)
 {
     char *nombre = interfaz_hilo->nombre_interfaz;
     t_config *config = interfaz_hilo->config_interfaz;
+    bloques_iniciales = list_create();
 
     char path[70] = "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/";
 
@@ -121,6 +123,8 @@ static void recibir_peticiones_de_kernel()
             direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
             log_info(dialfs_logger, "PID: %d - Escribir Archivo: %s - Tamaño a escribir : %d - Puntero archivo: %d \n", proceso_conectado, nombre, puntero_archivo, tamanio);
             escribir_archivo(nombre, puntero_archivo, tamanio, direccion_fisica);
+        case LEER_BITMAP:
+            leer_bitmap();
             break;
         default:
             break;
@@ -147,6 +151,8 @@ static void crear_archivo(char *nombre_archivo)
 {
     char* bloque_inicial = NULL;
     uint32_t buffer_bloque_inicial = buscar_bloque_inicial_libre();
+    
+    list_add(bloques_iniciales, (void*)(intptr_t)buffer_bloque_inicial);
 
     char *path_archivo = string_from_format("%s/%s", path_dial_fs, nombre_archivo);
 
@@ -234,20 +240,20 @@ static void truncar_archivo(char *nombre_archivo, uint32_t tamanio_nuevo)
 
 static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uint32_t bloque_inicial)
 {
-   uint32_t bloques_a_agregar = ceil((tamanio_nuevo - tamanio_actual) / tamanio_bloque);
+    uint32_t bloques_a_agregar = ceil((tamanio_nuevo - tamanio_actual) / tamanio_bloque);
     uint32_t bloque_final_archivo = bloque_inicial + ceil(tamanio_actual / tamanio_bloque);
 
-   //busco si hay la cantidad de bloques contiguos que me piden y si hay los ocupo
+    //Comprobamos si hay suficientes bloques contiguos
    if(!bloques_contiguos(bloques_a_agregar, bloque_final_archivo)) {
 
-        //si no hay compacto
+        //Si no hay compacto
         compactar(bloques_a_agregar, bloque_final_archivo);
         usleep(1000 * retraso_compactacion);
         
    } else printf ("Se encontraron bloques contiguos suficientes \n");
 
    //Ampliamos el archivo
-    agregar_bloques(bloques_a_agregar, bloque_inicial);
+    agregar_bloques(bloques_a_agregar, bloque_final_archivo);
    
 }
 
@@ -328,14 +334,11 @@ static void* obtener_contenido_a_escribir(uint32_t cantidad_bytes)
     eliminar_paquete(paquete);
 }
    
-
-
 static void reposicionamiento_del_puntero_de_archivo(uint32_t puntero_archivo, char *nombre_archivo)
 {
     // Obtenemos de la metadata los valores inciales
     metadata_archivo* metadata = levantar_metadata(nombre_archivo);
     uint32_t bloque_inicial = metadata->bloque_inicial;
-    uint32_t tamanio_archivo = metadata->tamanio_archivo;
     free(metadata);
     free(nombre_archivo);
 

@@ -58,9 +58,10 @@ void realizar_sleep()
         
         proceso_eliminado = false;
         int tiempo_sleep = tiempo_unidad_de_trabajo * cantidad_tiempo * 1000;
+        
         pthread_t hilo_sleep;
-        pthread_create(&hilo_sleep, NULL, dormir, tiempo_sleep);
-        pthread_detach(&hilo_sleep);
+        pthread_create(&hilo_sleep, NULL, (void*)dormir, &tiempo_sleep);
+        pthread_detach(hilo_sleep);
 
         }else if(paquete->codigo_operacion == FINALIZAR_OPERACION_IO){
             sacar_entero_de_paquete(&stream);

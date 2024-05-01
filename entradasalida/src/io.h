@@ -25,6 +25,7 @@
 
 extern t_list* interfaces;
 
+extern t_list* bloques_iniciales;
 extern t_log* dialfs_logger;
 extern char* path_dial_fs;
 extern FILE* archivo_de_bloques;
@@ -69,6 +70,7 @@ metadata_archivo* levantar_metadata(char* nombre_archivo);
 FILE* levantar_archivo_bloque();
 void crear_archivo_de_bloque();
 void cargar_bitmap();
+void leer_bitmap();
 void agregar_bloques(uint32_t cantidad_bloques_a_agregar, uint32_t bloque_inicial);
 uint32_t buscar_bloque_libre(uint32_t bloque_inicial);
 void eliminar_bloques(uint32_t cantidad_bloques_a_eliminar, uint32_t bloque_inicial);

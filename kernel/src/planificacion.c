@@ -119,7 +119,6 @@ void ingresar_a_READY(t_pcb *pcb)
 
 void ingresar_a_AUX_VRR(t_pcb *pcb)
 {
-    //no lo saco de ninguna lista porque no tenemos lista exec
     estado_proceso anterior = pcb->estado;
     pcb->estado = READY;
     loggear_cambio_de_estado(pcb->pid, anterior, pcb->estado);
@@ -136,7 +135,6 @@ void ingresar_a_AUX_VRR(t_pcb *pcb)
 }
 
 void ingresar_de_BLOCKED_a_READY_IO(t_list* cola, pthread_mutex_t cola_bloqueado_mutex){
-    //lo saco de la lista blocked
     detener_planificacion();
     pthread_mutex_lock(&cola_bloqueado_mutex);
     t_pcb* proceso_desbloqueado = desencolar(cola);
@@ -151,7 +149,6 @@ void ingresar_de_BLOCKED_a_READY_recursos(t_pcb* pcb_desbloqueado){
 
 void ingresar_a_BLOCKED_recursos(t_pcb *pcb, char* motivo)
 {
-    //no lo saco de ninguna lista porque no tenemos lista exec
     estado_proceso anterior = pcb->estado;
     pcb->estado = BLOCKED_RECURSO;
     loggear_cambio_de_estado(pcb->pid, anterior, pcb->estado); 
@@ -204,7 +201,6 @@ void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo)
     //Avisas pq finalizo el proceso
     loggear_finalizacion_proceso(pcb_asociado, motivo); 
     
-
     //Liberamos memoria
     liberar_PCB(pcb_asociado);
 

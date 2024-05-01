@@ -66,8 +66,8 @@ static void solicitar_informacion_memoria ()
             log_info(stdout_logger, "PID: %d - Operacion: IO_STDOUT_WRITE\n", proceso_conectado);
 
             pthread_t hilo_stdout;
-            pthread_create(&hilo_stdout, NULL, leer_memoria, NULL);
-            pthread_detach(&hilo_stdout);
+            pthread_create(&hilo_stdout, NULL, (void*)leer_memoria, NULL);
+            pthread_detach(hilo_stdout);
         } 
         else if(paquete->codigo_operacion == FINALIZAR_OPERACION_IO){
             sacar_entero_de_paquete(&stream);

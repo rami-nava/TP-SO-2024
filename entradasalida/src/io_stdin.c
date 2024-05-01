@@ -65,8 +65,8 @@ static void realizar_escritura()
             log_info(stdin_logger, "PID: %d - Operacion: IO_STDIN_READ\n", proceso_conectado);
             
             pthread_t hilo_stdin;
-            pthread_create(&hilo_stdin, NULL, guardar_escritura, NULL);
-            pthread_detach(&hilo_stdin);
+            pthread_create(&hilo_stdin, NULL, (void*)guardar_escritura, NULL);
+            pthread_detach(hilo_stdin);
 
         } 
         else if(paquete->codigo_operacion == FINALIZAR_OPERACION_IO){
@@ -89,8 +89,8 @@ static void guardar_escritura()
     char texto_a_guardar[tamanio_registro];
 
     pthread_t hilo_fin_proceso;
-    pthread_create(&hilo_fin_proceso, NULL, chequear_fin_proceso, NULL);
-    pthread_detach(&hilo_fin_proceso);
+    pthread_create(&hilo_fin_proceso, NULL, (void*)chequear_fin_proceso, NULL);
+    pthread_detach(hilo_fin_proceso);
     
     leer_linea = readline("Ingrese el texto que desea guardar en memoria > \n");
     

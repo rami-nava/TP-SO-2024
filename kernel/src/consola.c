@@ -71,6 +71,17 @@ void parse_iniciar_planificacion (char* linea) {
    free(linea_espaciada);  // Libera la memoria asignada al array
 }
 
+
+void parse_leer_bitmap (char* linea) {
+  char **linea_espaciada = string_split(linea, " ");  
+
+  if (linea_espaciada) {
+     consola_leer_bitmap();
+  }
+   string_iterate_lines(linea_espaciada, (void*)free); 
+   free(linea_espaciada);  
+}
+
 void parse_proceso_estado (char* linea) {
   char **linea_espaciada = string_split(linea, " ");  // Divide la línea en tokens
 
@@ -80,6 +91,19 @@ void parse_proceso_estado (char* linea) {
   }
    string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token
    free(linea_espaciada);  // Libera la memoria asignada al array
+}
+
+void parse_multiprogramacion(char *linea) {
+  char **linea_espaciada = string_split(linea, " ");  
+
+  if (linea_espaciada && linea_espaciada[1]) {
+    int valor;
+    if (sscanf(linea_espaciada[1], "%d", &valor) == 1) {
+      consola_modificar_multiprogramacion(valor);
+    }
+    string_iterate_lines(linea_espaciada, (void*)free); 
+    free(linea_espaciada);  
+  }
 }
 
 void consola_parsear_instruccion(char *leer_linea) {
@@ -97,6 +121,10 @@ void consola_parsear_instruccion(char *leer_linea) {
     comando = 4;
   } else if (string_contains(leer_linea, "PROCESO_ESTADO")) {
     comando = 5;
+  } else if (string_contains(leer_linea, "MULTIPROGRAMACION")) {
+    comando = 6;
+  } else if (string_contains(leer_linea, "LEER_BITMAP")) {
+    comando = 7;
   }
 
   switch (comando) {
@@ -117,6 +145,12 @@ void consola_parsear_instruccion(char *leer_linea) {
       break;
     case 5:
       parse_proceso_estado(leer_linea);
+      break;
+    case 6:
+      parse_multiprogramacion(leer_linea);
+      break;
+    case 7:
+      parse_leer_bitmap(leer_linea);
       break;
     default:
       printf("Comando desconocido: %s\n", leer_linea);

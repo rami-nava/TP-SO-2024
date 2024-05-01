@@ -12,7 +12,6 @@ static int indice_recurso(char *recurso_buscado);
 static void eliminar_recurso_de_proceso(t_list* recursos, char* recurso);
 static t_list* obtener_lista_recurso_buscado(int indice);
 static void eliminar_proceso_colas_bloqueo(t_pcb* proceso);
-static char* buscar_proceso_colas_bloqueo(t_pcb* proceso);
 //===========================================================================================================
 
 void crear_colas_bloqueo(){

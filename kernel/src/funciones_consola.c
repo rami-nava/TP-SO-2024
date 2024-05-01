@@ -53,11 +53,29 @@ void consola_iniciar_planificacion() {
         pthread_cond_broadcast(&cond_corriendo);  
         corriendo = 1;  // Bandera sigue
         pthread_mutex_unlock(&mutex_corriendo);
-  }
-  else {
+  } else {
     printf("No estaba pausada la planificacion -_- \n");
   }
-  
+}
+
+void consola_modificar_multiprogramacion(int nuevo_valor) 
+{
+  int grado_anterior = config_valores_kernel.grado_multiprogramacion;
+  config_valores_kernel.grado_multiprogramacion = nuevo_valor;
+
+  sem_destroy(&grado_multiprogramacion);
+
+  sem_init(&grado_multiprogramacion, 0, nuevo_valor);
+  printf("Grado Anterior: %d - Grado Actual: %d \n", grado_anterior, nuevo_valor);
+}
+
+void consola_leer_bitmap() 
+{
+  t_interfaz* interfaz = list_get(interfaces_dialfs, 0);
+
+  t_paquete *paquete = crear_paquete(LEER_BITMAP);
+  agregar_entero_a_paquete(paquete, 1);
+  enviar_paquete(paquete, interfaz->socket_conectado);
 }
 
 void consola_proceso_estado() {

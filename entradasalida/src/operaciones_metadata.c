@@ -37,6 +37,23 @@ void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inic
     config_destroy(archivo);
 }
 
+void modificar_metadata_bloque_inicial(uint32_t nuevo_bloque_inicial) {
+
+    char* puntero_auxiliar = NULL;
+    char* nombre_archivo = NULL; //TODO
+    
+	char* path = string_from_format ("%s/%s", path_dial_fs, nombre_archivo);
+    t_config * archivo = config_create (path);
+
+    puntero_auxiliar = string_from_format("%d", nuevo_bloque_inicial);
+    config_set_value(archivo, "BLOQUE_INICIAL", puntero_auxiliar);
+    free(puntero_auxiliar);
+    config_save_in_file(archivo, path);
+
+    free(path);
+    config_destroy(archivo);
+}
+
 void cargamos_cambios_a_metadata_reducir(int tamanio_nuevo, char* nombre_archivo) {
 
 	char* puntero_auxiliar = NULL;
