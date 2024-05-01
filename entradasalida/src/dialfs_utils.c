@@ -125,11 +125,6 @@ void agregar_bloques(uint32_t cantidad_bloques_a_agregar, uint32_t bloque_inicia
     char* bloque_ocupado = malloc(tamanio_bloque); 
     memset(bloque_ocupado, 'a', tamanio_bloque);
 
-    uint32_t desplazamiento = 0;
-    uint32_t bloque_libre = buscar_bloque_libre(bloque_inicial);
-
-    marcar_bloque_ocupado(bloque_libre);
-
     /*
     //creo un bloque con todos sus elementos en '\0'
     for(int i = 0; i < tamanio_bloque; i++){ 
@@ -139,7 +134,11 @@ void agregar_bloques(uint32_t cantidad_bloques_a_agregar, uint32_t bloque_inicia
     //Levanto el archivo de bloques
     archivo_de_bloques = levantar_archivo_bloque();
     
-    while (desplazamiento < cantidad_bloques_a_agregar) {
+    for(int i = 0; i < cantidad_bloques_a_agregar; i++) {
+
+        uint32_t bloque_libre = buscar_bloque_libre(bloque_inicial);
+
+        marcar_bloque_ocupado(bloque_libre);
 
         // Nos poscionamos en el archivo de bloques
         fseek(archivo_de_bloques, (tamanio_bloque * bloque_libre), SEEK_SET);
@@ -148,9 +147,6 @@ void agregar_bloques(uint32_t cantidad_bloques_a_agregar, uint32_t bloque_inicia
         fwrite(bloque_ocupado, sizeof(char), tamanio_bloque, archivo_de_bloques);
 
         //fwrite(&bloque_ocupado[0], sizeof(char), 1, archivo_de_bloques);
-
-        bloque_libre++;
-        desplazamiento++;
     }
 
     free(bloque_ocupado);

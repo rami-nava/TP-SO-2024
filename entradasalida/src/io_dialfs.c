@@ -157,6 +157,8 @@ static void aviso_de_operacion_finalizada_a_kernel()
 static void crear_archivo(char *nombre_archivo)
 {
     char* bloque_inicial = NULL;
+    char* tamanio_inicial = NULL;
+
     uint32_t buffer_bloque_inicial = buscar_bloque_inicial_libre();
     
     list_add(bloques_iniciales, (void*)(intptr_t)buffer_bloque_inicial);
@@ -184,7 +186,9 @@ static void crear_archivo(char *nombre_archivo)
 	    config_set_value(archivo_nuevo, "BLOQUE_INICIAL", bloque_inicial);
         free(bloque_inicial);
 
-        config_set_value(archivo_nuevo, "TAMANIO_ARCHIVO", "0");
+        tamanio_inicial = string_from_format("%d", tamanio_bloque);
+        config_set_value(archivo_nuevo, "TAMANIO_ARCHIVO", tamanio_inicial);
+        free(tamanio_inicial);
 
         config_save_in_file(archivo_nuevo, path_archivo);
 
@@ -208,10 +212,6 @@ static void eliminar_archivo(char *nombre_archivo)
     // Liberamos el bloque
     uint32_t cantidad_bloques_ocupados = ceil(tamanio_archivo / tamanio_bloque); 
     eliminar_bloques(cantidad_bloques_ocupados, bloque_inicial);
-
-    if(tamanio_archivo == 0){
-    eliminar_bloques(1, bloque_inicial);
-    }
 
     //eliminamos el archivo
     char *path_archivo = string_from_format("%s/%s", path_dial_fs, nombre_archivo);
@@ -255,13 +255,9 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
     compactar_desde_comienzo = false;
     
     uint32_t bloques_a_agregar = ceil((tamanio_nuevo - tamanio_actual) / tamanio_bloque);
-    uint32_t cant_bloques = ceil(tamanio_actual / tamanio_bloque);
+    uint32_t cantidad_bloques_del_archivo = ceil(tamanio_actual / tamanio_bloque);
 
-    if(tamanio_actual != 0){
-        cant_bloques -= 1;
-    }
-
-    uint32_t bloque_final_archivo = bloque_inicial + cant_bloques;
+    uint32_t bloque_final_archivo = bloque_inicial + cantidad_bloques_del_archivo - 1;
 
     //Comprobamos si hay suficientes bloques contiguos
    if(!bloques_contiguos(bloques_a_agregar, bloque_final_archivo)) {
@@ -283,13 +279,9 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
 static void reducir_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uint32_t bloque_inicial)
 {
     uint32_t bloques_a_eliminar = ceil((tamanio_actual - tamanio_nuevo) / tamanio_bloque);
-    uint32_t cant_bloques = ceil(tamanio_actual / tamanio_bloque);
+    uint32_t cantidad_bloques_del_archivo = ceil(tamanio_actual / tamanio_bloque);
 
-    if(tamanio_actual != 0){
-        cant_bloques -= 1;
-    }
-
-    uint32_t primer_bloque_a_borrar = bloque_inicial + cant_bloques;
+    uint32_t primer_bloque_a_borrar = bloque_inicial + cantidad_bloques_del_archivo;
 
     //Eliminamos los bloques
     eliminar_bloques(bloques_a_eliminar, primer_bloque_a_borrar);
