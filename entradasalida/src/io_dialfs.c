@@ -14,6 +14,8 @@ int tiempo_unidad_trabajo;
 int retraso_compactacion;
 t_log *dialfs_logger;
 t_list* bloques_iniciales;
+t_dictionary* nombre_con_bloque_inicial;
+bool compactar_desde_comienzo;
 
 static void recibir_peticiones_de_kernel();
 static void consumir_una_unidad_de_tiempo_de_trabajo();
@@ -36,6 +38,7 @@ void main_dialfs(t_interfaz *interfaz_hilo)
     char *nombre = interfaz_hilo->nombre_interfaz;
     t_config *config = interfaz_hilo->config_interfaz;
     bloques_iniciales = list_create();
+    nombre_con_bloque_inicial = dictionary_create();
 
     char path[70] = "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/";
 
@@ -154,6 +157,8 @@ static void crear_archivo(char *nombre_archivo)
     
     list_add(bloques_iniciales, (void*)(intptr_t)buffer_bloque_inicial);
 
+    dictionary_put(nombre_con_bloque_inicial, (void*)(intptr_t)buffer_bloque_inicial, string_duplicate(nombre_archivo));
+
     char *path_archivo = string_from_format("%s/%s", path_dial_fs, nombre_archivo);
 
     // Creamos el archivo vacio
@@ -240,6 +245,8 @@ static void truncar_archivo(char *nombre_archivo, uint32_t tamanio_nuevo)
 
 static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uint32_t bloque_inicial)
 {
+    compactar_desde_comienzo = false;
+    
     uint32_t bloques_a_agregar = ceil((tamanio_nuevo - tamanio_actual) / tamanio_bloque);
     uint32_t bloque_final_archivo = bloque_inicial + ceil(tamanio_actual / tamanio_bloque);
 
@@ -248,6 +255,9 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
 
         //Si no hay compacto
         compactar(bloques_a_agregar, bloque_final_archivo);
+        if(compactar_desde_comienzo) {
+            compactar_desde_el_comienzo();
+        }
         usleep(1000 * retraso_compactacion);
         
    } else printf ("Se encontraron bloques contiguos suficientes \n");

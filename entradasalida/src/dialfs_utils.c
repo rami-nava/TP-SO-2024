@@ -8,6 +8,9 @@ int tamanio_bitmap;
 static void limpiar_posiciones(uint32_t posicion_inicial, int tamanio_proceso);
 static bool pertenece_a_bloque_inicial(uint32_t indice_bloque);
 static void limpiar_un_bloque(uint32_t indice_bloque);
+static void marcar_bloque_ocupado(int index);
+static bool esta_libre(int index);
+static uint32_t buscar_bloque_libre(uint32_t bloque_inicial);
 //================================ ARCHIVOS DE BLOQUES ======================================================
 void crear_archivo_de_bloque()
 {
@@ -90,6 +93,7 @@ static void limpiar_posiciones(uint32_t posicion_inicial, int tamanio_proceso) {
 	
     for (int i = posicion_inicial; i < posicion_inicial + tamanio_proceso; i++) {
 		bitarray_clean_bit(bitmap_bitarray, i);
+        msync(bitmap, tamanio_bitmap, MS_SYNC);
 	}
 }
 
@@ -103,6 +107,16 @@ void leer_bitmap()
         }
     }
 }
+
+static void marcar_bloque_ocupado(int index) {
+    bitarray_set_bit(bitmap_bitarray, index);
+    msync(bitmap, tamanio_bitmap, MS_SYNC);
+}
+
+static bool esta_libre(int index) {
+    return bitarray_test_bit(bitmap_bitarray, index) == false;
+}
+
 //================================ BLOQUES ======================================================
 void agregar_bloques(uint32_t cantidad_bloques_a_agregar, uint32_t bloque_inicial)
 {
@@ -166,24 +180,34 @@ void eliminar_bloques(uint32_t cantidad_bloques_a_eliminar, uint32_t bloque_inic
 void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_archivo)
 {    
     t_list *lista_indices_bloques_libres = list_create();
-    int aux_recorrer_bitmap = 0;
+    uint32_t aux_recorrer_bitmap = bloque_final_archivo;
     uint32_t indice_bloque_libre = 0;
-    int cantidad_bloques_libres_encontrados = 0;
+    uint32_t cantidad_bloques_libres_encontrados = 0;
     uint32_t bloques_libres_contiguos = 0;
 
-    // Busco los bloques libres que necesito y los guardo en la lista 
-    while(cantidad_bloques_libres_encontrados <= cantidad_bloques_a_compactar) { 
-
+    // Recorro el bitmap desde el bloque final del archivo
+    while(aux_recorrer_bitmap < tamanio_bitmap) { 
+        
+        // Si aun necesito bloques libres para compactar
+        if(cantidad_bloques_libres_encontrados <= cantidad_bloques_a_compactar) {
+        
         // Busco el primer bloque libre en todo el bitmap
-        indice_bloque_libre = buscar_bloque_libre(bloque_final_archivo + 1); 
+        indice_bloque_libre = buscar_bloque_libre(aux_recorrer_bitmap + 1); 
 
         //Guardo los indices de los bloques libres
         list_add(lista_indices_bloques_libres, (void*)(intptr_t)indice_bloque_libre); 
+        } else break; // Si ya no necesito bloques libres, salgo del while
 
         aux_recorrer_bitmap++;
         cantidad_bloques_libres_encontrados++;
     }
-    
+
+    // Si no hay suficientes bloques libres, hay que compactar con el otro algoritmo
+    if(cantidad_bloques_libres_encontrados < cantidad_bloques_a_compactar) {
+        compactar_desde_comienzo = true;
+        return;
+    }
+
     // Ahora reviso cuantos de los bloques libres son contiguos
     for (int i = bloque_final_archivo + 1; i < tamanio_bitmap; i++) {
 
@@ -203,6 +227,7 @@ void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_arch
     //junto los bloques libres
     while (bloques_a_mover > 0)
     {
+        // Creo un bloque de buffer 
         char* bloque_ocupado = malloc(tamanio_bloque); 
 
         // Obtengo el indice del primer bloque libre
@@ -214,7 +239,7 @@ void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_arch
         for(int i = 0; i < bloques_ocupados; i++) {
             
         // Me posiciono en el ultimo bloque ocupado por un archivo 
-        fseek(archivo_de_bloques, tamanio_bloque * (bloque_libre - 1 - i), SEEK_SET);
+        fseek(archivo_de_bloques, tamanio_bloque * (bloque_libre - 1 - 1), SEEK_SET);
         fread(bloque_ocupado, sizeof(char), tamanio_bloque, archivo_de_bloques);
 
         // Me posiciono en el bloque libre
@@ -223,13 +248,14 @@ void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_arch
 
         // Actualizo el bloque inicial
         if(pertenece_a_bloque_inicial(bloque_libre - 1- i)) {
-            //modificar_metadata_bloque_inicial(bloque_libre - i);   TODO 
+            modificar_metadata_bloque_inicial(bloque_libre - i, bloque_libre - 1 - i);    
         }
 
+        //Deberia hacer un free?
         } 
         // Actualizo bitmap y archivo_de_bloques
-        limpiar_un_bloque(bloques_libres_contiguos + bloque_final_archivo);
         bloques_libres_contiguos++;
+        limpiar_un_bloque(bloques_libres_contiguos + bloque_final_archivo);
         marcar_bloque_ocupado(bloque_libre);
 
         //Elimino el primer bloque libre de la lista
@@ -239,6 +265,11 @@ void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_arch
 
     list_destroy(lista_indices_bloques_libres);
     fclose(archivo_de_bloques);
+}
+
+void compactar_desde_el_comienzo()
+{
+    //TODO
 }
 
 static void limpiar_un_bloque(uint32_t indice_bloque)
@@ -276,7 +307,8 @@ uint32_t buscar_bloque_inicial_libre()
     return -1;
 }
 
-uint32_t buscar_bloque_libre(uint32_t bloque_inicial) //no es desde el final?
+// Busco desde X bloque
+static uint32_t buscar_bloque_libre(uint32_t bloque_inicial) 
 {
     for (int i = bloque_inicial; i < tamanio_bitmap; i++){
         if (esta_libre(i)){
@@ -307,13 +339,4 @@ bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar, uint32_t bloque_final
     }
 
     return -1;
-}
-
-void marcar_bloque_ocupado(int index) {
-    bitarray_set_bit(bitmap_bitarray, index);
-    msync(bitmap, tamanio_bitmap, MS_SYNC);
-}
-
-bool esta_libre(int index) {
-    return bitarray_test_bit(bitmap_bitarray, index) == false;
 }

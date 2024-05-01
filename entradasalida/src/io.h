@@ -18,6 +18,7 @@
 #include <commons/bitarray.h>
 #include <commons/memory.h>
 #include <commons/temporal.h>
+#include <commons/collections/dictionary.h>
 
 #include "socket.h"
 #include "contexto.h"
@@ -26,6 +27,7 @@
 extern t_list* interfaces;
 
 extern t_list* bloques_iniciales;
+extern t_dictionary* nombre_con_bloque_inicial;
 extern t_log* dialfs_logger;
 extern char* path_dial_fs;
 extern FILE* archivo_de_bloques;
@@ -33,6 +35,7 @@ extern int tamanio_bloque;
 extern int cantidad_bloques;
 extern int tamanio_archivo_bloques;
 extern int retraso_compactacion;
+extern bool compactar_desde_comienzo;
 
 //STRUCTS//
 typedef struct 
@@ -65,6 +68,7 @@ void desconectar_memoria_dialfs();
 void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inicial, char* nombre_archivo);
 void cargamos_cambios_a_metadata_reducir(int tamanio_nuevo, char* nombre_archivo);
 metadata_archivo* levantar_metadata(char* nombre_archivo);
+void modificar_metadata_bloque_inicial(uint32_t nuevo_bloque_inicial, uint32_t bloque_inicial);
 
 //.................................. ARCHIVOS .......................................................................
 FILE* levantar_archivo_bloque();
@@ -72,12 +76,10 @@ void crear_archivo_de_bloque();
 void cargar_bitmap();
 void leer_bitmap();
 void agregar_bloques(uint32_t cantidad_bloques_a_agregar, uint32_t bloque_inicial);
-uint32_t buscar_bloque_libre(uint32_t bloque_inicial);
 void eliminar_bloques(uint32_t cantidad_bloques_a_eliminar, uint32_t bloque_inicial);
 uint32_t buscar_bloque_inicial_libre();
 void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_archivo);
-void marcar_bloque_ocupado(int index);
-bool esta_libre(int index);
+void compactar_desde_el_comienzo();
 bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar, uint32_t bloque_final_archivo);
 
 #endif

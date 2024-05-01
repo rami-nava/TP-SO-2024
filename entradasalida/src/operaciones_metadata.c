@@ -37,11 +37,12 @@ void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inic
     config_destroy(archivo);
 }
 
-void modificar_metadata_bloque_inicial(uint32_t nuevo_bloque_inicial) {
+void modificar_metadata_bloque_inicial(uint32_t nuevo_bloque_inicial, uint32_t bloque_inicial) {
 
     char* puntero_auxiliar = NULL;
-    char* nombre_archivo = NULL; //TODO
-    
+
+    char* nombre_archivo = dictionary_get(nombre_con_bloque_inicial, (void*)&bloque_inicial);
+
 	char* path = string_from_format ("%s/%s", path_dial_fs, nombre_archivo);
     t_config * archivo = config_create (path);
 
