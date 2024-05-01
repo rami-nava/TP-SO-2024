@@ -97,9 +97,10 @@ static void limpiar_posiciones(uint32_t posicion_inicial, int tamanio_proceso) {
 	}
 }
 
-void leer_bitmap()
+void leer_bitmap(int desde, int hasta)
 {
-    for (int i = 0; i < 15; i++) {
+    printf("LECTURA DE BITMAP DESDE: %d HASTA: %d\n\n", desde, hasta);
+    for (int i = desde; i <= hasta; i++) {
         if (bitarray_test_bit(bitmap_bitarray, i)) {
             printf("Bit at index %d is 1\n", i);
         } else {
@@ -189,10 +190,10 @@ void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_arch
     while(aux_recorrer_bitmap < tamanio_bitmap) { 
         
         // Si aun necesito bloques libres para compactar
-        if(cantidad_bloques_libres_encontrados <= cantidad_bloques_a_compactar) {
+        if(cantidad_bloques_libres_encontrados < cantidad_bloques_a_compactar) {
         
         // Busco el primer bloque libre en todo el bitmap
-        indice_bloque_libre = buscar_bloque_libre(aux_recorrer_bitmap + 1); 
+        indice_bloque_libre = buscar_bloque_libre(bloque_final_archivo + indice_bloque_libre); 
 
         //Guardo los indices de los bloques libres
         list_add(lista_indices_bloques_libres, (void*)(intptr_t)indice_bloque_libre); 
@@ -215,6 +216,8 @@ void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_arch
         if (esta_libre(i)) {
             bloques_libres_contiguos++;
             list_remove_element(lista_indices_bloques_libres, (void*)(intptr_t)i);
+        }else{
+            break;
         }
     }
 
@@ -323,7 +326,7 @@ bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar, uint32_t bloque_final
     uint32_t bloques_encontrados = 0;
 
     //Busco en el bitmap si hay suficientes bloques libres contiguos
-    for (int i = bloque_final_archivo; i < tamanio_bitmap; i++) {
+    for (int i = bloque_final_archivo + 1; i < tamanio_bitmap; i++) {
         if (esta_libre(i)) {
 
             //cantidad de bloques disponibles contiguos que encuentro

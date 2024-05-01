@@ -192,7 +192,7 @@ void consola_iniciar_proceso(char *path);
 void detener_planificacion();
 void parse_multiprogramacion(char *linea);
 void consola_modificar_multiprogramacion(int nuevo_valor); 
-void consola_leer_bitmap();
+void consola_leer_bitmap(int desde, int hasta);
 void parse_leer_bitmap(char *linea);
 
 ////======================================== IO ===========================================================================================================

@@ -81,6 +81,8 @@ static void recibir_peticiones_de_kernel()
         void *stream = paquete->buffer->stream;
         int proceso_conectado = -1;
         char* nombre = NULL;
+        int desde;
+        int hasta;
         uint32_t puntero_archivo = 0;
         uint32_t tamanio = 0;
         uint32_t direccion_fisica = 0;
@@ -127,7 +129,9 @@ static void recibir_peticiones_de_kernel()
             log_info(dialfs_logger, "PID: %d - Escribir Archivo: %s - Tamaño a escribir : %d - Puntero archivo: %d \n", proceso_conectado, nombre, puntero_archivo, tamanio);
             escribir_archivo(nombre, puntero_archivo, tamanio, direccion_fisica);
         case LEER_BITMAP:
-            leer_bitmap();
+            desde = sacar_entero_de_paquete(&stream);
+            hasta = sacar_entero_de_paquete(&stream);
+            leer_bitmap(desde, hasta);
             break;
         default:
             break;
@@ -157,7 +161,10 @@ static void crear_archivo(char *nombre_archivo)
     
     list_add(bloques_iniciales, (void*)(intptr_t)buffer_bloque_inicial);
 
-    dictionary_put(nombre_con_bloque_inicial, (void*)(intptr_t)buffer_bloque_inicial, string_duplicate(nombre_archivo));
+    char bloque_inicial_string[20]; //Alcanza para almacenar un uint32_t
+    snprintf(bloque_inicial_string, sizeof(bloque_inicial_string), "%u", buffer_bloque_inicial);
+
+    dictionary_put(nombre_con_bloque_inicial, strdup(bloque_inicial_string), strdup(nombre_archivo));
 
     char *path_archivo = string_from_format("%s/%s", path_dial_fs, nombre_archivo);
 
@@ -248,7 +255,13 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
     compactar_desde_comienzo = false;
     
     uint32_t bloques_a_agregar = ceil((tamanio_nuevo - tamanio_actual) / tamanio_bloque);
-    uint32_t bloque_final_archivo = bloque_inicial + ceil(tamanio_actual / tamanio_bloque);
+    uint32_t cant_bloques = ceil(tamanio_actual / tamanio_bloque);
+
+    if(tamanio_actual != 0){
+        cant_bloques -= 1;
+    }
+
+    uint32_t bloque_final_archivo = bloque_inicial + cant_bloques;
 
     //Comprobamos si hay suficientes bloques contiguos
    if(!bloques_contiguos(bloques_a_agregar, bloque_final_archivo)) {
@@ -270,8 +283,13 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
 static void reducir_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uint32_t bloque_inicial)
 {
     uint32_t bloques_a_eliminar = ceil((tamanio_actual - tamanio_nuevo) / tamanio_bloque);
+    uint32_t cant_bloques = ceil(tamanio_actual / tamanio_bloque);
 
-    uint32_t primer_bloque_a_borrar = bloque_inicial + ceil(tamanio_nuevo / tamanio_bloque);
+    if(tamanio_actual != 0){
+        cant_bloques -= 1;
+    }
+
+    uint32_t primer_bloque_a_borrar = bloque_inicial + cant_bloques;
 
     //Eliminamos los bloques
     eliminar_bloques(bloques_a_eliminar, primer_bloque_a_borrar);

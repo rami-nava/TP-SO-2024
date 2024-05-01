@@ -38,10 +38,12 @@ void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inic
 }
 
 void modificar_metadata_bloque_inicial(uint32_t nuevo_bloque_inicial, uint32_t bloque_inicial) {
-
     char* puntero_auxiliar = NULL;
-
-    char* nombre_archivo = dictionary_get(nombre_con_bloque_inicial, (void*)&bloque_inicial);
+    
+    char bloque_inicial_string[20]; //Alcanza para almacenar un uint32_t
+    snprintf(bloque_inicial_string, sizeof(bloque_inicial_string), "%u", bloque_inicial);
+    
+    char* nombre_archivo = (char*)dictionary_get(nombre_con_bloque_inicial, bloque_inicial_string);
 
 	char* path = string_from_format ("%s/%s", path_dial_fs, nombre_archivo);
     t_config * archivo = config_create (path);
@@ -50,6 +52,17 @@ void modificar_metadata_bloque_inicial(uint32_t nuevo_bloque_inicial, uint32_t b
     config_set_value(archivo, "BLOQUE_INICIAL", puntero_auxiliar);
     free(puntero_auxiliar);
     config_save_in_file(archivo, path);
+
+
+    //Actualizo el diccionario y la lista de bloques iniciales con el nuevo
+    char bloque_nuevo_inicial_string[20]; //Alcanza para almacenar un uint32_t
+    snprintf(bloque_nuevo_inicial_string, sizeof(bloque_nuevo_inicial_string), "%u", nuevo_bloque_inicial);
+
+    dictionary_put(nombre_con_bloque_inicial, strdup(bloque_nuevo_inicial_string), strdup(nombre_archivo));
+    dictionary_remove_and_destroy(nombre_con_bloque_inicial, bloque_inicial_string, free);
+
+    list_remove_element(bloques_iniciales, (void*)(intptr_t)bloque_inicial);
+    list_add(bloques_iniciales, (void*)(intptr_t)nuevo_bloque_inicial);
 
     free(path);
     config_destroy(archivo);

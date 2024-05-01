@@ -74,7 +74,7 @@ void modificar_metadata_bloque_inicial(uint32_t nuevo_bloque_inicial, uint32_t b
 FILE* levantar_archivo_bloque();
 void crear_archivo_de_bloque();
 void cargar_bitmap();
-void leer_bitmap();
+void leer_bitmap(int desde, int hasta);
 void agregar_bloques(uint32_t cantidad_bloques_a_agregar, uint32_t bloque_inicial);
 void eliminar_bloques(uint32_t cantidad_bloques_a_eliminar, uint32_t bloque_inicial);
 uint32_t buscar_bloque_inicial_libre();

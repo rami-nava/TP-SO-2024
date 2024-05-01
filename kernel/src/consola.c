@@ -75,9 +75,14 @@ void parse_iniciar_planificacion (char* linea) {
 void parse_leer_bitmap (char* linea) {
   char **linea_espaciada = string_split(linea, " ");  
 
-  if (linea_espaciada) {
-     consola_leer_bitmap();
+  if (linea_espaciada && linea_espaciada[1] && linea_espaciada[2]) {
+    int desde;
+    int hasta;
+    if (sscanf(linea_espaciada[1], "%d", &desde) == 1 && sscanf(linea_espaciada[2], "%d", &hasta) == 1) {
+      consola_leer_bitmap(desde,hasta);
+    }
   }
+
    string_iterate_lines(linea_espaciada, (void*)free); 
    free(linea_espaciada);  
 }

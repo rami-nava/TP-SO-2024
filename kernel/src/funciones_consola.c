@@ -69,12 +69,13 @@ void consola_modificar_multiprogramacion(int nuevo_valor)
   printf("Grado Anterior: %d - Grado Actual: %d \n", grado_anterior, nuevo_valor);
 }
 
-void consola_leer_bitmap() 
+void consola_leer_bitmap(int desde, int hasta) 
 {
   t_interfaz* interfaz = list_get(interfaces_dialfs, 0);
 
   t_paquete *paquete = crear_paquete(LEER_BITMAP);
-  agregar_entero_a_paquete(paquete, 1);
+  agregar_entero_a_paquete(paquete, desde);
+  agregar_entero_a_paquete(paquete, hasta);
   enviar_paquete(paquete, interfaz->socket_conectado);
 }
 
