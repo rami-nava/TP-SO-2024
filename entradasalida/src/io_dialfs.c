@@ -262,11 +262,17 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
     //Comprobamos si hay suficientes bloques contiguos
    if(!bloques_contiguos(bloques_a_agregar, bloque_final_archivo)) {
 
-        //Si no hay compacto
         compactar(bloques_a_agregar, bloque_final_archivo);
+
+        //Si no hay bloques libres suficientes a la derecha compacto
         if(compactar_desde_comienzo) {
-            compactar_desde_el_comienzo();
+            //Muevo todos los bloques libres a la izquierda del archivo, a su derecha
+            compactar_desde_el_comienzo(bloque_final_archivo);
         }
+
+        //La llamo denuevo, esta vez ya deberia tener bloques libres a la derecha para asignarle al archivo
+        compactar(bloques_a_agregar, bloque_final_archivo);
+
         usleep(1000 * retraso_compactacion);
         
    } else printf ("Se encontraron bloques contiguos suficientes \n");

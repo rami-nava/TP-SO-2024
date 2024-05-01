@@ -202,6 +202,7 @@ void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_arch
     // Si no hay suficientes bloques libres, hay que compactar con el otro algoritmo
     if(cantidad_bloques_libres_encontrados < cantidad_bloques_a_compactar) {
         compactar_desde_comienzo = true;
+        list_destroy(lista_indices_bloques_libres);
         return;
     }
 
@@ -266,9 +267,33 @@ void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_arch
     fclose(archivo_de_bloques);
 }
 
-void compactar_desde_el_comienzo()
+void compactar_desde_el_comienzo(uint32_t bloque_final_archivo)
 {
-    //TODO
+    int cant_bloques_a_mover = 0;
+    for(int i = 0; i <= bloque_final_archivo; i++){
+        if(esta_libre(i)){
+            cant_bloques_a_mover++;       
+        }else{ //Mover el bloque x posiciones para atras
+             
+             //Para evitar que en bloque 0 multiplique por -1
+             if(cant_bloques_a_mover > 0){
+
+                // Creo un bloque de buffer 
+                char* bloque_ocupado = malloc(tamanio_bloque); 
+
+                // Me posiciono en bloque que quiero mover 
+                fseek(archivo_de_bloques, tamanio_bloque * (i - 1), SEEK_SET);
+                fread(bloque_ocupado, sizeof(char), tamanio_bloque, archivo_de_bloques);
+
+                // Me posiciono en el primer bloque libre = la pos de este bloque menos la cant de bloques a moverlo
+                fseek(archivo_de_bloques, tamanio_bloque * (i - cant_bloques_a_mover - 1), SEEK_SET);
+                fwrite(bloque_ocupado, sizeof(char), tamanio_bloque, archivo_de_bloques);
+
+                limpiar_un_bloque(i);
+                marcar_bloque_ocupado(i - cant_bloques_a_mover);
+            }
+        }
+    }
 }
 
 static void limpiar_un_bloque(uint32_t indice_bloque)
