@@ -79,7 +79,7 @@ void agregar_bloques(uint32_t cantidad_bloques_a_agregar, uint32_t bloque_inicia
 void eliminar_bloques(uint32_t cantidad_bloques_a_eliminar, uint32_t bloque_inicial);
 uint32_t buscar_bloque_inicial_libre();
 void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_archivo);
-void compactar_desde_el_comienzo(uint32_t bloque_final_archivo);
+int compactar_desde_el_comienzo(uint32_t bloque_final_archivo);
 bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar, uint32_t bloque_final_archivo);
 
 #endif

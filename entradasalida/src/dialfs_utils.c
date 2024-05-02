@@ -189,14 +189,24 @@ void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_arch
         if(cantidad_bloques_libres_encontrados < cantidad_bloques_a_compactar) {
         
         // Busco el primer bloque libre en todo el bitmap
-        indice_bloque_libre = buscar_bloque_libre(bloque_final_archivo + indice_bloque_libre); 
+        //Luego de la primera iteracion, indice bloque libre > bloque final archivo
+        if(aux_recorrer_bitmap == bloque_final_archivo)
+            indice_bloque_libre = buscar_bloque_libre(bloque_final_archivo); 
+        else
+            indice_bloque_libre = buscar_bloque_libre(indice_bloque_libre + 1); 
 
         //Guardo los indices de los bloques libres
-        list_add(lista_indices_bloques_libres, (void*)(intptr_t)indice_bloque_libre); 
+        //TODO revisar este if
+        if(indice_bloque_libre < tamanio_bitmap) //Para evitar errores con indices cuando no encuentra uno libre
+            list_add(lista_indices_bloques_libres, (void*)(intptr_t)indice_bloque_libre); 
+
         } else break; // Si ya no necesito bloques libres, salgo del while
 
         aux_recorrer_bitmap++;
         cantidad_bloques_libres_encontrados++;
+    
+        if(indice_bloque_libre > tamanio_bitmap) 
+            break;
     }
 
     // Si no hay suficientes bloques libres, hay que compactar con el otro algoritmo
@@ -267,9 +277,12 @@ void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_arch
     fclose(archivo_de_bloques);
 }
 
-void compactar_desde_el_comienzo(uint32_t bloque_final_archivo)
+int compactar_desde_el_comienzo(uint32_t bloque_final_archivo)
 {
     int cant_bloques_a_mover = 0;
+    
+    archivo_de_bloques = levantar_archivo_bloque();
+
     for(int i = 0; i <= bloque_final_archivo; i++){
         if(esta_libre(i)){
             cant_bloques_a_mover++;       
@@ -289,11 +302,18 @@ void compactar_desde_el_comienzo(uint32_t bloque_final_archivo)
                 fseek(archivo_de_bloques, tamanio_bloque * (i - cant_bloques_a_mover), SEEK_SET);
                 fwrite(bloque_ocupado, sizeof(char), tamanio_bloque, archivo_de_bloques);
 
+                // Actualizo el bloque inicial
+                if(pertenece_a_bloque_inicial(i)) {
+                    modificar_metadata_bloque_inicial(i - cant_bloques_a_mover, i);    
+                }
+
                 limpiar_un_bloque(i);
                 marcar_bloque_ocupado(i - cant_bloques_a_mover);
             }
         }
     }
+    fclose(archivo_de_bloques);
+    return bloque_final_archivo - cant_bloques_a_mover;
 }
 
 static void limpiar_un_bloque(uint32_t indice_bloque)
@@ -339,7 +359,8 @@ static uint32_t buscar_bloque_libre(uint32_t bloque_inicial)
             return i;
         }
     }
-    return -1;
+    
+    return tamanio_bitmap + 1; //Para saber que no se encontro nada y evitar errores de conversion de negativos a uint32_t
 }
 
 bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar, uint32_t bloque_final_archivo) 

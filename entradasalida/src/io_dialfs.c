@@ -267,7 +267,8 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
         //Si no hay bloques libres suficientes a la derecha compacto
         if(compactar_desde_comienzo) {
             //Muevo todos los bloques libres a la izquierda del archivo, a su derecha
-            compactar_desde_el_comienzo(bloque_final_archivo);
+            //El bloque final del archivo cambia, entonces lo actualizo
+            bloque_final_archivo = compactar_desde_el_comienzo(bloque_final_archivo);
         }
 
         //La llamo denuevo, esta vez ya deberia tener bloques libres a la derecha para asignarle al archivo
