@@ -163,8 +163,8 @@ void eliminar_bloques(uint32_t cantidad_bloques_a_eliminar, uint32_t bloque_inic
     archivo_de_bloques = levantar_archivo_bloque();
 
     // Limpio el archivo de bloques con bloques vacios
-    for (int i = bloque_inicial; i < cantidad_bloques_a_eliminar; i++) {
-        fseek(archivo_de_bloques, (tamanio_bloque * i), SEEK_SET);
+    for (int i = 0; i < cantidad_bloques_a_eliminar; i++) {
+        fseek(archivo_de_bloques, tamanio_bloque * (bloque_inicial + i), SEEK_SET);
         fwrite(bloque_vacio, sizeof(char), tamanio_bloque, archivo_de_bloques);
 
         limpiar_posiciones(bloque_inicial, cantidad_bloques_a_eliminar);
@@ -286,7 +286,7 @@ void compactar_desde_el_comienzo(uint32_t bloque_final_archivo)
                 fread(bloque_ocupado, sizeof(char), tamanio_bloque, archivo_de_bloques);
 
                 // Me posiciono en el primer bloque libre = la pos de este bloque menos la cant de bloques a moverlo
-                fseek(archivo_de_bloques, tamanio_bloque * (i - cant_bloques_a_mover - 1), SEEK_SET);
+                fseek(archivo_de_bloques, tamanio_bloque * (i - cant_bloques_a_mover), SEEK_SET);
                 fwrite(bloque_ocupado, sizeof(char), tamanio_bloque, archivo_de_bloques);
 
                 limpiar_un_bloque(i);
@@ -357,10 +357,8 @@ bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar, uint32_t bloque_final
             if (bloques_encontrados == cantidad_bloques_a_buscar) {
                 return true;
             }
-        } else { // No hay suficientes bloques contiguos tenog que compactar
-            return false; 
-        }
+        } 
     }
 
-    return -1;
+    return false;
 }
