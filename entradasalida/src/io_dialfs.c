@@ -275,6 +275,8 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
         compactar(bloques_a_agregar, bloque_final_archivo);
 
         usleep(1000 * retraso_compactacion);
+
+        log_info(dialfs_logger, "Se compacto el archivo \n");
         
    } else printf ("Se encontraron bloques contiguos suficientes \n");
 

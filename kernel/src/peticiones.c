@@ -1,7 +1,5 @@
 #include "kernel.h"
 
-pthread_mutex_t mutex_FIN_QUANTUM;
-
 //=====================================================================================================================================
 static void io_gen_sleep(t_pcb *proceso, char **parametros);
 static void io_stdin_read(t_pcb *proceso, char **parametros);
@@ -19,43 +17,53 @@ static void a_leer_o_escribir_interfaz(op_code codigo, t_pcb * proceso, uint32_t
 static void a_crear_o_eliminar_archivo(op_code codigo, t_pcb * proceso, char* nombre_archivo, t_interfaz* interfaz);
 static void a_truncar_archivo(t_pcb * proceso, uint32_t tamanio, char* nombre_archivo, t_interfaz* interfaz);
 static void a_leer_o_escribir_archivo(op_code codigo, t_pcb * proceso, uint32_t puntero, uint32_t tamanio, uint32_t direccion, char* nombre_archivo, t_interfaz* interfaz);
-
+static void recibir_peticion(t_pcb *proceso, t_contexto *contexto_ejecucion);
 
 //======================================================================================================================================
+void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion)
+{
+    // Ejecutamos la peticion recibida
+    recibir_peticion(proceso, contexto_ejecucion);
 
-void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion){
+    // Verificamos si hay fin de quantum
+    if(contexto_ejecucion->hay_fin_de_quantum)
+    {
+        fin_quantum(proceso);
+    }
+}
+
+static void recibir_peticion(t_pcb *proceso, t_contexto *contexto_ejecucion){
     switch (contexto_ejecucion->motivo_desalojo->comando){
         case IO_GEN_SLEEP:
-            pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
-            proceso_en_ejecucion_RR = false;
-            pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
+            romper_el_reloj();
             io_gen_sleep(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
         case IO_STDIN_READ:
-            pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
-            proceso_en_ejecucion_RR = false;
-            pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
+            romper_el_reloj();
             io_stdin_read(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
         case IO_STDOUT_WRITE:
-            pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
-            proceso_en_ejecucion_RR = false;
-            pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
+            romper_el_reloj();
             io_stdout_write(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
         case IO_FS_CREATE:
+            romper_el_reloj();
             io_fs_create(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
         case IO_FS_DELETE:
+            romper_el_reloj();
             io_fs_delete(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
         case IO_FS_TRUNCATE:
+            romper_el_reloj();
             io_fs_truncate(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
         case IO_FS_WRITE:
+            romper_el_reloj();
             io_fs_write(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
         case IO_FS_READ:
+            romper_el_reloj();
             io_fs_read(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
         case WAIT:
@@ -65,9 +73,7 @@ void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion
             signal_s(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;        
         case EXIT:
-            pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
-            proceso_en_ejecucion_RR = false;
-            pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
+            romper_el_reloj();
             if(!strcmp(config_valores_kernel.algoritmo, "RR") || !strcmp(config_valores_kernel.algoritmo, "VRR"))
             {
                 sem_wait(&exit_sem);
@@ -77,30 +83,16 @@ void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion
         case OUT_OF_MEMORY:
             exit_c(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
-        case EXIT_MAS_FIN_QUANTUM: //No necesita un sem, ya que el reloj se destruye anteriormente
-            pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
-            proceso_en_ejecucion_RR = false;
-            pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
-            exit_c(proceso, contexto_ejecucion->motivo_desalojo->parametros);
-            break;
-        case FIN_QUANTUM:
-            pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
-            proceso_en_ejecucion_RR = false;
-            pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
-            fin_quantum(proceso);
-            break;
-    default:
-        log_error(kernel_logger, "Comando incorrecto");
+      default:
+        //log_info(kernel_logger, "Operacion no bloqueante\n");
         break;
     }
 }
 
 static void fin_quantum(t_pcb* proceso){
-    pthread_mutex_lock(&mutex_FIN_QUANTUM);
-    log_info(kernel_logger, "Fin de quantum del proceso %d\n", proceso->pid);
+    log_info(kernel_logger, "PID: %d - Desalojado por fin de Quantum\n",proceso_en_ejecucion->pid);
     proceso->quantum = 0;
     ingresar_a_READY(proceso);
-    pthread_mutex_unlock(&mutex_FIN_QUANTUM);
 }
 
 void volver_a_CPU(t_pcb* proceso) {

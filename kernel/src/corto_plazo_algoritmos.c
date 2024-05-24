@@ -103,7 +103,6 @@ void* comenzar_reloj_RR(){
                 else if (temporal_gettime(reloj) >= quantum_total)
                 {
                     pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
-                    log_info(kernel_logger, "PID: %d - Desalojado por fin de Quantum\n",proceso_en_ejecucion->pid);
                     desalojo(1); //Interrumpo la ejecucion por fin de quantum
                     temporal_destroy(reloj);
                     reloj = NULL;
@@ -117,4 +116,10 @@ void* comenzar_reloj_RR(){
     }
 }
 
-// Funciones de algoritmo VRR //
+// Es cuando desalojan el proceso sin que haya fin de Quantum
+void romper_el_reloj()
+{
+    pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
+    proceso_en_ejecucion_RR = false;
+    pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
+}

@@ -197,7 +197,7 @@ void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion) {
     ingresar_a_BLOCKED_IO(interfaz->cola_bloqueados ,proceso, motivo, interfaz->cola_bloqueado_mutex, interfaz->tipo_interfaz);
     logear_cola_io_bloqueados(interfaz); //NO es obligatorio
 
-    t_paquete_io* paquete_io = malloc(sizeof(paquete_io));
+    t_paquete_io* paquete_io = malloc(sizeof(t_paquete_io));
     paquete_io->interfaz = interfaz;
     paquete_io->paquete = peticion;
     paquete_io->pid = proceso->pid;
@@ -248,7 +248,7 @@ static void eliminar_interfaz(t_interfaz* interfaz){
                 if(!strcmp(interfaz_lista->nombre, interfaz->nombre)){
                     list_remove(interfaces_genericas, i);
                     liberar_memoria(interfaz_lista);
-                    break;
+                    return;
                 }
             }
     }    
@@ -261,7 +261,7 @@ static void eliminar_interfaz(t_interfaz* interfaz){
                 if(!strcmp(interfaz_lista->nombre, interfaz->nombre)){
                     list_remove(interfaces_stdin, i);
                     liberar_memoria(interfaz_lista);
-                    break;
+                    return;
                 }
             }
     }        
@@ -274,7 +274,7 @@ static void eliminar_interfaz(t_interfaz* interfaz){
                 if(!strcmp(interfaz_lista->nombre, interfaz->nombre)){
                     list_remove(interfaces_stdout, i);
                     liberar_memoria(interfaz_lista);
-                    break;
+                    return;
                 }
             }
     }        
@@ -287,7 +287,7 @@ static void eliminar_interfaz(t_interfaz* interfaz){
                 if(!strcmp(interfaz_lista->nombre, interfaz->nombre)){
                     list_remove(interfaces_dialfs, i);
                     liberar_memoria(interfaz_lista);
-                    break;
+                    return;
                 }
            }      
     }

@@ -48,7 +48,6 @@ extern sem_t exit_sem;
 
 extern pthread_mutex_t mutex_NEW;
 extern pthread_mutex_t mutex_READY;
-extern pthread_mutex_t mutex_FIN_QUANTUM;
 extern pthread_mutex_t mutex_PROCESOS_DEL_SISTEMA;
 extern pthread_mutex_t mutex_AUX_VRR;
 extern pthread_mutex_t mutex_corriendo;
@@ -142,6 +141,7 @@ void ingresar_de_BLOCKED_a_READY_recursos(t_pcb* pcb_desbloqueado);
 void ingresar_a_AUX_VRR(t_pcb *pcb);
 void desalojo(int tipo_interrupcion);
 void* comenzar_reloj_RR();
+void romper_el_reloj();
 void log_ingreso_a_ready();
 void log_ingreso_a_aux_vrr();
 void logear_cola_io_bloqueados(t_interfaz* interfaz);

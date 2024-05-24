@@ -192,12 +192,13 @@ static void check_interrupt(){
         pthread_mutex_lock(&interrupcion_mutex);
 
         if(tipo_interrupcion == 1){
-            if(contexto_ejecucion->motivo_desalojo->comando != EXIT){ //De esta forma si hay un FQ cuando hay un EXIT se ejecuta el EXIT
-                log_info(cpu_logger, "Recibi una interrupcion de Fin de Quantum del proceso PID: %d\n", contexto_ejecucion->pid);
-                modificar_motivo (FIN_QUANTUM, 0, "", "", "", "", "");
-            }else{
-                modificar_motivo(EXIT_MAS_FIN_QUANTUM, 1,"SUCCESS","","","","");
-            }
+            log_info(cpu_logger, "Recibi una interrupcion de Fin de Quantum del proceso PID: %d\n", contexto_ejecucion->pid);
+            contexto_ejecucion->hay_fin_de_quantum = 1;
+            
+        }else if(tipo_interrupcion == 2){
+            log_info(cpu_logger,"Recibi una interrupcion de finalizacion por signal del proceso PID: %d\n", contexto_ejecucion->pid);
+            modificar_motivo (EXIT, 1, "INVALID_RESOURCE", "", "", "", "");
+        
         }else if(tipo_interrupcion == 3){
             log_info(cpu_logger,"Recibi una interrupcion de finalizacion del proceso PID: %d\n", contexto_ejecucion->pid);
             modificar_motivo (EXIT, 1, "Pedido de finalizacion", "", "", "", "");
@@ -207,8 +208,9 @@ static void check_interrupt(){
     }
     pthread_mutex_unlock(&interrupcion_mutex);
 
-    if(hay_que_devolver_contexto())
+    if(hay_que_devolver_contexto() || contexto_ejecucion->hay_fin_de_quantum){
         enviar_contexto(socket_cliente_dispatch);
+    }
 }
 
 void atender_interrupt(void * socket_servidor_interrupt){
@@ -475,7 +477,7 @@ uint32_t tamanio_registro(char* registro) {
 void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char* parm1, char* parm2, char* parm3, char* parm4, char* parm5) { 
     char* (parametros[5]) = { parm1, parm2, parm3, parm4, parm5 };
     contexto_ejecucion->motivo_desalojo->comando = comando;
-
+    
     for (int i = 0; i < cantidad_parametros; i++)
         contexto_ejecucion->motivo_desalojo->parametros[i] = string_duplicate(parametros[i]);
     contexto_ejecucion->motivo_desalojo->cantidad_parametros = cantidad_parametros;
@@ -485,7 +487,6 @@ static void liberar_memoria() {
     for (int i = 0; i <= cantidad_parametros; i++) free(elementos_instrucciones[i]);
     free(elementos_instrucciones);
 }
-
 
 static bool hay_que_devolver_contexto(){
     int operacion = contexto_ejecucion->motivo_desalojo->comando;
