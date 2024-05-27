@@ -19,15 +19,17 @@ static void a_truncar_archivo(t_pcb * proceso, uint32_t tamanio, char* nombre_ar
 static void a_leer_o_escribir_archivo(op_code codigo, t_pcb * proceso, uint32_t puntero, uint32_t tamanio, uint32_t direccion, char* nombre_archivo, t_interfaz* interfaz);
 static void recibir_peticion(t_pcb *proceso, t_contexto *contexto_ejecucion);
 
+bool instruccion_bloqueante = false;
 //======================================================================================================================================
 void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion)
 {
     // Ejecutamos la peticion recibida
     recibir_peticion(proceso, contexto_ejecucion);
 
-    // Verificamos si hay fin de quantum
-    if(contexto_ejecucion->hay_fin_de_quantum)
+    // Verificamos si hay fin de quantum y el proceso no fue bloqueado
+    if(contexto_ejecucion->hay_fin_de_quantum && !instruccion_bloqueante)
     {
+        cambio_de_proceso = true;
         fin_quantum(proceso);
     }
 }
@@ -259,7 +261,8 @@ static void a_leer_o_escribir_archivo(op_code codigo, t_pcb * proceso, uint32_t 
     crear_hilo_io(proceso, interfaz, paquete);
 }
 
-static void exit_c(t_pcb* proceso, char **parametros){   
+static void exit_c(t_pcb* proceso, char **parametros){ 
+    cambio_de_proceso = true;  
     mandar_a_EXIT(proceso, parametros[0]);
 }
 

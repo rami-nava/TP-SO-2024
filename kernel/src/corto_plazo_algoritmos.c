@@ -2,6 +2,7 @@
 
 pthread_mutex_t proceso_en_ejecucion_RR_mutex;
 sem_t ciclo_actual_quantum_sem;
+sem_t rompiendo_reloj;
 sem_t exit_sem;
 
 static int quantum_total;
@@ -84,8 +85,8 @@ void* comenzar_reloj_RR(){
                 if(!proceso_en_ejecucion_RR) 
                 {
                 pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
-                    //Hubo salida por I/O o Exit
 
+                    //Hubo salida por I/O o Exit
                      if(!strcmp(config_valores_kernel.algoritmo, "VRR") && ocurrio_IO(contexto_ejecucion)){
                         ciclo_actual_quantum = temporal_gettime(reloj);
                         sem_post(&ciclo_actual_quantum_sem); //Si no es exit no habria que hacer post
@@ -98,14 +99,23 @@ void* comenzar_reloj_RR(){
                     if(contexto_ejecucion->motivo_desalojo->comando == EXIT){
                         sem_post(&exit_sem); //Para evitar condiciones de carrera y se pueda reiniciar el quantum
                     }
+
+                    //Avisar que ya rompi el reloj antes de iniciar un nuevo proceso
+                    sem_post(&rompiendo_reloj);
+
                 pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
                 }
                 else if (temporal_gettime(reloj) >= quantum_total)
                 {
+
                     pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
                     desalojo(1); //Interrumpo la ejecucion por fin de quantum
                     temporal_destroy(reloj);
                     reloj = NULL;
+
+                    //Avisar que ya rompi el reloj antes de iniciar un nuevo proceso
+                    sem_post(&rompiendo_reloj);
+
                     pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
                 }
                 pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
@@ -122,4 +132,6 @@ void romper_el_reloj()
     pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
     proceso_en_ejecucion_RR = false;
     pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
+
+    instruccion_bloqueante = true;
 }

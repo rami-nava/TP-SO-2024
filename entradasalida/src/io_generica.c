@@ -7,10 +7,6 @@ static int socket_kernel;
 static int tiempo_unidad_de_trabajo;
 t_log* generica_logger;
 static char* nombre_interfaz;
-static t_temporal* reloj;
-static bool proceso_eliminado;
-
-static void dormir(int duracion);
 
 static void realizar_sleep();
 
@@ -47,6 +43,7 @@ void realizar_sleep()
     while(1)
     {
         t_paquete* paquete = recibir_paquete(socket_kernel);
+
         void* stream = paquete->buffer->stream;
 
         if(paquete->codigo_operacion == GENERICA_IO_SLEEP) {
@@ -55,17 +52,18 @@ void realizar_sleep()
         cantidad_tiempo = sacar_entero_de_paquete(&stream);
 
         log_info(generica_logger, "PID: %d - Operacion: IO_GEN_SLEEP\n", proceso_conectado);
-        
-        proceso_eliminado = false;
+
         int tiempo_sleep = tiempo_unidad_de_trabajo * cantidad_tiempo * 1000;
         
-        pthread_t hilo_sleep;
-        pthread_create(&hilo_sleep, NULL, (void*)dormir, &tiempo_sleep);
-        pthread_detach(hilo_sleep);
+        usleep(tiempo_sleep);
+        
+        log_info(generica_logger, "El proceso finalizo IO\n");
+
+        int termino_io = 1;
+        send(socket_kernel, &termino_io, sizeof(int), 0);
 
         }else if(paquete->codigo_operacion == FINALIZAR_OPERACION_IO){
             sacar_entero_de_paquete(&stream);
-            proceso_eliminado = true;
             
             //Enviar paquete para que el hilo de kernel no quede esperando 
             int termino_io = -1;
@@ -74,23 +72,4 @@ void realizar_sleep()
         
         eliminar_paquete(paquete);
     }
-}
-
-static void dormir(int duracion){
-    reloj = temporal_create();
-
-    while(temporal_gettime(reloj) <= duracion){
-        if(proceso_eliminado){
-                log_info(generica_logger, "El proceso fue finalizado\n");
-                temporal_destroy(reloj);
-                return;
-        }
-
-    }
-
-    int termino_io = 1;
-    send(socket_kernel, &termino_io, sizeof(int), 0);
-    log_info(generica_logger, "El proceso finalizo IO\n");
-
-    temporal_destroy(reloj);
 }

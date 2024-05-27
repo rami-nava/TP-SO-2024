@@ -9,8 +9,6 @@ static int socket_kernel;
 static int socket_memoria;
 static int tiempo_unidad_de_trabajo;
 t_log* stdout_logger;
-static t_temporal* reloj;
-static bool proceso_eliminado;
 static uint32_t direccion_fisica;
 static uint32_t tamanio_registro;
 
@@ -65,13 +63,10 @@ static void solicitar_informacion_memoria ()
 
             log_info(stdout_logger, "PID: %d - Operacion: IO_STDOUT_WRITE\n", proceso_conectado);
 
-            pthread_t hilo_stdout;
-            pthread_create(&hilo_stdout, NULL, (void*)leer_memoria, NULL);
-            pthread_detach(hilo_stdout);
+            leer_memoria();
         } 
         else if(paquete->codigo_operacion == FINALIZAR_OPERACION_IO){
             sacar_entero_de_paquete(&stream);
-            proceso_eliminado = true;
             
             //Enviar paquete para que el hilo de kernel no quede esperando 
             int termino_io = -1;
@@ -84,17 +79,7 @@ static void solicitar_informacion_memoria ()
 
 static void leer_memoria(){
     //Tarda una unidad de trabajo
-    reloj = temporal_create();
-
-    while(temporal_gettime(reloj) <= tiempo_unidad_de_trabajo){
-        if(proceso_eliminado){
-                log_info(stdout_logger, "El proceso fue finalizado\n");
-                temporal_destroy(reloj);
-                return;
-        }
-
-    }
-    //Si el proceso se finaliza luego del sleep, la IO continua su ejecucion
+    usleep(tiempo_unidad_de_trabajo * 1000);
 
     //Le pide la lectura de esa direccion a la memoria 
     pedir_lectura(direccion_fisica, tamanio_registro);

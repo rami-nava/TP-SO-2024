@@ -30,6 +30,8 @@ extern t_pcb* proceso_en_ejecucion;
 extern int ciclo_actual_quantum;
 extern bool proceso_en_ejecucion_RR;
 extern char* pids;
+extern bool cambio_de_proceso;
+extern bool instruccion_bloqueante; //Evita casos de bloqueo y fin de quantum al mismo tiempo
 
 extern int socket_cpu_dispatch;
 extern int socket_cpu_interrupt;
@@ -44,6 +46,7 @@ extern sem_t hay_procesos_ready;
 extern sem_t grado_multiprogramacion;
 extern sem_t ciclo_actual_quantum_sem;
 extern sem_t exit_sem;
+extern sem_t rompiendo_reloj;
 
 
 extern pthread_mutex_t mutex_NEW;
@@ -203,7 +206,6 @@ bool admite_operacion_interfaz(t_interfaz* interfaz, codigo_instrucciones operac
 t_interfaz* obtener_interfaz_por_nombre(char* nombre_interfaz);
 void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion);
 void crear_hilo_io_generica(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion);
-void interrumpir_io(t_interfaz* interfaz);
 
 
 #endif

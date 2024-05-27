@@ -76,7 +76,7 @@ void wait_s(t_pcb *proceso, char **parametros){
         char* recurso_para_asignar = string_duplicate(recurso);
         list_add(proceso->recursos_asignados, recurso_para_asignar);
 
-        volver_a_CPU(proceso);
+        cambio_de_proceso = false;
     }
 }
 
@@ -126,7 +126,9 @@ void signal_s(t_pcb *proceso, char **parametros){
     }else free(recurso_para_asignar);
 
     //si llega como instruccion algo distinto de EXIT, el proceso sigue su ejecucion 
-    if (strncmp (parametros[2], "EXIT", 4)) volver_a_CPU(proceso);
+    if (strncmp (parametros[2], "EXIT", 4)){
+        cambio_de_proceso = false;
+    }
 }
 
 /*Si el proceso hizo un wait pero nunca le di el recurso, tengo que igualmente sacarlo de la cola
