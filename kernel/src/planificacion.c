@@ -70,6 +70,9 @@ void planificador_corto_plazo(t_pcb *(*proximo_a_ejecutar)()){
                 continue; //Para que vuelva al principio del while
             }
         }
+
+        cambio_de_proceso = true;
+
         //Enviamos el proceso a ejecutar a la CPU
         contexto_ejecucion = enviar_a_cpu(proceso_en_ejecucion);
 

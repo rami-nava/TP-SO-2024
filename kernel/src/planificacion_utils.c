@@ -76,6 +76,7 @@ void desalojo(int tipo_interrupcion){
     pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
     agregar_entero_a_paquete(paquete,tipo_interrupcion);
     enviar_paquete(paquete, socket_cpu_interrupt);
+    cambio_de_proceso = true;
 }
 
 bool actualmente_en_IO(t_pcb* pcb){
