@@ -19,10 +19,13 @@ static void a_truncar_archivo(t_pcb * proceso, uint32_t tamanio, char* nombre_ar
 static void a_leer_o_escribir_archivo(op_code codigo, t_pcb * proceso, uint32_t puntero, uint32_t tamanio, uint32_t direccion, char* nombre_archivo, t_interfaz* interfaz);
 static void recibir_peticion(t_pcb *proceso, t_contexto *contexto_ejecucion);
 
-bool instruccion_bloqueante = false;
+bool instruccion_bloqueante;
+
 //======================================================================================================================================
 void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion)
 {
+    instruccion_bloqueante = false;
+
     // Ejecutamos la peticion recibida
     recibir_peticion(proceso, contexto_ejecucion);
 

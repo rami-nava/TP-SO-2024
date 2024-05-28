@@ -125,6 +125,7 @@ typedef struct{
     uint32_t SI;
     uint32_t DI;
 	int quantum;
+	int eliminado;
 }t_pcb; 
 
 

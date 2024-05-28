@@ -3,6 +3,7 @@
 int quantum;
 char* pids; 
 static void eliminar_de_cola_io(t_list* lista_interfaces, t_pcb* pcb);
+static bool en_io(t_list* lista_interfaces, t_pcb* pcb);
 
 char *estados_procesos[9] = {"NEW", "READY", "EXEC", "BLOCKED_RECURSO", "BLOCKED_IO_GENERICA", "BLOCKED_IO_STDIN", "BLOCKED_IO_STDOUT", "BLOCKED_IO_DIALFS", "SALIDA"};
 
@@ -77,8 +78,42 @@ void desalojo(int tipo_interrupcion){
     enviar_paquete(paquete, socket_cpu_interrupt);
 }
 
+bool actualmente_en_IO(t_pcb* pcb){
+    
+    estado_proceso estado_actual = pcb->estado;
+
+    switch (estado_actual)
+    {
+        case BLOCKED_IO_GENERICA:
+            if(en_io(interfaces_genericas, pcb)) return true;
+            break;
+        case BLOCKED_IO_STDIN:
+            if(en_io(interfaces_stdin, pcb)) return true;
+            break;
+        case BLOCKED_IO_STDOUT:
+            if(en_io(interfaces_stdout, pcb)) return true;
+            break;
+        case BLOCKED_IO_DIALFS:
+            if(en_io(interfaces_dialfs, pcb)) return true;
+            break;
+        default:
+                return false;
+            break;
+    }
+}
+
+static bool en_io(t_list* lista_interfaces, t_pcb* pcb){
+    for(int i = 0; i < list_size(lista_interfaces) ; i++){ //Recorre todas las colas de bloqueados de interfaces del tipo en la que se bloqueo
+        t_interfaz* interfaz_lista = list_get(lista_interfaces,i);
+        t_pcb* proceso_en_io = list_get(interfaz_lista->cola_bloqueados, 0);
+
+        if(proceso_en_io->pid == pcb->pid) return true;
+    }
+
+    return false;
+}
+
 void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb){
-    //TODO ver como hacer con la IO si finalizan el proceso que esta en IO
     
     estado_proceso estado_actual = pcb->estado;
 
@@ -109,12 +144,6 @@ void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb){
 static void eliminar_de_cola_io(t_list* lista_interfaces, t_pcb* pcb){
     for(int i = 0; i < list_size(lista_interfaces) ; i++){ //Recorre todas las colas de bloqueados de interfaces del tipo en la que se bloqueo
         t_interfaz* interfaz_lista = list_get(lista_interfaces,i);
-        t_pcb* proceso_en_io = list_get(interfaz_lista->cola_bloqueados, 0);
-
-        if(proceso_en_io->pid == pcb->pid){ //Si es el proceso que esta actualmente en IO al recibirlo hay que mandarlo a EXIT
-           // pcb->eliminado = 1;
-        }
-
         eliminar_de_cola(interfaz_lista->cola_bloqueados,pcb ,interfaz_lista->cola_bloqueado_mutex);
     }
 }

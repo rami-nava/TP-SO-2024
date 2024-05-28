@@ -222,11 +222,11 @@ if(existe_proceso(paquete_io->pid)){ //Si fue finalizado el proceso, el hilo no 
     if(termino_io == 1){ //Si no recibe 1 es porque el proceso fue finalizado durante el IO
         t_pcb* proceso_IO = buscar_pcb_en_lista(paquete_io->interfaz->cola_bloqueados, paquete_io->pid);
 
-        //if(proceso_IO->eliminado == 1){
-        //    mandar_a_EXIT(proceso_IO, "Pedido de finalizacion");
-        //}
-
-        ingresar_de_BLOCKED_a_READY_IO(paquete_io->interfaz->cola_bloqueados, paquete_io->interfaz->cola_bloqueado_mutex);
+        if(proceso_IO->eliminado == 1){
+            mandar_a_EXIT(proceso_IO, "Pedido de finalizacion");
+        }else{
+            ingresar_de_BLOCKED_a_READY_IO(paquete_io->interfaz->cola_bloqueados, paquete_io->interfaz->cola_bloqueado_mutex);
+        }
     }
 }
 

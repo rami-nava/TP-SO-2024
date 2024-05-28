@@ -97,6 +97,7 @@ void actualizar_PCB(t_pcb* proceso){
     proceso->SI = contexto_ejecucion->SI;
     proceso->DI = contexto_ejecucion->DI;
     proceso->quantum = contexto_ejecucion->quantum;
+    proceso->eliminado = contexto_ejecucion->eliminado;
 }
 
 void asignar_PBC_a_contexto(t_pcb* proceso){
@@ -114,6 +115,7 @@ void asignar_PBC_a_contexto(t_pcb* proceso){
     contexto_ejecucion->SI = proceso->SI;
     contexto_ejecucion->DI = proceso->DI;
     contexto_ejecucion->quantum = proceso->quantum;
+    contexto_ejecucion->eliminado = proceso->eliminado;
 }
 
 void agregar_proceso_a_lista_procesos_del_sistema(t_pcb *proceso){

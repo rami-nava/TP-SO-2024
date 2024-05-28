@@ -206,6 +206,6 @@ bool admite_operacion_interfaz(t_interfaz* interfaz, codigo_instrucciones operac
 t_interfaz* obtener_interfaz_por_nombre(char* nombre_interfaz);
 void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion);
 void crear_hilo_io_generica(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion);
-
+bool actualmente_en_IO(t_pcb* pcb);
 
 #endif
