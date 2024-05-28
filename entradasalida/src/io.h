@@ -65,7 +65,7 @@ void desconectar_memoria_stdout();
 void desconectar_memoria_dialfs();
 
 //.................................. METADATA .....................................................................
-void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inicial, char* nombre_archivo);
+void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, char* nombre_archivo);
 void cargamos_cambios_a_metadata_reducir(int tamanio_nuevo, char* nombre_archivo);
 metadata_archivo* levantar_metadata(char* nombre_archivo);
 void modificar_metadata_bloque_inicial(uint32_t nuevo_bloque_inicial, uint32_t bloque_inicial);
