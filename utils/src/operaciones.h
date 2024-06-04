@@ -33,7 +33,7 @@ typedef enum{
 	STDIN_READ,
 	STDOUT_WRITE,
 	REALIZAR_LECTURA,
-	DEVOLVER_LECTURA,
+	RESULTADO_LECTURA,
 	REALIZAR_ESCRITURA,
 	CREAR_ARCHIVO,
 	ELIMINAR_ARCHIVO,
@@ -47,6 +47,7 @@ typedef enum{
     INTERFAZ_STDOUT,
     INTERFAZ_DIALFS,
 	PEDIDO_MOV_IN,
+	RESULTADO_MOV_IN,
 	PEDIDO_MOV_OUT,
 	PEDIDO_RESIZE,
 	PEDIDO_COPY_STRING,
@@ -130,12 +131,12 @@ typedef struct{
 
 
 //======================================================= CREAR PAQUETES ==========================================================================================================
-t_paquete *crear_paquete_con_codigo_de_operacion(uint8_t codigo);
 t_paquete* crear_paquete(op_code );
-void crear_buffer(t_paquete *paquete);
 void enviar_paquete(t_paquete* , int );
 void* serializar_paquete(t_paquete* , int );
 t_paquete* recibir_paquete(int );
+int recibir_operacion(int socket_cliente);
+void* recibir_buffer(int socket_cliente);
 
 //======================================================= AGREGAR_A_PAQUETE =========================================================================================================
 void agregar_entero_a_paquete(t_paquete* ,int );
@@ -156,11 +157,10 @@ uint8_t sacar_byte_sin_signo_de_paquete(void** );
 char** sacar_array_cadenas_de_paquete(void** );
 t_list* sacar_lista_de_cadenas_de_paquete(void**);
 void* sacar_puntero_de_paquete(void** );
-void* sacar_bytes_de_paquete(void** , uint32_t );
+void* sacar_bytes_de_paquete(void**);
 
 //======================================================= LIBERAR_MEMORIA ==============================================================================================================
 void eliminar_paquete(t_paquete* );
-void free_lista(t_list* lista);
 void free_array (char ** );
 
 #endif
