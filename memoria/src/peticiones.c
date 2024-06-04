@@ -8,7 +8,7 @@ int atender_clientes_memoria(int socket_servidor){
 	int* cliente_fd = malloc(sizeof(int));
 	*cliente_fd = esperar_cliente(socket_servidor);
 
-	if(*cliente_fd != -1){ //era sin el * pero  eso corrige el warning
+	if(*cliente_fd != -1){ 
 		pthread_t hilo_cliente;
 		pthread_create(&hilo_cliente, NULL, (void*) manejo_conexiones, cliente_fd);
 		pthread_detach(hilo_cliente);
@@ -55,6 +55,7 @@ static void manejo_conexiones(void* conexion)
 			send(cliente, &ok_creacion, sizeof(int), 0);
 			log_info(memoria_logger,"Estructuras creadas en memoria exitosamente\n");
 		break;
+
 		case MANDAR_INSTRUCCION:
 			//la cpu nos manda el program counter y el pid del proceso que recibio para ejecutar
 			posicion_pedida = sacar_entero_de_paquete(&stream);
@@ -69,41 +70,16 @@ static void manejo_conexiones(void* conexion)
 			agregar_cadena_a_paquete(paquete, instruccion_pedida); 
 			enviar_paquete(paquete, cliente);
 		break;
+
 		case FINALIZAR_EN_MEMORIA:
-			int pid = sacar_entero_de_paquete(&stream);
-			log_info(memoria_logger,"Recibi pedido de eliminacion de estructuras en memoria\n");
-			
+			int pid = sacar_entero_de_paquete(&stream);			
 			finalizar_en_memoria(pid);
 
 			int ok_finalizacion = 1;
 			send(cliente, &ok_finalizacion, sizeof(int), 0);
 			log_info(memoria_logger,"Estructuras eliminadas en memoria exitosamente\n");
 		break;
-		//INSTRUCCIONES DE IO
-		case REALIZAR_LECTURA:
-			uint32_t direccion_fisica_lectura = sacar_entero_sin_signo_de_paquete(&stream);
-			uint32_t tamanio_lectura = sacar_entero_sin_signo_de_paquete(&stream);
-			realizar_lectura(direccion_fisica_lectura, tamanio_lectura, cliente);
-			break;
-		case REALIZAR_ESCRITURA:
-			uint32_t direccion_fisica_escritura = sacar_entero_sin_signo_de_paquete(&stream);
-			uint32_t tamanio_escritura = sacar_entero_sin_signo_de_paquete(&stream);
-			void* texto_a_guardar = sacar_bytes_de_paquete(&stream, tamanio_escritura);
-			realizar_escritura(direccion_fisica_escritura, texto_a_guardar, tamanio_escritura, cliente);
-			break;
-		case LEER_CONTENIDO_EN_MEMORIA:
-			uint32_t cantidad_bytes_a_leer = sacar_entero_de_paquete(&stream);
-			uint32_t direccion_fisica_fs_write = sacar_entero_sin_signo_de_paquete(&stream);
-			realizar_lectura(direccion_fisica_fs_write, cantidad_bytes_a_leer, cliente);
-			break;
-		case ESCRIBIR_CONTENIDO_EN_MEMORIA:
-			uint32_t cantidad_bytes_a_escribir = sacar_entero_de_paquete(&stream);
-			void* contenido = sacar_bytes_de_paquete(&stream, cantidad_bytes_a_escribir);
-			uint32_t direccion_fisica_fs_read = sacar_entero_sin_signo_de_paquete(&stream);
-			realizar_escritura(direccion_fisica_fs_read, contenido, cantidad_bytes_a_escribir, cliente);
-			break;
 
-		//INSTRUCCIONES DE CPU
 		case TRADUCIR_PAGINA_A_MARCO:
 			uint32_t numero_pagina = sacar_entero_sin_signo_de_paquete(&stream);
 			int pid_mmu = sacar_entero_de_paquete(&stream);
@@ -114,24 +90,27 @@ static void manejo_conexiones(void* conexion)
 			int pid_mov_in = sacar_entero_de_paquete(&stream);
 		    uint32_t direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 			uint32_t tam_lectura = sacar_entero_sin_signo_de_paquete(&stream);
-
-			//Como recibimos void* convertimos el valor ya que debe ser siempre uint32_t viniendo de movin
-			void* puntero_contenido = leer_contenido_espacio_usuario(pid_mov_in, direccion_fisica, tam_lectura);
-			uint32_t* ptr_contenido = (uint32_t*) puntero_contenido;
-			uint32_t valor_leido = *ptr_contenido;
-			
-			send(cliente, &valor_leido, sizeof(uint32_t), 0); 
+			leer_contenido_espacio_usuario(pid_mov_in, direccion_fisica, tam_lectura, cliente, PEDIDO_MOV_IN);
 			break;
-
+		
+		case REALIZAR_LECTURA:
+			int pid_lectura = sacar_entero_de_paquete(&stream);
+			uint32_t direccion_fisica_lectura = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t tamanio_lectura = sacar_entero_sin_signo_de_paquete(&stream);
+			leer_contenido_espacio_usuario(pid_lectura, direccion_fisica_lectura, tamanio_lectura, cliente, REALIZAR_ESCRITURA);
+			break;
+			
 		case PEDIDO_MOV_OUT:
 			int pid_mov_out = sacar_entero_de_paquete(&stream);
 		    uint32_t dir_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 			uint32_t tamanio_registro = sacar_entero_sin_signo_de_paquete(&stream);
-			void* valor = sacar_bytes_de_paquete(&stream, tamanio_registro); 
+			void* valor = sacar_bytes_de_paquete(&stream); 
 			
 			escribir_contenido_espacio_usuario(pid_mov_out, dir_fisica, tamanio_registro, valor);
-			uint32_t se_ha_escrito = 1; // TODO darle una linda respuesta
-			send(cliente, &se_ha_escrito, sizeof(uint32_t), 0);
+
+			//Avisamos que se escribio
+			uint32_t escritura_guardada = 1; 
+			send(cliente, &escritura_guardada, sizeof(uint32_t), 0);
 			break;
 
 		case PEDIDO_RESIZE:
@@ -155,6 +134,7 @@ static void manejo_conexiones(void* conexion)
 			uint32_t direccion_fisica_destino = sacar_entero_sin_signo_de_paquete(&stream);
 			copy_string(pid_copy_string, cantidad_bytes_a_copiar, direccion_fisica_a_copiar, direccion_fisica_destino);
 			break;
+			
 		case DESCONECTAR_IO:
         	sacar_entero_de_paquete(&stream);
 			close(cliente);
@@ -165,3 +145,26 @@ static void manejo_conexiones(void* conexion)
 		eliminar_paquete(paquete);
 	}
 }
+
+/*
+//INSTRUCCIONES DE IO
+		
+		case REALIZAR_ESCRITURA:
+			uint32_t direccion_fisica_escritura = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t tamanio_escritura = sacar_entero_sin_signo_de_paquete(&stream);
+			void* texto_a_guardar = sacar_bytes_de_paquete(&stream);
+			realizar_escritura(direccion_fisica_escritura, texto_a_guardar, tamanio_escritura, cliente);
+			break;
+		case LEER_CONTENIDO_EN_MEMORIA:
+			int pid_fs_write = sacar_entero_de_paquete(&stream);
+			uint32_t cantidad_bytes_a_leer = sacar_entero_de_paquete(&stream);
+			uint32_t direccion_fisica_fs_write = sacar_entero_sin_signo_de_paquete(&stream);
+			leer_contenido_espacio_usuario(pid_fs_write, direccion_fisica_fs_write, cantidad_bytes_a_leer, cliente);
+			break;
+		case ESCRIBIR_CONTENIDO_EN_MEMORIA:
+			uint32_t cantidad_bytes_a_escribir = sacar_entero_de_paquete(&stream);
+			uint32_t direccion_fisica_fs_read = sacar_entero_sin_signo_de_paquete(&stream);
+			void* contenido = sacar_bytes_de_paquete(&stream);
+			realizar_escritura(direccion_fisica_fs_read, contenido, cantidad_bytes_a_escribir, cliente);
+			break;
+*/

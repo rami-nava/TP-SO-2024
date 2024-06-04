@@ -104,8 +104,10 @@ int out_of_memory(int pid, uint32_t tamanio){ //SOLO FUNCIONA PARA EXTENDER EL T
 
 	if(cantidad_marcos_libres >= cantidad_marcos_necesarios)
 		return 0;
-	else 
-		return 1; //OUT OF MEMORY
+	else {
+		log_info(memoria_logger, "OUT OF MEMORY. PID: %d - TAMAÑO: %d", pid, tamanio);
+		return 1; 
+	}
 }
 
 uint32_t tamanio_actual_proceso_en_memoria(t_proceso_en_memoria* proceso){

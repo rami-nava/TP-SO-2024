@@ -392,6 +392,34 @@ void setear_registro(char *registros, char* valor)
     log_info(cpu_logger, "PID %d - Registro: %s - Valor: %s", contexto_ejecucion->pid, registros, valor);
 }
 
+void setear_registro_entero(char *registros, uint32_t valor)
+{
+    if (string_equals_ignore_case(registros, "PC"))
+        contexto_ejecucion->PC = valor;
+    if (string_equals_ignore_case(registros, "AX"))
+        contexto_ejecucion->AX = valor;
+    if (string_equals_ignore_case(registros, "BX"))
+        contexto_ejecucion->BX = valor;
+    if (string_equals_ignore_case(registros, "CX"))
+        contexto_ejecucion->CX = valor;
+    if (string_equals_ignore_case(registros, "DX"))
+        contexto_ejecucion->DX = valor;
+    if (string_equals_ignore_case(registros, "EAX"))
+        contexto_ejecucion->EAX = valor;
+    if (string_equals_ignore_case(registros, "EBX"))
+        contexto_ejecucion->EBX = valor;
+    if (string_equals_ignore_case(registros, "ECX"))
+        contexto_ejecucion->ECX = valor;
+    if (string_equals_ignore_case(registros, "EDX"))
+        contexto_ejecucion->EDX = valor;
+    if (string_equals_ignore_case(registros, "SI"))
+        contexto_ejecucion->SI = valor;
+    if (string_equals_ignore_case(registros, "DI"))
+        contexto_ejecucion->DI = valor;
+
+    log_info(cpu_logger, "PID %d - Registro: %s - Valor: %d", contexto_ejecucion->pid, registros, valor);
+}
+
 uint32_t buscar_registro(char *registro)
 {
     uint32_t valor = 0;

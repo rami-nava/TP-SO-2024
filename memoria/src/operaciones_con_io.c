@@ -35,7 +35,7 @@ void realizar_lectura(uint32_t direccion_fisica, uint32_t cantidad_bytes_a_leer,
 
 static void enviar_lectura(char* lectura, int cliente)
 {
-    t_paquete* paquete = crear_paquete(DEVOLVER_LECTURA);
+    t_paquete* paquete = crear_paquete(RESULTADO_LECTURA);
     agregar_cadena_a_paquete(paquete, lectura);
 	enviar_paquete(paquete, cliente);
 }

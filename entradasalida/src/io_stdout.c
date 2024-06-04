@@ -7,16 +7,15 @@ static char *ip_memoria;
 static char *puerto_memoria;
 static int socket_kernel;
 static int socket_memoria;
-static int tiempo_unidad_de_trabajo;
 t_log* stdout_logger;
 static uint32_t direccion_fisica;
 static uint32_t tamanio_registro;
 
 // Funciones Locales //
-static void solicitar_informacion_memoria();
-static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio); 
+static void stdout_write();
+static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio, int pid); 
 static char* recibir_lectura(uint32_t tamanio);
-static void leer_memoria(); 
+static void leer_memoria(int pid); 
 
 void main_stdout(t_interfaz* interfaz_hilo) 
 {
@@ -34,7 +33,6 @@ void main_stdout(t_interfaz* interfaz_hilo)
     puerto_kernel = config_get_string_value(config, "PUERTO_KERNEL");
     ip_memoria = config_get_string_value(config, "IP_MEMORIA");
     puerto_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
-    tiempo_unidad_de_trabajo = config_get_int_value(config, "TIEMPO_UNIDAD_TRABAJO");
     
     log_info(stdout_logger, "Iniciando interfaz STDOUT: %s", nombre);
         
@@ -44,11 +42,11 @@ void main_stdout(t_interfaz* interfaz_hilo)
     conectarse_a_kernel(socket_kernel, INTERFAZ_STDOUT, nombre, "STDOUT");
 
     // Realiza su IO_STDOUT_WRITE
-    solicitar_informacion_memoria();
+    stdout_write();
 
 }   
 
-static void solicitar_informacion_memoria ()
+static void stdout_write ()
 {
     while (1)
     {
@@ -57,13 +55,13 @@ static void solicitar_informacion_memoria ()
 
         if(paquete->codigo_operacion == STDOUT_WRITE)
         {
-            int proceso_conectado = sacar_entero_de_paquete(&stream);
+            int pid = sacar_entero_de_paquete(&stream);
             direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
             tamanio_registro = sacar_entero_sin_signo_de_paquete(&stream);
 
-            log_info(stdout_logger, "PID: %d - Operacion: IO_STDOUT_WRITE\n", proceso_conectado);
+            log_info(stdout_logger, "PID: %d - Operacion: IO_STDOUT_WRITE\n", pid);
 
-            leer_memoria();
+            leer_memoria(pid);
         } 
         else if(paquete->codigo_operacion == FINALIZAR_OPERACION_IO){
             sacar_entero_de_paquete(&stream);
@@ -77,12 +75,10 @@ static void solicitar_informacion_memoria ()
     
 }
 
-static void leer_memoria(){
-    //Tarda una unidad de trabajo
-    usleep(tiempo_unidad_de_trabajo * 1000);
-
+static void leer_memoria(int pid){
+   
     //Le pide la lectura de esa direccion a la memoria 
-    pedir_lectura(direccion_fisica, tamanio_registro);
+    pedir_lectura(direccion_fisica, tamanio_registro, pid);
 
     //Recibe la lectura de la memoria
     char* lectura = recibir_lectura(tamanio_registro);
@@ -97,9 +93,10 @@ static void leer_memoria(){
     send(socket_kernel, &termino_io, sizeof(int), 0); 
 }
 
-static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio) 
+static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio, int pid) 
 {
     t_paquete* paquete = crear_paquete(REALIZAR_LECTURA);
+    agregar_entero_a_paquete(paquete, pid);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
     agregar_entero_sin_signo_a_paquete(paquete, tamanio);
     enviar_paquete(paquete, socket_memoria);
@@ -107,24 +104,43 @@ static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio)
 
 static char* recibir_lectura(uint32_t tamanio) 
 {
-    while (1)
-    {
-        t_paquete* paquete = recibir_paquete(socket_memoria);
-        void* stream = paquete->buffer->stream;
+    t_paquete* paquete = recibir_paquete(socket_memoria);
+    void* stream = paquete->buffer->stream;
 
-        if(paquete->codigo_operacion == DEVOLVER_LECTURA){
-            char* texto_leido = sacar_cadena_de_paquete(&stream);
-
-            return texto_leido;
-        } else
-        {
-            log_error(stdout_logger, "El paquete no es del tipo DEVOLVER_LECTURA");
-            return NULL;
-        }
+    if(paquete->codigo_operacion == RESULTADO_LECTURA){
+        char* lectura = sacar_cadena_de_paquete(&stream);
 
         eliminar_paquete(paquete);
+        return lectura;
+    }
+    else {
+        log_error(stdout_logger, "No me enviaste el contenido \n");
+        eliminar_paquete(paquete);
+        abort();
     }
 }
+
+/*
+static char* recibir_lectura(uint32_t tamanio) 
+{
+    int cod_op = recibir_operacion(socket_memoria);
+
+    if (cod_op == RESULTADO_LECTURA){
+
+        void* buffer = recibir_buffer(socket_memoria);
+
+        char* lectura = malloc(tamanio);
+        memcpy(lectura, buffer, tamanio);
+
+        free(buffer);
+
+        return lectura;
+    }
+    else {
+        log_error(stdout_logger, "No me enviaste el contenido \n");
+        abort();
+    }
+}*/
 
 void desconectar_memoria_stdout(){
     t_paquete* paquete = crear_paquete(DESCONECTAR_IO);

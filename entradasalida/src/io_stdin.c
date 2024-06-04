@@ -2,7 +2,8 @@
 
 // Funciones Locales //
 static void realizar_escritura();
-static void guardar_escritura();
+static void guardar_escritura(int pid);
+static void solicitar_escritura(void* texto_a_guardar, int pid);
 
 static char *ip_kernel;
 static char *puerto_kernel;
@@ -50,13 +51,13 @@ static void realizar_escritura()
 
         if(paquete->codigo_operacion == STDIN_READ)
         {
-            int proceso_conectado = sacar_entero_de_paquete(&stream);
+            int pid = sacar_entero_de_paquete(&stream);
             direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
             tamanio_registro = sacar_entero_sin_signo_de_paquete(&stream);
 
-            log_info(stdin_logger, "PID: %d - Operacion: IO_STDIN_READ\n", proceso_conectado);
+            log_info(stdin_logger, "PID: %d - Operacion: IO_STDIN_READ\n", pid);
             
-            guardar_escritura();
+            guardar_escritura(pid);
         } 
         else if(paquete->codigo_operacion == FINALIZAR_OPERACION_IO){
             sacar_entero_de_paquete(&stream);
@@ -68,10 +69,9 @@ static void realizar_escritura()
         
         eliminar_paquete(paquete);
     }
-    
 }
 
-static void guardar_escritura() 
+static void guardar_escritura(int pid) 
 {
     char* leer_linea;
     char texto_a_guardar[tamanio_registro];
@@ -86,15 +86,11 @@ static void guardar_escritura()
         log_info(stdin_logger, "Guardando texto en memoria: %s\n", texto_a_guardar);
         
         //IO solicita que memoria guarde el texto en la direccion especificada
-        t_paquete* paquete = crear_paquete(REALIZAR_ESCRITURA);
-        agregar_entero_sin_signo_a_paquete(paquete,direccion_fisica);
-        agregar_entero_a_paquete(paquete, tamanio_registro);
-        agregar_bytes_a_paquete(paquete, texto_a_guardar, tamanio_registro);
-        enviar_paquete(paquete, socket_memoria);
+        solicitar_escritura(texto_a_guardar, pid);
         
         //Memoria confirma que guardo el texto en la direccion especificada
-        int escritura_guardada;
-        recv(socket_memoria, &escritura_guardada, sizeof(int), 0); 
+        uint32_t escritura_guardada;
+        recv(socket_memoria, &escritura_guardada, sizeof(uint32_t), MSG_WAITALL); 
 
         //Le avisa a kernel que el texto fue guardado en memoria
         int termino_io = 1;
@@ -102,6 +98,14 @@ static void guardar_escritura()
     }
 }
 
+static void solicitar_escritura(void* texto_a_guardar, int pid) {
+    t_paquete* paquete = crear_paquete(PEDIDO_MOV_OUT);
+    agregar_entero_a_paquete(paquete, pid);
+    agregar_entero_sin_signo_a_paquete(paquete,direccion_fisica);
+    agregar_entero_a_paquete(paquete, tamanio_registro);
+    agregar_bytes_a_paquete(paquete, texto_a_guardar, tamanio_registro);
+    enviar_paquete(paquete, socket_memoria);
+}
 
 void desconectar_memoria_stdin(){
     t_paquete* paquete = crear_paquete(DESCONECTAR_IO);

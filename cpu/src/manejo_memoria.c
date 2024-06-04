@@ -12,7 +12,7 @@ static void pedir_numero_frame(uint32_t numero_pagina);
 static uint32_t numero_marco_pagina();
 static void pedir_MOV_IN(uint32_t direccion_fisica, uint32_t tamanio);
 static void pedir_MOV_OUT(uint32_t direccion_fisica, void* valor_registro, uint32_t tamanio_registro);
-
+static uint32_t recibir_resultado_mov_in(uint32_t tam_registro);
 //================================================== Handshake =====================================================================
 void realizar_handshake()
 {
@@ -83,7 +83,6 @@ uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica){
 static uint32_t traducir_pagina_a_marco(uint32_t numero_pagina){
     
     pedir_numero_frame(numero_pagina);
-    log_info(cpu_logger, "Pagina enviada a memoria \n");
    
     uint32_t numero_marco = numero_marco_pagina();
     log_info(cpu_logger, "PID: %d - OBTENER MARCO - Página: %d - Marco: %d \n", contexto_ejecucion->pid, numero_pagina, numero_marco);
@@ -163,46 +162,70 @@ void copy_string(char* tamanio)
     enviar_paquete(paquete, socket_cliente_memoria);
 }
 
-void mov_in(char *registro, char *direccion_logica){
+void mov_in(char *registro, char *registro_direccion_logica){
 
-    uint32_t direccion_fisica = traducir_de_logica_a_fisica(atoi(direccion_logica));
+    // Buscamos la direccion logica
+    uint32_t direccion_logica = buscar_registro(registro_direccion_logica);
 
-    if (direccion_fisica != UINT32_MAX)
-    {
-        uint32_t tamanio = tamanio_registro(registro);
-        pedir_MOV_IN(direccion_fisica, tamanio);
+    // Traducimos la direccion logica a fisica
+    uint32_t direccion_fisica = traducir_de_logica_a_fisica(direccion_logica);
 
-        uint32_t valor_leido = 0;
-        recv(socket_cliente_memoria, &valor_leido, sizeof(uint32_t), MSG_WAITALL);
+    // Buscamos el tamanio del registro
+    uint32_t tam_registro = tamanio_registro(registro);
 
-        char valor_str[12]; 
-        snprintf(valor_str, sizeof(valor_str), "%" PRIu32, valor_leido);
+    // Enviamos el pedido de MOV_IN
+    pedir_MOV_IN(direccion_fisica, tam_registro);
 
-        setear_registro(registro, valor_str);
+    // Recibimos el valor del MOV_IN
+    uint32_t valor_leido = recibir_resultado_mov_in(tam_registro);
 
-        log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %d \n", contexto_ejecucion->pid, "LEER", direccion_fisica, valor_leido);
+    // Actualizamos el valor del registro
+    setear_registro_entero(registro, valor_leido); 
+
+    log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %d \n", contexto_ejecucion->pid, "LEER", direccion_fisica, valor_leido);
+}
+
+static uint32_t recibir_resultado_mov_in(uint32_t tam_registro){
+    int cod_op = recibir_operacion(socket_cliente_memoria);
+
+    if (cod_op == RESULTADO_MOV_IN){
+
+        void* buffer_dato = recibir_buffer(socket_cliente_memoria);
+
+        uint32_t dato_a_guardar;
+    
+        memcpy(&dato_a_guardar, buffer_dato, sizeof(uint32_t));
+
+        free(buffer_dato);
+
+        return dato_a_guardar;
+    }
+    else{
+        log_error(cpu_logger, "No me enviaste el valor :( \n");
+        abort();
     }
 }
 
-void mov_out(char *direccion_logica, char *registro){
+void mov_out(char *registro_direccion_logica, char *registro){
 
-    void* valor = buscar_valor_registro_generico(registro);
+    void* valor_registro = buscar_valor_registro_generico(registro);
 
-    uint32_t tamanio = tamanio_registro(registro);
+    uint32_t valor_registro_log = buscar_registro(registro);
 
-    uint32_t direccion_fisica = traducir_de_logica_a_fisica(atoi(direccion_logica));
+    uint32_t direccion_logica = buscar_registro(registro_direccion_logica);
 
-    if (direccion_fisica != UINT32_MAX)
-    {
-        pedir_MOV_OUT(direccion_fisica, valor, tamanio);
+    uint32_t direccion_fisica = traducir_de_logica_a_fisica(direccion_logica);
 
-        uint32_t se_ha_escrito;
-        recv(socket_cliente_memoria, &se_ha_escrito, sizeof(uint32_t), MSG_WAITALL);
+    uint32_t tam_registro = tamanio_registro(registro);
 
-        //VER LOG CON VOID*
-        //log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %d \n", contexto_ejecucion->pid, "ESCRIBIR", direccion_fisica, valor);
-    }
+    pedir_MOV_OUT(direccion_fisica, valor_registro, tam_registro);
+
+    uint32_t escritura_guardada;
+    recv(socket_cliente_memoria, &escritura_guardada, sizeof(uint32_t), MSG_WAITALL);
+
+    log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %d \n", contexto_ejecucion->pid, "ESCRIBIR", direccion_fisica, valor_registro_log);
 }
+
 
 static void pedir_MOV_OUT(uint32_t direccion_fisica, void* valor_registro, uint32_t tamanio_registro){
     

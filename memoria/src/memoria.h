@@ -115,6 +115,6 @@ int numero_marco(uint32_t direccion_fisica);
 
 //ESCRITURA Y LECTURA
 void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido);
-void* leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_lectura);
+void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_lectura, int cliente, op_code op);
 
 #endif

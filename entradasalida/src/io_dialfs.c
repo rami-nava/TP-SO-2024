@@ -29,7 +29,7 @@ static void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_
 static void escribir_en_memoria(void* contenido, uint32_t direccion_fisica, uint32_t bytes_a_escribir);
 static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t bytes_a_escribir, uint32_t direccion_fisica);
 static void solicitar_contenido_a_memoria(uint32_t cantidad_bytes, uint32_t direccion_fisica);
-static void* obtener_contenido_a_escribir(uint32_t cantidad_bytes);
+static void* obtener_contenido_a_escribir();
 static void reposicionamiento_del_puntero_de_archivo(uint32_t puntero_archivo, char *nombre_archivo);
 
 
@@ -315,8 +315,8 @@ static void escribir_en_memoria(void* contenido, uint32_t direccion_fisica, uint
 {
     t_paquete* paquete = crear_paquete(ESCRIBIR_CONTENIDO_EN_MEMORIA);
     agregar_entero_sin_signo_a_paquete(paquete, bytes_a_escribir);
-    agregar_bytes_a_paquete(paquete, contenido, bytes_a_escribir);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
+    agregar_bytes_a_paquete(paquete, contenido, bytes_a_escribir);
     enviar_paquete(paquete, socket_memoria);
     free(contenido);
 }
@@ -327,7 +327,7 @@ static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uin
     
     solicitar_contenido_a_memoria(cantidad_bytes, direccion_fisica);
 
-    void* contenido = obtener_contenido_a_escribir(cantidad_bytes);
+    void* contenido = obtener_contenido_a_escribir();
 
     reposicionamiento_del_puntero_de_archivo(puntero_archivo, nombre_archivo);
     
@@ -346,21 +346,20 @@ static void solicitar_contenido_a_memoria(uint32_t cantidad_bytes, uint32_t dire
 	enviar_paquete(paquete, socket_memoria);
 }
 
-static void* obtener_contenido_a_escribir(uint32_t cantidad_bytes)
+static void* obtener_contenido_a_escribir()
 {
-    t_paquete* paquete = recibir_paquete(socket_memoria);
-    void* stream = paquete->buffer->stream;
+     int cod_op = recibir_operacion(socket_memoria);
 
-    if (paquete->codigo_operacion == DEVOLVER_LECTURA)
-    {
-        void* contenido = sacar_bytes_de_paquete(&stream, cantidad_bytes);
+    if (cod_op == RESULTADO_MOV_IN){
+
+        void* contenido = recibir_buffer(socket_memoria);
+
         return contenido;
-    } else
-    {
-        perror("Error al obtener el contenido a escribir");
-        return NULL;
     }
-    eliminar_paquete(paquete);
+    else{
+        log_error(dialfs_logger, "No me enviaste el contenido \n");
+        abort();
+    }
 }
    
 static void reposicionamiento_del_puntero_de_archivo(uint32_t puntero_archivo, char *nombre_archivo)

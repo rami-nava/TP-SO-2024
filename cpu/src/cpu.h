@@ -55,6 +55,7 @@ void mov_out(char* direccion_logica, char* registro);
 void resize(char* tamanio);
 void copy_string(char* tamanio);
 void setear_registro(char* registro, char* valor);
+void setear_registro_entero(char* registro, uint32_t valor);
 bool no_es_bloqueante(codigo_instrucciones instruccion_actual);
 void ciclo_de_instruccion();
 uint32_t buscar_registro(char*registro);
