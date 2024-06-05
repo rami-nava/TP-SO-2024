@@ -340,7 +340,10 @@ static void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_dir
     char direccion_fisica[12];
     char puntero_archivo[12];
 
+    //especifica que el valor debe ser formateado como un entero sin signo de 32 bits
     sprintf(puntero_archivo, "%" PRIu32, buscar_registro(registro_puntero_archivo));
+
+    //el registro guarda la direccion logica
     sprintf(direccion_fisica, "%" PRIu32, traducir_de_logica_a_fisica(buscar_registro(registro_direccion)));
     sprintf(tamanio, "%" PRIu32, buscar_registro(tamanio_registro));
 

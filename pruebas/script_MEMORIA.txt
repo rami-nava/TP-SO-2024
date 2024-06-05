@@ -1,0 +1,4 @@
+DETENER_PLANIFICACION
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/MEMORIA_1.txt" 
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/MEMORIA_2.txt"
+INICIAR_PLANIFICACION

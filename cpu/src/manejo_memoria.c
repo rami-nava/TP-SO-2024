@@ -208,8 +208,10 @@ static uint32_t recibir_resultado_mov_in(uint32_t tam_registro){
 
 void mov_out(char *registro_direccion_logica, char *registro){
 
+    //devuelve un puntero al registro
     void* valor_registro = buscar_valor_registro_generico(registro);
 
+    //solo para mostrarlo en el log
     uint32_t valor_registro_log = buscar_registro(registro);
 
     uint32_t direccion_logica = buscar_registro(registro_direccion_logica);

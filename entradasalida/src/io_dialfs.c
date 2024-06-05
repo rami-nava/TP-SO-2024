@@ -85,7 +85,7 @@ static void recibir_peticiones_de_kernel()
         int hasta;
         uint32_t puntero_archivo = 0;
         uint32_t tamanio = 0;
-        uint32_t direccion_fisica = 0;
+        uint32_t direccion_fisica = 0; //la interfaz recibe la direccion logica ya traducida a fisica
         uint32_t tamanio_archivo = 0;
 
         consumir_una_unidad_de_tiempo_de_trabajo();
@@ -120,15 +120,24 @@ static void recibir_peticiones_de_kernel()
             log_info(dialfs_logger, "PID: %d - Leer Archivo: %s - Tamaño a leer : %d - Puntero archivo: %d \n", proceso_conectado, nombre, puntero_archivo, tamanio);
             leer_archivo(nombre, puntero_archivo, tamanio, direccion_fisica);
             break;
+
         case ESCRIBIR_ARCHIVO:
             nombre = sacar_cadena_de_paquete(&stream);
+            
+            //escribir lo leido de memoria en el archivo apartir de aca
             puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream);
+
+            //cantidad bytes a leer de memoria
             tamanio = sacar_entero_sin_signo_de_paquete(&stream);
             proceso_conectado = sacar_entero_de_paquete(&stream);
+
+            //direccion desde la que empiezo a leer de memoria
             direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
-            log_info(dialfs_logger, "PID: %d - Escribir Archivo: %s - Tamaño a escribir : %d - Puntero archivo: %d \n", proceso_conectado, nombre, puntero_archivo, tamanio);
+
+            log_info(dialfs_logger, "PID: %d - Escribir Archivo: %s - Tamaño a escribir : %d - Puntero archivo: %d \n", proceso_conectado, nombre, tamanio, puntero_archivo);
             escribir_archivo(nombre, puntero_archivo, tamanio, direccion_fisica, proceso_conectado);
             break;
+
         case LEER_BITMAP:
             desde = sacar_entero_de_paquete(&stream);
             hasta = sacar_entero_de_paquete(&stream);
