@@ -92,12 +92,19 @@ static void manejo_conexiones(void* conexion)
 			uint32_t tam_lectura = sacar_entero_sin_signo_de_paquete(&stream);
 			leer_contenido_espacio_usuario(pid_mov_in, direccion_fisica, tam_lectura, cliente, PEDIDO_MOV_IN);
 			break;
+
+		case LEER_CONTENIDO_EN_MEMORIA:
+			int pid_fs_write = sacar_entero_de_paquete(&stream);
+			uint32_t cantidad_bytes_a_leer = sacar_entero_de_paquete(&stream);
+			uint32_t direccion_fisica_fs_write = sacar_entero_sin_signo_de_paquete(&stream);
+			leer_contenido_espacio_usuario(pid_fs_write, direccion_fisica_fs_write, cantidad_bytes_a_leer, cliente, LEER_CONTENIDO_EN_MEMORIA);
+			break;
 		
 		case REALIZAR_LECTURA:
 			int pid_lectura = sacar_entero_de_paquete(&stream);
 			uint32_t direccion_fisica_lectura = sacar_entero_sin_signo_de_paquete(&stream);
 			uint32_t tamanio_lectura = sacar_entero_sin_signo_de_paquete(&stream);
-			leer_contenido_espacio_usuario(pid_lectura, direccion_fisica_lectura, tamanio_lectura, cliente, REALIZAR_ESCRITURA);
+			leer_contenido_espacio_usuario(pid_lectura, direccion_fisica_lectura, tamanio_lectura, cliente, REALIZAR_LECTURA);
 			break;
 			
 		case PEDIDO_MOV_OUT:
@@ -155,12 +162,7 @@ static void manejo_conexiones(void* conexion)
 			void* texto_a_guardar = sacar_bytes_de_paquete(&stream);
 			realizar_escritura(direccion_fisica_escritura, texto_a_guardar, tamanio_escritura, cliente);
 			break;
-		case LEER_CONTENIDO_EN_MEMORIA:
-			int pid_fs_write = sacar_entero_de_paquete(&stream);
-			uint32_t cantidad_bytes_a_leer = sacar_entero_de_paquete(&stream);
-			uint32_t direccion_fisica_fs_write = sacar_entero_sin_signo_de_paquete(&stream);
-			leer_contenido_espacio_usuario(pid_fs_write, direccion_fisica_fs_write, cantidad_bytes_a_leer, cliente);
-			break;
+
 		case ESCRIBIR_CONTENIDO_EN_MEMORIA:
 			uint32_t cantidad_bytes_a_escribir = sacar_entero_de_paquete(&stream);
 			uint32_t direccion_fisica_fs_read = sacar_entero_sin_signo_de_paquete(&stream);

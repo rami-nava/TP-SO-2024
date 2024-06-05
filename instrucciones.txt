@@ -9,3 +9,9 @@ make memcheck ARGS="impresora1 /home/utnso/tp-2024-1c-SegmenFault/IO_configs/imp
 
 ./entradasalida impresora1 "/home/utnso/tp-2024-1c-SegmenFault/IO_configs/impresora1.config" 
 ./entradasalida filesystem1 "/home/utnso/tp-2024-1c-SegmenFault/IO_configs/filesystem1.config" 
+
+
+TECLADO 1==============
+./entradasalida teclado1 "/home/utnso/tp-2024-1c-SegmenFault/IO_configs/teclado1.config"
+
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/FS_A.txt"

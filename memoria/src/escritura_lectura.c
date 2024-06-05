@@ -114,7 +114,7 @@ void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint
 	}
 
 	free(contenido);
-
+	log_info(memoria_logger, "Se escribio correctamente en la memoria fisica\n");
 }
 
 //Spliteo el contenido segun en cuantas divisiones de paginas/marcos deba hacerse 
@@ -266,19 +266,24 @@ void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t
     // Liberar la lista de páginas a leer
     list_destroy_and_destroy_elements(paginas_a_leer, free);
 
+	log_info(memoria_logger, "Se leyo correctamente en la memoria fisica\n");
+
 	// Devolver el contenido leído
 	if(operacion == PEDIDO_MOV_IN){
 	t_paquete* paquete_mov_in = crear_paquete(RESULTADO_MOV_IN);
 	agregar_bytes_a_paquete(paquete_mov_in, contenido_leido, tamanio_lectura);
 	enviar_paquete(paquete_mov_in, cliente);
-	} else{
+	} else if (operacion == REALIZAR_LECTURA){
 	t_paquete* paquete = crear_paquete(RESULTADO_LECTURA);
 	agregar_cadena_a_paquete(paquete, contenido_leido);
 	enviar_paquete(paquete, cliente);
+	} else {
+	t_paquete* paquete_fs_write = crear_paquete(VALOR_LECTURA);
+	agregar_bytes_a_paquete(paquete_fs_write, contenido_leido, tamanio_lectura);
+	enviar_paquete(paquete_fs_write, cliente);
 	}
 
 	free(contenido_leido);
-
 }
 
 static bool contenido_cabe_en_marcos(t_proceso_en_memoria* proceso, int tamanio_contenido_bytes) {
