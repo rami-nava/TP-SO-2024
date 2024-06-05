@@ -87,7 +87,8 @@ void* comenzar_reloj_RR(){
                 pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
 
                     //Hubo salida por I/O o Exit
-                     if(!strcmp(config_valores_kernel.algoritmo, "VRR") && ocurrio_IO(contexto_ejecucion)){
+                     if(!strcmp(config_valores_kernel.algoritmo, "VRR") && ocurrio_IO(contexto_ejecucion)){ 
+                        //el ocurrio_IO para darle prioridad a los IO BOUND y no a aquellos que hagan WAIT por ejemplo
                         ciclo_actual_quantum = temporal_gettime(reloj);
                         sem_post(&ciclo_actual_quantum_sem); //Si no es exit no habria que hacer post
                     }
@@ -107,6 +108,9 @@ void* comenzar_reloj_RR(){
                 }
                 else if (temporal_gettime(reloj) >= quantum_total)
                 {
+
+                    ciclo_actual_quantum = 0;
+                    sem_post(&ciclo_actual_quantum_sem); //Para que no se bloquee si hay FQ y IO
 
                     pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
                     desalojo(1); //Interrumpo la ejecucion por fin de quantum

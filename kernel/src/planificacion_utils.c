@@ -101,6 +101,8 @@ bool actualmente_en_IO(t_pcb* pcb){
                 return false;
             break;
     }
+
+    return false;
 }
 
 static bool en_io(t_list* lista_interfaces, t_pcb* pcb){
