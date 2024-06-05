@@ -10,7 +10,6 @@ SET EDX 16
 SET SI 4
 RESIZE 128
 IO_FS_CREATE filesystem1 consolas.txt
-IO_FS_TRUNCATE filesystem1 consolas.txt ECX
 MOV_OUT 0 AX
 MOV_OUT 4 BX
 MOV_OUT 8 CX

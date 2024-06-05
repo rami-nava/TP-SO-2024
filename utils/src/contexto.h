@@ -7,7 +7,7 @@
 typedef struct {
 	codigo_instrucciones comando; 
 	int cantidad_parametros;
-	char* parametros[3]; 
+	char* parametros[5]; 
 } t_motivo_de_desalojo; 
 
 typedef struct {
