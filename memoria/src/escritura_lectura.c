@@ -95,16 +95,20 @@ void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint
 	t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
 
 	if(!contenido_cabe_en_marcos(proceso, tamanio_escritura)){
-		//TODO preguntar que onda, igual dudo que se de este caso
+		log_error(memoria_logger, "No se puede leer el contenido solicitado");
+        return;
 	}
+
+	int lugar_restante = lugar_restante_en_marco(direccion_fisica);
 
 	//Entra en una pagina/marco
 	if (lugar_restante_en_marco(direccion_fisica) >= tamanio_escritura){
 		
-		acceso_a_espacio_usuario(pid, "ESCRIBIR", direccion_fisica, tamanio_escritura);
+		acceso_a_espacio_usuario(pid, "ESCRIBIR EN EL MISMO MARCO", direccion_fisica, tamanio_escritura);
 
 		//Copio el contenido en el marco correspondiente			
 		memcpy(espacio_usuario + direccion_fisica, contenido, tamanio_escritura); 
+		printf("\n espacio ocupado del marco:%d , espacio disponible: %d\n", tam_pagina - lugar_restante, lugar_restante);
 
 		//    PARA TESTS
 		//mem_hexdump(espacio_usuario, config_valores_memoria.tam_memoria);
@@ -120,6 +124,7 @@ void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint
 //Spliteo el contenido segun en cuantas divisiones de paginas/marcos deba hacerse 
 static void escribir_contenido_en_partes(t_proceso_en_memoria* proceso, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido){
 	
+	//marco donde no entra todo lo que quiero escribir
 	t_marco* primer_marco = marco_desde_df(direccion_fisica);
 	
 	int bytes_restantes_primer_marco = lugar_restante_en_marco(direccion_fisica); //Cuantos bytes entran del contenido en el primer marco marcado por df
@@ -140,7 +145,7 @@ static void copiar_contenido_en_partes_espacio_usuario(uint32_t direccion_fisica
 	uint32_t bytes_copiados = 0;
 	uint32_t bytes_por_marco = tam_pagina; 	//Trato la primer pagina por si no comienza en 0 la DF y hay que escribir desde la mitad del marco
 	
-	acceso_a_espacio_usuario(pid, "ESCRIBIR", direccion_fisica_inicial, bytes_restantes_primer_marco);
+	acceso_a_espacio_usuario(pid, "ESCRIBIR EN UNA PARTECITA DEL MARCO ANTERIOR", direccion_fisica_inicial, bytes_restantes_primer_marco);
 
 	//Copio solo la parte que entra en el primer marco
 	memcpy(espacio_usuario + direccion_fisica_inicial, &contenido, bytes_restantes_primer_marco);
@@ -159,12 +164,16 @@ static void copiar_contenido_en_partes_espacio_usuario(uint32_t direccion_fisica
         // Calcular la dirección física dle marco actual en donde comenzar a escribir la parte
         uint32_t direccion_fisica = calcular_direccion_fisica_inicial_marco(marco);
 		
-		bytes_por_marco = tam_pagina - (direccion_fisica % tam_pagina);
-		if (bytes_por_marco > tam_contenido - bytes_copiados) {
-   			bytes_por_marco = tam_contenido - bytes_copiados;
-		} //VER ESTOOOOOO
+		bytes_por_marco = tam_pagina - (desplazamiento(direccion_fisica));
 
-		acceso_a_espacio_usuario(pid, "ESCRIBIR", direccion_fisica, bytes_por_marco);
+		//si en el marco que agarre puedo escribir todo, dejo de buscar?
+		if (bytes_por_marco > tam_contenido - bytes_copiados) {
+			
+			//los bytes restantes del marco
+   			bytes_por_marco = tam_contenido - bytes_copiados;
+		}//si el marco no tiene suficiente espacio sigo buscando
+
+		acceso_a_espacio_usuario(pid, "ESCRIBIR LO RESTANTE EN OTRO MARCO", direccion_fisica, bytes_por_marco);
 
 		// Copiar los bytes en el espacio de usuario, al sumar bytes_copiados esta partiendo el string/entero
         memcpy(espacio_usuario + direccion_fisica, contenido + bytes_copiados, bytes_por_marco);
@@ -190,7 +199,8 @@ static t_list* obtener_paginas_contiguas(t_proceso_en_memoria* proceso, int cant
 		t_pagina* pagina = list_get(proceso->paginas_en_memoria, nro_pagina);
 
 		if (pagina == NULL){
-			//TODO
+			log_error(memoria_logger, "Pagina nula");
+        	return;
 		}
 
         list_add(lista_paginas, pagina);
