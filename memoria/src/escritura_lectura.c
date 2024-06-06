@@ -9,6 +9,7 @@ static uint32_t calcular_direccion_fisica_inicial_marco(t_marco* marco);
 static bool comparador_paginas(void* pagina1, void* pagina2);
 static void copiar_contenido_en_partes_espacio_usuario(uint32_t direccion_fisica_inicial, int bytes_restantes_primer_marco, void* contenido, uint32_t tam_contenido, t_list* paginas_contiguas, int pid);
 static t_list* obtener_paginas_contiguas(t_proceso_en_memoria* proceso, int cantidad_paginas, uint32_t pagina_inicio);
+static void imprimir_contenido_memoria(void* puntero, size_t tamano);
 
 // ****** FUNCIONES AUXILIARES ****** //
 
@@ -99,6 +100,7 @@ void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint
         return;
 	}
 
+	//lugar restante del marco donde estoy
 	int lugar_restante = lugar_restante_en_marco(direccion_fisica);
 
 	//Entra en una pagina/marco
@@ -108,7 +110,12 @@ void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint
 
 		//Copio el contenido en el marco correspondiente			
 		memcpy(espacio_usuario + direccion_fisica, contenido, tamanio_escritura); 
-		printf("\n espacio ocupado del marco:%d , espacio disponible: %d\n", tam_pagina - lugar_restante, lugar_restante);
+
+		//lo escribo y lo restorno para usarlo en el log
+		t_marco* marco_escrito = ocupar_marco_con_contenido(direccion_fisica, tamanio_escritura);
+
+		printf("\n espacio ocupado del marco:%d , espacio disponible: %d\n", marco_escrito->bytes_ocupados, lugar_restante);
+		imprimir_contenido_memoria(espacio_usuario + direccion_fisica, tamanio_escritura);
 
 		//    PARA TESTS
 		//mem_hexdump(espacio_usuario, config_valores_memoria.tam_memoria);
@@ -118,7 +125,6 @@ void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint
 	}
 
 	free(contenido);
-	log_info(memoria_logger, "Se escribio correctamente en la memoria fisica\n");
 }
 
 //Spliteo el contenido segun en cuantas divisiones de paginas/marcos deba hacerse 
@@ -149,7 +155,8 @@ static void copiar_contenido_en_partes_espacio_usuario(uint32_t direccion_fisica
 
 	//Copio solo la parte que entra en el primer marco
 	memcpy(espacio_usuario + direccion_fisica_inicial, &contenido, bytes_restantes_primer_marco);
-	
+	t_marco* marco_escrito = ocupar_marco_con_contenido(direccion_fisica_inicial, bytes_restantes_primer_marco);
+
 	bytes_copiados += bytes_restantes_primer_marco; 
 
     // Iterar sobre las páginas contiguas
@@ -177,6 +184,7 @@ static void copiar_contenido_en_partes_espacio_usuario(uint32_t direccion_fisica
 
 		// Copiar los bytes en el espacio de usuario, al sumar bytes_copiados esta partiendo el string/entero
         memcpy(espacio_usuario + direccion_fisica, contenido + bytes_copiados, bytes_por_marco);
+		ocupar_marco_con_contenido(direccion_fisica, bytes_por_marco);
 
         // Actualizar el número de bytes copiados
         bytes_copiados += bytes_por_marco;
@@ -200,7 +208,7 @@ static t_list* obtener_paginas_contiguas(t_proceso_en_memoria* proceso, int cant
 
 		if (pagina == NULL){
 			log_error(memoria_logger, "Pagina nula");
-        	return;
+        	return NULL;
 		}
 
         list_add(lista_paginas, pagina);
@@ -212,6 +220,9 @@ static t_list* obtener_paginas_contiguas(t_proceso_en_memoria* proceso, int cant
 
 void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_lectura, int cliente, op_code operacion) {
     
+	uint32_t bytes_restantes_a_leer = 0;
+	uint32_t bytes_a_leer_siguiente_marco = 0;
+
 	t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
 
     // Verificar si el contenido a leer cabe en los marcos del proceso
@@ -233,23 +244,26 @@ void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t
     // Crear un buffer para almacenar el contenido leído
     void* contenido_leido = malloc(tamanio_lectura);
 
-    // Verificar si la dirección física inicial tiene un desplazamiento
+    // Verificar si la dirección física inicial tiene un desplazamiento (si ya esta medio escrita)
     int desplazamiento_inicial = desplazamiento(direccion_fisica);
 
-	// Obtenemos la cantidad de bytes que vamos a leer
-    uint32_t bytes_a_leer = tam_pagina - desplazamiento_inicial;
+	uint32_t bytes_a_leer_primer_marco = marco_inicial->bytes_ocupados;
 
-	// Accedemos al espacio de usuario
-	acceso_a_espacio_usuario(pid, "LEER", direccion_fisica, bytes_a_leer);
+	// Voy a empezar a leer desde donde esta escrito
+	char* puntero_de_direccion_fisica = espacio_usuario + desplazamiento_inicial;
+
+	acceso_a_espacio_usuario(pid, "LEER", direccion_fisica, bytes_a_leer_primer_marco);
 
     // Leemos lo que quede del primer marco, puede una parte si el offset es mas que 0
-    memcpy(contenido_leido, espacio_usuario + direccion_fisica, bytes_a_leer);
+    memcpy(contenido_leido, puntero_de_direccion_fisica, bytes_a_leer_primer_marco);
 
-    // Actualizar la cantidad de bytes leídos
-    uint32_t bytes_leidos = bytes_a_leer;
+    // Obtenemos bytes restantes a leer (si quedan)
+	if(bytes_a_leer_primer_marco < tamanio_lectura){
+		bytes_restantes_a_leer = tamanio_lectura - bytes_a_leer_primer_marco;
+	}
 
-    // Iterar sobre las páginas contiguas para continuar la lectura
-    for (int i = 1; i < list_size(paginas_a_leer) && (bytes_leidos < tamanio_lectura); i++) {
+	// Iterar sobre las páginas contiguas para continuar la lectura apartir de la segunda pagina
+    for (int i = 1; i < list_size(paginas_a_leer) && (bytes_restantes_a_leer < tamanio_lectura); i++) {
         
 		t_pagina* pagina = list_get(paginas_a_leer, i);
         t_marco* marco = buscar_marco_por_numero(pagina->nro_marco);
@@ -257,26 +271,26 @@ void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t
         // Calcular la dirección física inicial del marco actual
         uint32_t direccion_fisica_marco = calcular_direccion_fisica_inicial_marco(marco);
 
-        // Calcular cuántos bytes se pueden leer en esta página/marco, en la ultima pueden ser menos q el tampag
-        uint32_t bytes_por_leer = tam_pagina - (direccion_fisica_marco % tam_pagina);
-		if (bytes_por_leer > tamanio_lectura - bytes_leidos) {
-   			bytes_por_leer = tamanio_lectura - bytes_leidos;
-		}
+		bytes_a_leer_siguiente_marco = marco->bytes_ocupados;
+
+		char* puntero_de_siguiente_direccion_fisica = espacio_usuario + desplazamiento(direccion_fisica_marco);
 
 		// Accedemos al espacio de usuario
-		acceso_a_espacio_usuario(pid, "LEER", direccion_fisica_marco, bytes_a_leer);
+		acceso_a_espacio_usuario(pid, "LEER", direccion_fisica_marco, bytes_a_leer_siguiente_marco);
 
         // Leer desde la dirección física del marco actual
-        memcpy(contenido_leido + bytes_leidos, espacio_usuario + direccion_fisica_marco, bytes_a_leer);
-
-        // Actualizar la cantidad de bytes leídos
-        bytes_leidos += bytes_a_leer;
+        memcpy(contenido_leido + bytes_a_leer_siguiente_marco, puntero_de_siguiente_direccion_fisica, bytes_a_leer_siguiente_marco);
+		
+		// Obtenemos bytes restantes a leer (si quedan)
+		if(bytes_a_leer_siguiente_marco < tamanio_lectura){
+			bytes_restantes_a_leer = tamanio_lectura - bytes_a_leer_siguiente_marco;
+		}
     }
 
     // Liberar la lista de páginas a leer
     list_destroy_and_destroy_elements(paginas_a_leer, free);
 
-	log_info(memoria_logger, "Se leyo correctamente en la memoria fisica\n");
+	imprimir_contenido_memoria(contenido_leido, tamanio_lectura);
 
 	// Devolver el contenido leído
 	if(operacion == PEDIDO_MOV_IN){
@@ -294,6 +308,16 @@ void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t
 	}
 
 	free(contenido_leido);
+}
+
+
+static void imprimir_contenido_memoria(void* puntero, size_t tamano) {
+    uint8_t* bytes = (uint8_t*)puntero; // Convertir el puntero a uint8_t* para tratarlo como una secuencia de bytes
+    printf("El contenido en memoria es: ");
+    for (size_t i = 0; i < tamano; i++) {
+        printf("%02x ", bytes[i]); // Imprimir cada byte en formato hexadecimal
+    }
+    printf("\n");
 }
 
 static bool contenido_cabe_en_marcos(t_proceso_en_memoria* proceso, int tamanio_contenido_bytes) {

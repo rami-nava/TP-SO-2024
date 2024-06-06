@@ -57,13 +57,13 @@ void traducir_pagina_a_marcos(uint32_t numero_pagina, int pid, int cliente)
 }
 
 t_marco *marco_desde_df(uint32_t dir_fisica){
+	/*
 	int num_marco = numero_marco(dir_fisica);
-
-	//pthread_mutex_lock(&mutex_marcos);
+	pthread_mutex_lock(&mutex_marcos);
 	t_marco *marco_elegido = list_get(marcos, num_marco);
-	//pthread_mutex_unlock(&mutex_marcos);
+	pthread_mutex_unlock(&mutex_marcos);*/
 
-	return marco_elegido;
+	return buscar_marco_por_numero(numero_marco(dir_fisica));
 }
 
 

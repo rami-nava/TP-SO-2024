@@ -212,6 +212,7 @@ uint32_t buscar_marco(uint32_t numero_pagina, int pid){
        
 	    if (pagina_actual->nro_pagina == numero_pagina) {
             pagina = pagina_actual;
+			break;
         }
     }
 
@@ -235,6 +236,22 @@ int numero_marco(uint32_t direccion_fisica){
 	return num_marco;
 }
 
+t_marco* ocupar_marco_con_contenido(uint32_t direccion_fisica, uint32_t bytes_a_escribir){
+
+	//dada la direccion fisica obtengo el marco correspondiente
+	t_marco* marco_obtenido = marco_desde_df(direccion_fisica);
+
+	marco_obtenido->bytes_ocupados += bytes_a_escribir;
+
+	//esto no se pero si ya no hay espacio en el marco capaz sirve para el test
+	if(marco_obtenido->bytes_ocupados == tam_pagina){
+		marco_obtenido->libre = false;
+	}
+
+	return marco_obtenido;
+}
+
+
 /* // MUESTREA PARA TESTEAR MEMORIA -> NO USAR EN EL TP 
 static void mostrar_procesos_en_memoria() {
     printf("=== Procesos en memoria ===\n");
@@ -253,7 +270,7 @@ static void mostrar_marcos() {
     }
     printf("\n");
 }
-
+*
 static void mostrar_contenido() {
     uint8_t *ptr = (uint8_t*)espacio_usuario;
 
