@@ -47,9 +47,13 @@ static t_pcb *proximo_a_ejecutar_FIFO_RR(){
 
 static t_pcb *proximo_a_ejecutar_VRR(){
     if(list_size(cola_AUX_VRR) > 0){
+        pthread_mutex_lock(&mutex_AUX_VRR);
         return desencolar(cola_AUX_VRR);
+        pthread_mutex_unlock(&mutex_AUX_VRR);
     }else{
+        pthread_mutex_lock(&mutex_READY);
         return desencolar(cola_READY);
+        pthread_mutex_unlock(&mutex_READY);
     }
 }
 
