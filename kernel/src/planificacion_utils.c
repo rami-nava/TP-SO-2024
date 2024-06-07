@@ -125,6 +125,7 @@ void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb){
             eliminar_de_cola(cola_NEW, pcb, mutex_NEW);
             break;
         case READY:
+            eliminar_de_cola(cola_AUX_VRR, pcb, mutex_AUX_VRR);
             eliminar_de_cola(cola_READY, pcb, mutex_READY);
             break;
         case BLOCKED_IO_GENERICA:
