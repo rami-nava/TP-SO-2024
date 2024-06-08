@@ -4,6 +4,12 @@ int tiempo = 0;
 int tiempo_carga = 0;
 pthread_mutex_t mutex_tiempo;
 pthread_mutex_t mutex_tiempo_carga;
+
+static int obtener_tiempo();
+static int obtener_tiempo_carga();
+static int buscar_indice_entrada_menor_uso(t_list* lista);
+static bool menor_uso(t_entrada* siguiente_entrada, t_entrada* menor_entrada);
+static void reemplazo_por_LRU(t_entrada* nueva_entrada);
 //=======================================================
 
 //TLB -> LRU -> MANEJA QUEUE PERO AL CONSULTAR UNA PAGINA SE SACA Y SE ENCOLA NUEVAMENTE
@@ -40,20 +46,19 @@ int consultar_tlb(int pid, int pagina){
 
 } 
 
-int obtener_tiempo(){
+static int obtener_tiempo(){
 	pthread_mutex_lock(&mutex_tiempo);
 	tiempo++;
 	pthread_mutex_unlock(&mutex_tiempo);
 	return tiempo;
 }
 
-int obtener_tiempo_carga(){
+static int obtener_tiempo_carga(){
 	pthread_mutex_lock(&mutex_tiempo);
 	tiempo_carga++;
 	pthread_mutex_unlock(&mutex_tiempo);
 }
 	
-
 void agregar_entrada_tlb(int pid, int pagina, int marco){
 
     int tamanio_actual_tlb = queue_size(tlb);
@@ -66,32 +71,64 @@ void agregar_entrada_tlb(int pid, int pagina, int marco){
     nueva_entrada->ultimo_uso = obtener_tiempo(); //se va modificando cada vez que la referencio
 
     if( (tamanio_actual_tlb < cantidad_entradas_tlb) ){
-
         //No importa el algoritmo siempre encolo
         queue_push(tlb, nueva_entrada);
 
-    }else{
-        
+    }else{ 
+        //porque puede estar deshabilitada la tlb
         if( (cantidad_entradas_tlb != 0) ){
 
-            //REEMPLAZO DE ENTRADA
-            //En ambos casos debo desencolar la primera porque el manejo del algortimo de hace desde la consulta de entradas
-            
-            queue_pop(tlb);
-            queue_push(tlb, nueva_entrada);
+            //REEMPLAZO DE ENTRADA 
+            if(strcmp(algoritmo_tlb,"LRU") == 0){
+                reemplazo_por_LRU(nueva_entrada);
+            } else {
+                //reemplazo_por_FIFO(nueva_entrada);
+            } 
+            //queue_pop(tlb);
+            //queue_push(tlb, nueva_entrada);
 
         }else{
             //TODO SI NO ESTA HABILITADA QUE PASA? LOG U OTRA COSA?
         }
     }
-
-  
-    
-
-   
-
 }
 
+//las entradas con numero mas alta se referenciaron hace poco (u=1 se uso hace mas tiempo que u=8)
+static bool menor_uso(t_entrada* siguiente_entrada, t_entrada* menor_entrada) {
+    return siguiente_entrada->ultimo_uso < menor_entrada->ultimo_uso;
+}
+
+static int buscar_indice_entrada_menor_uso(t_list* lista) {
+    if (list_is_empty(lista)) {
+        return NULL;
+    }
+
+    //agarro la primera y voy comparando con el resto
+    t_entrada* menor = list_get(lista, 0);
+    int indice_menor_uso = 0;
+
+    for (int i = 1; i < list_size(lista); i++) {
+        t_entrada* siguiente_entrada = list_get(lista, i);
+        if (menor_uso(siguiente_entrada, menor)) {
+            menor = siguiente_entrada;
+            indice_menor_uso = i;
+        }
+    }
+    return indice_menor_uso;
+}
+
+
+static void reemplazo_por_LRU(t_entrada* nueva_entrada){
+
+    //saco la entrada menos usada
+    int indice_menos_usada = buscar_indice_entrada_menor_uso(tlb);
+    list_remove(tlb, indice_menos_usada);
+
+    //pongo en el indice que saque, la nueva entrada
+    list_add_in_index(tlb, indice_menos_usada, nueva_entrada);
+
+    //queue_push(tlb, entrada);
+}
 
 
 void imprimir_tlb(t_queue* tlb) { //SOLO PARA TESTING
