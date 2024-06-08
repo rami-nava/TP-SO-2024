@@ -1,5 +1,11 @@
 #include "cpu.h"
 
+int tiempo = 0;
+int tiempo_carga = 0;
+pthread_mutex_t mutex_tiempo;
+pthread_mutex_t mutex_tiempo_carga;
+//=======================================================
+
 //TLB -> LRU -> MANEJA QUEUE PERO AL CONSULTAR UNA PAGINA SE SACA Y SE ENCOLA NUEVAMENTE
 //TLB -> FIFO -> MANEJA QUEUE
 
@@ -34,6 +40,20 @@ int consultar_tlb(int pid, int pagina){
 
 } 
 
+int obtener_tiempo(){
+	pthread_mutex_lock(&mutex_tiempo);
+	tiempo++;
+	pthread_mutex_unlock(&mutex_tiempo);
+	return tiempo;
+}
+
+int obtener_tiempo_carga(){
+	pthread_mutex_lock(&mutex_tiempo);
+	tiempo_carga++;
+	pthread_mutex_unlock(&mutex_tiempo);
+}
+	
+
 void agregar_entrada_tlb(int pid, int pagina, int marco){
 
     int tamanio_actual_tlb = queue_size(tlb);
@@ -42,7 +62,8 @@ void agregar_entrada_tlb(int pid, int pagina, int marco){
     nueva_entrada->pid = pid;
     nueva_entrada->pagina = pagina;
     nueva_entrada->marco = marco;
-
+    nueva_entrada->tiempo_carga = obtener_tiempo_carga(); //me da el tiempo y no se modifica una vez que se asigna
+    nueva_entrada->ultimo_uso = obtener_tiempo(); //se va modificando cada vez que la referencio
 
     if( (tamanio_actual_tlb < cantidad_entradas_tlb) ){
 

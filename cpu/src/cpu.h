@@ -14,8 +14,6 @@
 #include "contexto.h"
 #include <commons/collections/queue.h>
 
-
-
 // Estructuras //
 typedef struct  
 {
@@ -89,8 +87,9 @@ typedef struct {
 	int pid;
    int pagina;
    int marco; 
+   int ultimo_uso;
+   int tiempo_carga;
 } t_entrada;
-
 
 
 int consultar_tlb(int pid, int pagina); //HIT: marco - MISS: -1
