@@ -114,7 +114,7 @@ int numero_marco(uint32_t direccion_fisica);
 t_marco* ocupar_marco_con_contenido(uint32_t direccion_fisica, uint32_t bytes_a_escribir);
 
 //ESCRITURA Y LECTURA
-void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido, char* instruccion);
-void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_lectura, int cliente, char* instruccion);
+void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido);
+void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_lectura, int cliente);
 
 #endif

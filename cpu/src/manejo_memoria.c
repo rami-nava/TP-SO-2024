@@ -13,6 +13,8 @@ static uint32_t numero_marco_pagina();
 static void pedir_MOV_IN(uint32_t direccion_fisica, uint32_t tamanio);
 static void pedir_MOV_OUT(uint32_t direccion_fisica, void* valor_registro, uint32_t tamanio_registro);
 static uint32_t recibir_resultado_mov_in(uint32_t tam_registro);
+
+
 //================================================== Handshake =====================================================================
 void realizar_handshake()
 {
@@ -44,84 +46,7 @@ static void recibir_handshake()
 
 }
 
-//================================================== MMU =================================================================================
 
-uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica){
-    
-    uint32_t numero_pagina = 0;
-    uint32_t offset = 0;
-    uint32_t numero_marco = 0;
-    uint32_t direccion_fisica = 0;
-
-    // Calculamos numero_pagina y offset
-    numero_pagina = floor(direccion_logica / tam_pagina);
-    offset = direccion_logica - (numero_pagina * tam_pagina);
-
-    //busco si ya tengo el nro marco en la tlb para evitar un acceso a memoria
-    int respuesta_tlb = consultar_tlb(contexto_ejecucion->pid, numero_pagina); 
-    if (respuesta_tlb == -1){
-        
-        log_info(cpu_logger, "PID: %d - TLB MISS - Página: %d \n", contexto_ejecucion->pid, numero_pagina);
-
-        // Llamos a la  Memoria, para conseguir el número de marco correspondiente a la página
-        numero_marco = traducir_pagina_a_marco(numero_pagina);
-
-        agregar_entrada_tlb(contexto_ejecucion->pid, numero_pagina, numero_marco);
-
-        // Calculamos la direcion fisica
-        direccion_fisica = numero_marco * tam_pagina + offset;
-
-    }else if(respuesta_tlb == 2){
-        //significa que la tlb esta deshabilitada
-        numero_marco = traducir_pagina_a_marco(numero_pagina);
-        direccion_fisica = numero_marco * tam_pagina + offset;
-    }else {
-        log_info(cpu_logger, "PID: %d - TLB HIT - Página: %d \n", contexto_ejecucion->pid, numero_pagina);
-        direccion_fisica = respuesta_tlb * tam_pagina + offset;
-    }
-
-    return direccion_fisica;
-}
-
-static uint32_t traducir_pagina_a_marco(uint32_t numero_pagina){
-    
-    pedir_numero_frame(numero_pagina);
-   
-    uint32_t numero_marco = numero_marco_pagina();
-    log_info(cpu_logger, "PID: %d - OBTENER MARCO - Página: %d - Marco: %d \n", contexto_ejecucion->pid, numero_pagina, numero_marco);
-   
-    return numero_marco;
-}
-
-static void pedir_numero_frame(uint32_t numero_pagina){
-
-    t_paquete *paquete = crear_paquete(TRADUCIR_PAGINA_A_MARCO);
-    agregar_entero_sin_signo_a_paquete(paquete, numero_pagina);
-    agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
-    
-    enviar_paquete(paquete, socket_cliente_memoria);
-}
-
-static uint32_t numero_marco_pagina(){
-    uint32_t numero_marco = 0;
-
-    t_paquete *paquete = recibir_paquete(socket_cliente_memoria);
-    void *stream = paquete->buffer->stream;
-
-    if (paquete->codigo_operacion == NUMERO_MARCO){
-        
-        numero_marco = sacar_entero_sin_signo_de_paquete(&stream);
-
-        eliminar_paquete(paquete);
-
-        return numero_marco;
-    }
-    else{
-        log_error(cpu_logger, "No me enviaste el numero de marco :( \n");
-        abort();
-    }
-    eliminar_paquete(paquete);
-}
 
 //================================================== INSTRUCCIONES =================================================================================
 void resize(char *tamanio)
@@ -251,3 +176,4 @@ static void pedir_MOV_IN(uint32_t direccion_fisica, uint32_t tamanio){
     agregar_entero_sin_signo_a_paquete(paquete, tamanio);
     enviar_paquete(paquete, socket_cliente_memoria);
 }
+

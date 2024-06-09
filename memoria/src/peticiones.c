@@ -140,11 +140,25 @@ static void manejo_conexiones(void* conexion)
 			uint32_t direccion_fisica_a_copiar = sacar_entero_sin_signo_de_paquete(&stream);
 			uint32_t direccion_fisica_destino = sacar_entero_sin_signo_de_paquete(&stream);
 			copy_string(pid_copy_string, cantidad_bytes_a_copiar, direccion_fisica_a_copiar, direccion_fisica_destino);
-			break;
-			
+			break;	
 		case DESCONECTAR_IO:
         	sacar_entero_de_paquete(&stream);
 			close(cliente);
+			break;
+		case ESCRIBIR_CONTENIDO_EN_MEMORIA_DESDE_CPU:
+			int pid = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t bytes_a_escribir = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+			void* valor = sacar_bytes_de_paquete(&stream); 
+			escribir_contenido_espacio_usuario(pid, direccion_fisica, bytes_a_escribir, valor);
+			//send....
+			break;
+		case LEER_CONTENIDO_EN_MEMORIA_DESDE_CPU:
+			int pid = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t bytes_a_leer = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+			leer_contenido_espacio_usuario(pid, direccion_fisica, tamanio_lectura, cliente);
+			//send....
 			break;
 		default:
 			break;

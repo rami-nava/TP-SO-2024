@@ -7,7 +7,7 @@ static void imprimir_contenido_memoria(void* puntero, size_t tamano);
 
 
 
-void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido, char* instruccion){
+void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido){
 	
 	t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
 
@@ -16,7 +16,7 @@ void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint
         return;
 	}
 
-	char* mensaje = "ESCRITURA EN MEMORIA: INSTRUCCION: " + instruccion + " PROCESO: " + (char*) pid;
+	char* mensaje = "ESCRITURA EN MEMORIA - PROCESO: " + (char*) pid;
 
 	acceso_a_espacio_usuario(pid, mensaje, direccion_fisica, tamanio_escritura);
 
@@ -33,7 +33,7 @@ void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint
 }
 
 
-void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_lectura, int cliente, char* instruccion) {
+void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_lectura, int cliente) {
     
 	t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
 
@@ -51,7 +51,7 @@ void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t
     void* contenido_leido = malloc(tamanio_lectura);
 
 
-	char* mensaje = "LECTURA EN MEMORIA: INSTRUCCION: " + instruccion + " PROCESO: " + (char*) pid;
+	char* mensaje = "LECTURA EN MEMORIA - PROCESO: " + (char*) pid;
 	
 	acceso_a_espacio_usuario(pid, mensaje, direccion_fisica, tamanio_lectura);
 

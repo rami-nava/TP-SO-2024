@@ -65,6 +65,10 @@ void* buscar_valor_registro_generico(char* registro);
 uint32_t tamanio_registro(char* registro);
 
 
+// FUNCIONES MMU
+void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t direccion_logica);
+uint32_t bytes(uint32_t direccion_fisica, uint32_t bytes_manipulados, uint32_t tamanio);
+
 //TLB
 
 /* La idea es:
@@ -81,6 +85,7 @@ uint32_t tamanio_registro(char* registro);
 extern t_list* tlb;
 extern int cantidad_entradas_tlb;
 extern char* algoritmo_tlb;
+extern uint32_t tam_pagina;
 
 
 typedef struct {

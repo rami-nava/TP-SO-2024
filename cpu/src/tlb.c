@@ -19,7 +19,7 @@ int consultar_tlb(int pid, int pagina){
 
     if(cantidad_entradas_tlb == 0){
         //tlb deshabilitada
-        return 2;
+        return -2;
     }else {
         int tamanio_actual_tlb = list_size(tlb);
 
