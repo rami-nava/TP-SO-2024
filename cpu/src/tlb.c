@@ -27,7 +27,7 @@ int consultar_tlb(int pid, int pagina){
         if (entrada_actual->pid == pid && entrada_actual->pagina == pagina) {
 
             //Uso la entrada, por ende en FIFO no pasa nada, en LRU debo mover la entrada al tope de la cola
-            if(algoritmo_tlb == (char*) "LRU"){
+            if(strcmp(algoritmo_tlb, "LRU") == 0){
                 entrada_actual->ultimo_uso = obtener_tiempo();
             }
             
@@ -69,7 +69,7 @@ void agregar_entrada_tlb(int pid, int pagina, int marco){
     if( (tamanio_actual_tlb < cantidad_entradas_tlb) ){
         //No importa el algoritmo siempre encolo
         list_add(tlb, nueva_entrada);
-        //imprimir_tlb(tlb);
+        imprimir_tlb(tlb);
 
     }else{ 
         //porque puede estar deshabilitada la tlb
@@ -81,7 +81,6 @@ void agregar_entrada_tlb(int pid, int pagina, int marco){
             } else {
                 reemplazo_por_FIFO(nueva_entrada);
             } 
-
             imprimir_tlb(tlb);
 
         }else{
@@ -97,7 +96,7 @@ static bool menor_uso(t_entrada* siguiente_entrada, t_entrada* menor_entrada) {
 
 //las paginas con numero mas chico van primero (t=1 se cargo antes que t=8)
 static bool mas_vieja(t_entrada* siguiente_entrada, t_entrada* mas_vieja){
-    return (siguiente_entrada->tiempo_carga > mas_vieja->tiempo_carga); 
+    return (siguiente_entrada->tiempo_carga < mas_vieja->tiempo_carga); 
 }
 
 static int buscar_indice_entrada_menor_uso(t_list* lista) {
@@ -129,13 +128,11 @@ static int buscar_indice_entrada_mas_vieja(t_list* lista) {
             indice_mas_vieja = i;
         }
     }
-    printf("reemplazo fifo\n");
+    printf("reemplazo fifo indice %d\n", indice_mas_vieja);
     return indice_mas_vieja;
 }
 
 static void reemplazo_por_LRU(t_entrada* nueva_entrada){
-
-    printf("reemplazo lru\n");
 
     //saco la entrada menos usada
     int indice_menos_usada = buscar_indice_entrada_menor_uso(tlb);
@@ -143,6 +140,7 @@ static void reemplazo_por_LRU(t_entrada* nueva_entrada){
 
     //pongo en el indice que saque, la nueva entrada
     list_add_in_index(tlb, indice_menos_usada, nueva_entrada);
+    printf("reemplazo lru indice %d\n", indice_menos_usada);
 }
 
 static void reemplazo_por_FIFO(t_entrada* nueva_entrada){

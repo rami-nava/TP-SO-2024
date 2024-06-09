@@ -69,14 +69,14 @@ uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica){
         agregar_entrada_tlb(contexto_ejecucion->pid, numero_pagina, numero_marco);
 
         // Calculamos la direcion fisica
-        return numero_marco * tam_pagina + offset;
+        direccion_fisica = numero_marco * tam_pagina + offset;
 
     }else{
         log_info(cpu_logger, "PID: %d - TLB HIT - Página: %d \n", contexto_ejecucion->pid, numero_pagina);
-        return respuesta_tlb * tam_pagina + offset;
+        direccion_fisica = respuesta_tlb * tam_pagina + offset;
     }
 
-    //return direccion_fisica;
+    return direccion_fisica;
 }
 
 static uint32_t traducir_pagina_a_marco(uint32_t numero_pagina){
