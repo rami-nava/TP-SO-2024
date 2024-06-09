@@ -8,8 +8,11 @@ pthread_mutex_t mutex_tiempo_carga;
 static int obtener_tiempo();
 static int obtener_tiempo_carga();
 static int buscar_indice_entrada_menor_uso(t_list* lista);
+static int buscar_indice_entrada_mas_vieja(t_list* lista);
 static bool menor_uso(t_entrada* siguiente_entrada, t_entrada* menor_entrada);
+static bool mas_vieja(t_entrada* siguiente_entrada, t_entrada* menor_entrada);
 static void reemplazo_por_LRU(t_entrada* nueva_entrada);
+static void reemplazo_por_FIFO(t_entrada* nueva_entrada);
 //=======================================================
 
 //TLB -> LRU -> MANEJA QUEUE PERO AL CONSULTAR UNA PAGINA SE SACA Y SE ENCOLA NUEVAMENTE
@@ -82,10 +85,8 @@ void agregar_entrada_tlb(int pid, int pagina, int marco){
             if(strcmp(algoritmo_tlb,"LRU") == 0){
                 reemplazo_por_LRU(nueva_entrada);
             } else {
-                //reemplazo_por_FIFO(nueva_entrada);
+                reemplazo_por_FIFO(nueva_entrada);
             } 
-            //queue_pop(tlb);
-            //queue_push(tlb, nueva_entrada);
 
         }else{
             //TODO SI NO ESTA HABILITADA QUE PASA? LOG U OTRA COSA?
@@ -96,6 +97,11 @@ void agregar_entrada_tlb(int pid, int pagina, int marco){
 //las entradas con numero mas alta se referenciaron hace poco (u=1 se uso hace mas tiempo que u=8)
 static bool menor_uso(t_entrada* siguiente_entrada, t_entrada* menor_entrada) {
     return siguiente_entrada->ultimo_uso < menor_entrada->ultimo_uso;
+}
+
+//las paginas con numero mas chico van primero (t=1 se cargo antes que t=8)
+static bool mas_vieja(t_entrada* siguiente_entrada, t_entrada* mas_vieja){
+    return (siguiente_entrada->tiempo_carga > mas_vieja->tiempo_carga); 
 }
 
 static int buscar_indice_entrada_menor_uso(t_list* lista) {
@@ -117,6 +123,24 @@ static int buscar_indice_entrada_menor_uso(t_list* lista) {
     return indice_menor_uso;
 }
 
+static int buscar_indice_entrada_mas_vieja(t_list* lista) {
+    if (list_is_empty(lista)) {
+        return NULL;
+    }
+
+    //agarro la primera y voy comparando con el resto
+    t_entrada* mas_vieja = list_get(lista, 0);
+    int indice_mas_vieja = 0;
+
+    for (int i = 1; i < list_size(lista); i++) {
+        t_entrada* siguiente_entrada = list_get(lista, i);
+        if (menor_uso(siguiente_entrada, mas_vieja)) {
+            mas_vieja = siguiente_entrada;
+            indice_mas_vieja = i;
+        }
+    }
+    return indice_mas_vieja;
+}
 
 static void reemplazo_por_LRU(t_entrada* nueva_entrada){
 
@@ -126,10 +150,16 @@ static void reemplazo_por_LRU(t_entrada* nueva_entrada){
 
     //pongo en el indice que saque, la nueva entrada
     list_add_in_index(tlb, indice_menos_usada, nueva_entrada);
-
-    //queue_push(tlb, entrada);
 }
 
+static void reemplazo_por_FIFO(t_entrada* nueva_entrada){
+    
+    int indice_mas_vieja = buscar_indice_entrada_mas_vieja(tlb);
+    list_remove(tlb, indice_mas_vieja);
+
+    //pongo en el indice que saque, la nueva entrada
+    list_add_in_index(tlb, indice_mas_vieja, nueva_entrada);
+}
 
 void imprimir_tlb(t_queue* tlb) { //SOLO PARA TESTING
     
