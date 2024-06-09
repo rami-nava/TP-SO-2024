@@ -78,7 +78,7 @@ uint32_t tamanio_registro(char* registro);
 
 
 
-extern t_queue* tlb;
+extern t_list* tlb;
 extern int cantidad_entradas_tlb;
 extern char* algoritmo_tlb;
 
@@ -94,9 +94,7 @@ typedef struct {
 
 int consultar_tlb(int pid, int pagina); //HIT: marco - MISS: -1
 void agregar_entrada_tlb(int pid, int pagina, int marco); 
-void imprimir_tlb(t_queue* tlb);
-
-
+void imprimir_tlb(t_list* tlb);
 
 
 #endif 

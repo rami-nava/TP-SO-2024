@@ -15,28 +15,20 @@ static void reemplazo_por_LRU(t_entrada* nueva_entrada);
 static void reemplazo_por_FIFO(t_entrada* nueva_entrada);
 //=======================================================
 
-//TLB -> LRU -> MANEJA QUEUE PERO AL CONSULTAR UNA PAGINA SE SACA Y SE ENCOLA NUEVAMENTE
-//TLB -> FIFO -> MANEJA QUEUE
-
-//Si cant_entradas es 0 esta desabilitada, siempre es un entero
-
-
 int consultar_tlb(int pid, int pagina){
 
-    int tamanio_actual_tlb = queue_size(tlb);
+    int tamanio_actual_tlb = list_size(tlb);
 
     //HIT: MARCO
     for (int i = 0; i < tamanio_actual_tlb; i++) {
         
-        t_entrada* entrada_actual = (t_entrada*) list_get(tlb->elements, i);
+        t_entrada* entrada_actual = (t_entrada*) list_get(tlb, i);
 
         if (entrada_actual->pid == pid && entrada_actual->pagina == pagina) {
 
             //Uso la entrada, por ende en FIFO no pasa nada, en LRU debo mover la entrada al tope de la cola
             if(algoritmo_tlb == (char*) "LRU"){
-                
-                list_remove(tlb->elements, i);
-                queue_push(tlb, entrada_actual);
+                entrada_actual->ultimo_uso = obtener_tiempo();
             }
             
             return entrada_actual->marco;
@@ -60,22 +52,24 @@ static int obtener_tiempo_carga(){
 	pthread_mutex_lock(&mutex_tiempo);
 	tiempo_carga++;
 	pthread_mutex_unlock(&mutex_tiempo);
+    return tiempo_carga;
 }
 	
 void agregar_entrada_tlb(int pid, int pagina, int marco){
 
-    int tamanio_actual_tlb = queue_size(tlb);
+    int tamanio_actual_tlb = list_size(tlb);
 
     t_entrada* nueva_entrada = (t_entrada*) malloc(sizeof(t_entrada));
     nueva_entrada->pid = pid;
     nueva_entrada->pagina = pagina;
     nueva_entrada->marco = marco;
-    nueva_entrada->tiempo_carga = obtener_tiempo_carga(); //me da el tiempo y no se modifica una vez que se asigna
     nueva_entrada->ultimo_uso = obtener_tiempo(); //se va modificando cada vez que la referencio
+    nueva_entrada->tiempo_carga = obtener_tiempo_carga(); //me da el tiempo y no se modifica una vez que se asigna
 
     if( (tamanio_actual_tlb < cantidad_entradas_tlb) ){
         //No importa el algoritmo siempre encolo
-        queue_push(tlb, nueva_entrada);
+        list_add(tlb, nueva_entrada);
+        //imprimir_tlb(tlb);
 
     }else{ 
         //porque puede estar deshabilitada la tlb
@@ -87,6 +81,8 @@ void agregar_entrada_tlb(int pid, int pagina, int marco){
             } else {
                 reemplazo_por_FIFO(nueva_entrada);
             } 
+
+            imprimir_tlb(tlb);
 
         }else{
             //TODO SI NO ESTA HABILITADA QUE PASA? LOG U OTRA COSA?
@@ -105,9 +101,6 @@ static bool mas_vieja(t_entrada* siguiente_entrada, t_entrada* mas_vieja){
 }
 
 static int buscar_indice_entrada_menor_uso(t_list* lista) {
-    if (list_is_empty(lista)) {
-        return NULL;
-    }
 
     //agarro la primera y voy comparando con el resto
     t_entrada* menor = list_get(lista, 0);
@@ -124,25 +117,25 @@ static int buscar_indice_entrada_menor_uso(t_list* lista) {
 }
 
 static int buscar_indice_entrada_mas_vieja(t_list* lista) {
-    if (list_is_empty(lista)) {
-        return NULL;
-    }
 
     //agarro la primera y voy comparando con el resto
-    t_entrada* mas_vieja = list_get(lista, 0);
+    t_entrada* entrada_mas_vieja = list_get(lista, 0);
     int indice_mas_vieja = 0;
 
     for (int i = 1; i < list_size(lista); i++) {
         t_entrada* siguiente_entrada = list_get(lista, i);
-        if (menor_uso(siguiente_entrada, mas_vieja)) {
-            mas_vieja = siguiente_entrada;
+        if (mas_vieja(siguiente_entrada, entrada_mas_vieja)) {
+            entrada_mas_vieja = siguiente_entrada;
             indice_mas_vieja = i;
         }
     }
+    printf("reemplazo fifo\n");
     return indice_mas_vieja;
 }
 
 static void reemplazo_por_LRU(t_entrada* nueva_entrada){
+
+    printf("reemplazo lru\n");
 
     //saco la entrada menos usada
     int indice_menos_usada = buscar_indice_entrada_menor_uso(tlb);
@@ -161,14 +154,14 @@ static void reemplazo_por_FIFO(t_entrada* nueva_entrada){
     list_add_in_index(tlb, indice_mas_vieja, nueva_entrada);
 }
 
-void imprimir_tlb(t_queue* tlb) { //SOLO PARA TESTING
+void imprimir_tlb(t_list* tlb) { //SOLO PARA TESTING
     
     if (tlb == NULL) {
         printf("TLB vacía\n");
         return;
     }
 
-    t_list_iterator *iterator = list_iterator_create(tlb->elements);
+    t_list_iterator *iterator = list_iterator_create(tlb);
     
     int index = 0;
 
