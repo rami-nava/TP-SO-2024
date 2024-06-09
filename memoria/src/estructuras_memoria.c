@@ -236,20 +236,6 @@ int numero_marco(uint32_t direccion_fisica){
 	return num_marco;
 }
 
-t_marco* ocupar_marco_con_contenido(uint32_t direccion_fisica, uint32_t bytes_a_escribir){
-
-	//dada la direccion fisica obtengo el marco correspondiente
-	t_marco* marco_obtenido = marco_desde_df(direccion_fisica);
-
-	marco_obtenido->bytes_ocupados += bytes_a_escribir;
-
-	//esto no se pero si ya no hay espacio en el marco capaz sirve para el test
-	if(marco_obtenido->bytes_ocupados == tam_pagina){
-		marco_obtenido->libre = false;
-	}
-
-	return marco_obtenido;
-}
 
 
 /* // MUESTREA PARA TESTEAR MEMORIA -> NO USAR EN EL TP 
