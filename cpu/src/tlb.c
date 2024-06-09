@@ -17,28 +17,30 @@ static void reemplazo_por_FIFO(t_entrada* nueva_entrada);
 
 int consultar_tlb(int pid, int pagina){
 
-    int tamanio_actual_tlb = list_size(tlb);
+    if(cantidad_entradas_tlb == 0){
+        //tlb deshabilitada
+        return 2;
+    }else {
+        int tamanio_actual_tlb = list_size(tlb);
 
-    //HIT: MARCO
-    for (int i = 0; i < tamanio_actual_tlb; i++) {
-        
-        t_entrada* entrada_actual = (t_entrada*) list_get(tlb, i);
-
-        if (entrada_actual->pid == pid && entrada_actual->pagina == pagina) {
-
-            //Uso la entrada, por ende en FIFO no pasa nada, en LRU debo mover la entrada al tope de la cola
-            if(strcmp(algoritmo_tlb, "LRU") == 0){
-                entrada_actual->ultimo_uso = obtener_tiempo();
-            }
+        //HIT: MARCO
+        for (int i = 0; i < tamanio_actual_tlb; i++) {
             
-            return entrada_actual->marco;
+            t_entrada* entrada_actual = (t_entrada*) list_get(tlb, i);
+
+            if (entrada_actual->pid == pid && entrada_actual->pagina == pagina) {
+
+                //Uso la entrada, por ende en FIFO no pasa nada, en LRU debo mover la entrada al tope de la cola
+                if(strcmp(algoritmo_tlb, "LRU") == 0){
+                    entrada_actual->ultimo_uso = obtener_tiempo();
+                }
+                return entrada_actual->marco;
+            }
         }
 
+        //MISS: -1
+        return -1;
     }
-
-    //MISS: -1
-    return -1;
-
 } 
 
 static int obtener_tiempo(){
@@ -82,9 +84,6 @@ void agregar_entrada_tlb(int pid, int pagina, int marco){
                 reemplazo_por_FIFO(nueva_entrada);
             } 
             imprimir_tlb(tlb);
-
-        }else{
-            //TODO SI NO ESTA HABILITADA QUE PASA? LOG U OTRA COSA?
         }
     }
 }

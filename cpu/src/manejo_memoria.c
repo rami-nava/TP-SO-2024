@@ -71,7 +71,11 @@ uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica){
         // Calculamos la direcion fisica
         direccion_fisica = numero_marco * tam_pagina + offset;
 
-    }else{
+    }else if(respuesta_tlb == 2){
+        //significa que la tlb esta deshabilitada
+        numero_marco = traducir_pagina_a_marco(numero_pagina);
+        direccion_fisica = numero_marco * tam_pagina + offset;
+    }else {
         log_info(cpu_logger, "PID: %d - TLB HIT - Página: %d \n", contexto_ejecucion->pid, numero_pagina);
         direccion_fisica = respuesta_tlb * tam_pagina + offset;
     }
