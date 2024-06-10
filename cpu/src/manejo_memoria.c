@@ -7,13 +7,8 @@ uint32_t tam_pagina;
 // FUNCIONES INTERNAS //
 static void enviar_handshake();
 static void recibir_handshake();
-static uint32_t traducir_pagina_a_marco(uint32_t numero_pagina);
-static void pedir_numero_frame(uint32_t numero_pagina);
-static uint32_t numero_marco_pagina();
 static void pedir_MOV_IN(uint32_t direccion_fisica, uint32_t tamanio);
-static void pedir_MOV_OUT(uint32_t direccion_fisica, void* valor_registro, uint32_t tamanio_registro);
 static uint32_t recibir_resultado_mov_in(uint32_t tam_registro);
-
 
 //================================================== Handshake =====================================================================
 void realizar_handshake()
@@ -90,7 +85,7 @@ void copy_string(char* tamanio)
     enviar_paquete(paquete, socket_cliente_memoria);
 }
 
-// leo de memoria y lo escribo en el registro
+// Leo de memoria y lo escribo en el registro
 void mov_in(char *registro, char *registro_direccion_logica){
 
     // Buscamos la direccion logica
@@ -135,29 +130,22 @@ static uint32_t recibir_resultado_mov_in(uint32_t tam_registro){
     }
 }
 
+// Escribe el valor del registro de la derecha en la direccion de la izquierda
 void mov_out(char *registro_direccion_logica, char *registro){
 
-    //devuelve un puntero al registro
-    void* valor_registro = buscar_valor_registro_generico(registro);
+    //devuelve un puntero al registro (lo que tengo que escribir)
+    void* valor_a_escribir = buscar_valor_registro_generico(registro);
 
-    //solo para mostrarlo en el log
-    uint32_t valor_registro_log = buscar_registro(registro);
-
+    // Devuelve la direccion logica almacenada en el registro de la izquierda
     uint32_t direccion_logica = buscar_registro(registro_direccion_logica);
 
-    uint32_t direccion_fisica = traducir_de_logica_a_fisica(direccion_logica);
-
+    // Devuelve cantidad de bytes que se van a escribir
     uint32_t tam_registro = tamanio_registro(registro);
 
-    pedir_MOV_OUT(direccion_fisica, valor_registro, tam_registro);
-
-    uint32_t escritura_guardada;
-    recv(socket_cliente_memoria, &escritura_guardada, sizeof(uint32_t), MSG_WAITALL);
-
-    log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %d \n", contexto_ejecucion->pid, "ESCRIBIR", direccion_fisica, valor_registro_log);
+    escritura_en_memoria(valor_a_escribir, tam_registro, direccion_logica);
 }
 
-
+/*
 static void pedir_MOV_OUT(uint32_t direccion_fisica, void* valor_registro, uint32_t tamanio_registro){
     
     t_paquete *paquete = crear_paquete(PEDIDO_MOV_OUT);
@@ -166,7 +154,7 @@ static void pedir_MOV_OUT(uint32_t direccion_fisica, void* valor_registro, uint3
     agregar_entero_sin_signo_a_paquete(paquete, tamanio_registro);
     agregar_bytes_a_paquete(paquete, valor_registro, tamanio_registro);
     enviar_paquete(paquete, socket_cliente_memoria);
-}
+}*/
 
 static void pedir_MOV_IN(uint32_t direccion_fisica, uint32_t tamanio){
 

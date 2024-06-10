@@ -1,5 +1,9 @@
 #include "cpu.h"
 
+static uint32_t traducir_pagina_a_marco(uint32_t numero_pagina);
+static void pedir_numero_frame(uint32_t numero_pagina);
+static uint32_t recibir_numero_marco_pagina();
+
 //==================================================AUXILIARES=================================================================================
 
 
@@ -9,7 +13,7 @@ static void pedido_escritura_mmu(void* contenido, uint32_t direccion_fisica, uin
     agregar_entero_sin_signo_a_paquete(paquete, bytes_a_escribir);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
     agregar_bytes_a_paquete(paquete, contenido, bytes_a_escribir);
-    enviar_paquete(paquete, socket_memoria);
+    enviar_paquete(paquete, socket_cliente_memoria);
     free(contenido);
 }
 
@@ -31,15 +35,35 @@ static uint32_t traducir_pagina_a_marco(uint32_t numero_pagina){
     return numero_marco;
 }
 
-/*
-static uint32_t traducir_pagina_a_marco_mmu(uint32_t numero_pagina){
-    
-    //TODO
-    // congtrolar q el marco no este en tlb antes de pedirlo.
+// Busca el marco en la tlb y si no lo encuentra hace un acceso a memoria 
+uint32_t buscar_marco_tlb_o_memoria (uint32_t numero_pagina) {
 
-    //TLB MISS Y HIT
-    //Obtener Marco: “PID: <PID> - OBTENER MARCO - Página: <NUMERO_PAGINA> - Marco: <NUMERO_MARCO>”.
-}*/
+    uint32_t numero_marco = 0;
+
+    //Busco el marco en la tlb
+    uint32_t respuesta_tlb = consultar_tlb(contexto_ejecucion->pid, numero_pagina); 
+    
+    if (respuesta_tlb == -1){
+        
+        log_info(cpu_logger, "PID: %d - TLB MISS - Página: %d \n", contexto_ejecucion->pid, numero_pagina);
+
+        // Llamos a la  Memoria, para conseguir el número de marco correspondiente a la página
+        numero_marco = traducir_pagina_a_marco(numero_pagina);
+
+        agregar_entrada_tlb(contexto_ejecucion->pid, numero_pagina, numero_marco);
+
+    }else if(respuesta_tlb == -2){
+
+        //Significa que la tlb esta deshabilitada
+        numero_marco = traducir_pagina_a_marco(numero_pagina);
+
+    }else {
+        log_info(cpu_logger, "PID: %d - TLB HIT - Página: %d \n", contexto_ejecucion->pid, numero_pagina);
+        numero_marco = respuesta_tlb;
+    }
+
+    return numero_marco;
+}
 
 static void pedir_numero_frame(uint32_t numero_pagina){
 
@@ -71,9 +95,6 @@ static uint32_t recibir_numero_marco_pagina(){
     eliminar_paquete(paquete);
 }
 
-
-
-
 uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica){
     
     uint32_t numero_pagina = 0;
@@ -85,45 +106,26 @@ uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica){
     numero_pagina = floor(direccion_logica / tam_pagina);
     offset = direccion_logica - (numero_pagina * tam_pagina);
 
-    //Busco si ya tengo el nro marco en la tlb para evitar un acceso a memoria
-    int respuesta_tlb = consultar_tlb(contexto_ejecucion->pid, numero_pagina); 
+    //Busco el marco de la pagina
+    numero_marco = buscar_marco_tlb_o_memoria(numero_pagina); 
     
-    if (respuesta_tlb == -1){
-        
-        log_info(cpu_logger, "PID: %d - TLB MISS - Página: %d \n", contexto_ejecucion->pid, numero_pagina);
-
-        // Llamos a la  Memoria, para conseguir el número de marco correspondiente a la página
-        numero_marco = traducir_pagina_a_marco(numero_pagina);
-
-        agregar_entrada_tlb(contexto_ejecucion->pid, numero_pagina, numero_marco);
-
-        // Calculamos la direcion fisica
-        direccion_fisica = numero_marco * tam_pagina + offset;
-
-    }else if(respuesta_tlb == -2){
-
-        //Significa que la tlb esta deshabilitada
-        numero_marco = traducir_pagina_a_marco(numero_pagina);
-        direccion_fisica = numero_marco * tam_pagina + offset;
-
-    }else {
-        log_info(cpu_logger, "PID: %d - TLB HIT - Página: %d \n", contexto_ejecucion->pid, numero_pagina);
-        direccion_fisica = respuesta_tlb * tam_pagina + offset;
-    }
+    direccion_fisica = numero_marco * tam_pagina + offset;
 
     return direccion_fisica;
 }
 
 uint32_t bytes(uint32_t direccion_fisica, uint32_t bytes_manipulados, uint32_t tamanio){
-    uint32_t bytes = tam_pagina - (direccion_fisica_marco % tam_pagina);
-    if (bytes > tamanio_lectura - bytes_manipulados) {
-    bytes = tamanio_lectura - bytes_manipulados;
+    uint32_t bytes = tam_pagina - (direccion_fisica % tam_pagina);
+    if (bytes > tamanio - bytes_manipulados) {
+    bytes = tamanio - bytes_manipulados;
     }
+    return bytes;
 }
 
 
 //================================================== ESCRITURA=================================================================================
 
+// Pedido de escritura generica para memoria
 void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t direccion_logica){
 
     uint32_t pagina_actual = floor(direccion_logica / tam_pagina);
@@ -142,27 +144,27 @@ void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t 
 
     pedido_escritura_mmu(contenido_a_enviar, direccion_fisica_actual, bytes_en_este_marco);
     
-    //RESPUESTA DE MEMORIA??
+    uint32_t escritura_guardada;
+    recv(socket_cliente_memoria, &escritura_guardada, sizeof(uint32_t), MSG_WAITALL);
 
-    log_info(cpu_logger, "PID: <%d> - Acción: <ESCRIBIR> - Dirección Física: <%d> - Valor: <%s>", contexto_ejecucion->pid,direccion_fisica_actual, (char *) contenido_a_enviar); //VER EL CASTEO DE VOID* A CHARS Y A INT
+    log_info(cpu_logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %s", contexto_ejecucion->pid, direccion_fisica_actual, (char *) contenido_a_enviar); //VER EL CASTEO DE VOID* A CHARS Y A INT
         
-    free(contenido_a_enviar);
+    //free(contenido_a_enviar);
 
     bytes_escritos += bytes_en_este_marco;
 
-
-    if (bytes_escritos < tamanio_escritura ) {
+    if (bytes_escritos < tamanio_escritura) {
 
         //Hasta aca ya copiamos la cant 'bytes_en_este_marco' del contenido total, ahora el resto se splitea
-        log_info(cpu_logger, "COMIENZO DE ESCRITURA EN PARTES");
+        printf("COMIENZO DE ESCRITURA EN PARTES\n"); //a veces los logs generan condicion de carrera
         //Se usa: *El tamanio de la escritura supera el tamanio de pagina 
         //        Y/= *El desplazamiento no es 0 y se escribe el restante en otra pagina
         
-        for (int i=1, bytes_escritos < tamanio_escritura, i++){
+        for (int i=1; bytes_escritos < tamanio_escritura; i++){
 
             pagina_actual ++;
 
-            marco_actual = traducir_pagina_a_marco(pagina_actual); // ACA HAY QUE PREGUNTAR POR TLB, VER DE HACER OTOR METODO
+            marco_actual = buscar_marco_tlb_o_memoria(pagina_actual); 
             
             direccion_fisica_actual = marco_actual * tam_pagina;
 
@@ -174,22 +176,18 @@ void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t 
 
             pedido_escritura_mmu(contenido_a_enviar, direccion_fisica_actual, bytes_en_este_marco);
 
-            //RESPUESTA DE MEMORIA?? 
+            uint32_t escritura_guardada;
+            recv(socket_cliente_memoria, &escritura_guardada, sizeof(uint32_t), MSG_WAITALL);
 
-            log_info(cpu_logger, "PID: <%d> - Acción: <ESCRIBIR> - Dirección Física: <%d> - Valor: <%s>", contexto_ejecucion->pid,direccion_fisica_actual, (char *) contenido_a_enviar); //VER EL CASTEO DE VOID* A CHARS Y A INT
+            log_info(cpu_logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %s", contexto_ejecucion->pid,direccion_fisica_actual, (char *) contenido_a_enviar); //VER EL CASTEO DE VOID* A CHARS Y A INT
             
             bytes_escritos += bytes_en_este_marco;
 
             free(contenido_a_enviar);
         }
 
-        log_info(cpu_logger, "ESCRITURA EN PARTES FINALIZADA");
-
+        printf("ESCRITURA EN PARTES FINALIZADA\n");
     }
 }
-
-
-
-
 
 //================================================== LECTURA=================================================================================

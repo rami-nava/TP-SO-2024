@@ -100,14 +100,28 @@ void resize(int pid, uint32_t tamanio){
 
 int out_of_memory(int pid, uint32_t tamanio){ //SOLO FUNCIONA PARA EXTENDER EL TAMAÑO POR AHORA
 	int cantidad_marcos_necesarios = cantidad_de_marcos_necesarios(tamanio);
-	int cantidad_marcos_libres = cantidad_de_marcos_libres();
+	//int cantidad_marcos_libres = cantidad_de_marcos_libres();
 
-	if(cantidad_marcos_libres >= cantidad_marcos_necesarios)
+	if(cantidad_marcos >= cantidad_marcos_necesarios)
 		return 0;
 	else {
 		log_info(memoria_logger, "OUT OF MEMORY. PID: %d - TAMAÑO: %d", pid, tamanio);
 		return 1; 
 	}
+}
+
+int cantidad_de_marcos_libres(){
+	
+	t_marco* marco_obtenido = NULL;
+	int contador = 0;
+	
+	for(int i = 0; i < list_size(marcos); i++){
+		marco_obtenido = list_get(marcos,i);
+		/*if(marco_obtenido->libre == 1){
+			contador++;
+		}  TODO ver lo del libre*/
+	}
+	return contador;
 }
 
 uint32_t tamanio_actual_proceso_en_memoria(t_proceso_en_memoria* proceso){

@@ -16,7 +16,7 @@ void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint
         return;
 	}
 
-	char* mensaje = "ESCRITURA EN MEMORIA - PROCESO: " + (char*) pid;
+	char* mensaje = "ESCRITURA EN MEMORIA";
 
 	acceso_a_espacio_usuario(pid, mensaje, direccion_fisica, tamanio_escritura);
 
@@ -33,7 +33,7 @@ void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint
 }
 
 
-void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_lectura, int cliente) {
+void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_lectura, op_code operacion, int cliente) {
     
 	t_proceso_en_memoria* proceso = obtener_proceso_en_memoria(pid);
 
@@ -50,15 +50,12 @@ void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t
     // Crear un buffer para almacenar el contenido leído
     void* contenido_leido = malloc(tamanio_lectura);
 
-
-	char* mensaje = "LECTURA EN MEMORIA - PROCESO: " + (char*) pid;
+	char* mensaje = "LECTURA EN MEMORIA";
 	
 	acceso_a_espacio_usuario(pid, mensaje, direccion_fisica, tamanio_lectura);
 
     // Leemos el marco, puede una parte si el offset es mas que 0
     memcpy(contenido_leido, espacio_usuario + direccion_fisica, tamanio_lectura);
-
-
 
 	imprimir_contenido_memoria(contenido_leido, tamanio_lectura);
 
@@ -83,7 +80,7 @@ void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t
 
 static void imprimir_contenido_memoria(void* puntero, size_t tamano) {
     uint8_t* bytes = (uint8_t*)puntero; // Convertir el puntero a uint8_t* para tratarlo como una secuencia de bytes
-    printf("El contenido en memoria es: ");
+    printf("El contenido escrito en memoria es: ");
     for (size_t i = 0; i < tamano; i++) {
         printf("%02x ", bytes[i]); // Imprimir cada byte en formato hexadecimal
     }

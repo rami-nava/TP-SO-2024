@@ -90,16 +90,16 @@ extern uint32_t tam_pagina;
 
 typedef struct {
 	int pid;
-   int pagina;
-   int marco; 
+   uint32_t pagina;
+   uint32_t marco; 
    int ultimo_uso;
    int tiempo_carga;
 } t_entrada;
 
 
-int consultar_tlb(int pid, int pagina); //HIT: marco - MISS: -1
-void agregar_entrada_tlb(int pid, int pagina, int marco); 
+uint32_t consultar_tlb(int pid, uint32_t pagina); //HIT: marco - MISS: -1
+void agregar_entrada_tlb(int pid, uint32_t pagina, uint32_t marco); 
 void imprimir_tlb(t_list* tlb);
-
+uint32_t buscar_marco_tlb_o_memoria (uint32_t numero_pagina);
 
 #endif 

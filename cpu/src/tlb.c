@@ -13,9 +13,9 @@ static bool menor_uso(t_entrada* siguiente_entrada, t_entrada* menor_entrada);
 static bool mas_vieja(t_entrada* siguiente_entrada, t_entrada* menor_entrada);
 static void reemplazo_por_LRU(t_entrada* nueva_entrada);
 static void reemplazo_por_FIFO(t_entrada* nueva_entrada);
-//=======================================================
+//====================================================================================================================
 
-int consultar_tlb(int pid, int pagina){
+uint32_t consultar_tlb(int pid, uint32_t pagina){
 
     if(cantidad_entradas_tlb == 0){
         //tlb deshabilitada
@@ -57,7 +57,7 @@ static int obtener_tiempo_carga(){
     return tiempo_carga;
 }
 	
-void agregar_entrada_tlb(int pid, int pagina, int marco){
+void agregar_entrada_tlb(int pid, uint32_t pagina, uint32_t marco){
 
     int tamanio_actual_tlb = list_size(tlb);
 

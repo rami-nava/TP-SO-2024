@@ -115,6 +115,6 @@ t_marco* ocupar_marco_con_contenido(uint32_t direccion_fisica, uint32_t bytes_a_
 
 //ESCRITURA Y LECTURA
 void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido);
-void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_lectura, int cliente);
+void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_lectura, op_code operacion, int cliente);
 
 #endif

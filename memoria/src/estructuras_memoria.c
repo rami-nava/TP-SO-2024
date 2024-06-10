@@ -48,7 +48,6 @@ void crear_marcos_memoria() {
 
 		marco->nro_pagina = -1;
 		marco->nro_marco = i;
-		marco->libre = 1;
 		marco->pid_proceso = -1;
         
 		list_add(marcos, marco);
@@ -76,20 +75,6 @@ void finalizar_en_memoria(int pid)
 }
 
 //============================================ FUNCIONES DE ASIGNACION DE MARCOS/PAGINAS =============================================
-
-int cantidad_de_marcos_libres(){
-	
-	t_marco* marco_obtenido = NULL;
-	int contador = 0;
-	
-	for(int i = 0; i < list_size(marcos); i++){
-		marco_obtenido = list_get(marcos,i);
-		if(marco_obtenido->libre == 1){
-			contador++;
-		}
-	}
-	return contador;
-}
 
 int cantidad_de_marcos_necesarios(int tamanio_contenido_bytes){
 
@@ -121,7 +106,6 @@ void liberar_marco(int marco_a_liberar){
 	t_marco *marco = buscar_marco_por_numero(marco_a_liberar);  
 
 	marco->nro_pagina = -1;
-	marco->libre = 1;
 	marco->pid_proceso = -1;
 }
 
@@ -155,10 +139,8 @@ void asignar_marcos_a_proceso(t_proceso_en_memoria* proceso, int cantidad_de_mar
 		if(contador < cantidad_de_marcos_necesarios){
 			marco_obtenido = (t_marco*) list_get(marcos,i);
 			
-			if(marco_obtenido->libre == 1){ //SI EL MARCO QUE SE OBTIENE ESTA LIBRE
-				asignar_proceso_a_marco(proceso, marco_obtenido); //TAMBIEN AGREGA PAGINA A PROCESO
-				contador++;
-			}
+			asignar_proceso_a_marco(proceso, marco_obtenido); //TAMBIEN AGREGA PAGINA A PROCESO
+			contador++;
 		} else {
 			break;
 		}
@@ -171,7 +153,6 @@ void asignar_proceso_a_marco(t_proceso_en_memoria* proceso, t_marco* marco){
 	
 	marco->pid_proceso = proceso->pid;
 	marco->nro_pagina = list_size(proceso->paginas_en_memoria)-1;
-	marco->libre = 0;
 }
 
 //Busca en los procesos cuyas instrucciones ya fueron cargadas
