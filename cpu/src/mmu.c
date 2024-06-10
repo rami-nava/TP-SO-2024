@@ -3,12 +3,13 @@
 static uint32_t traducir_pagina_a_marco(uint32_t numero_pagina);
 static void pedir_numero_frame(uint32_t numero_pagina);
 static uint32_t recibir_numero_marco_pagina();
+static char log_contenido(void* contenido_a_enviar, size_t bytes_en_este_marco);
 
 //==================================================AUXILIARES=================================================================================
 
 
 static void pedido_escritura_mmu(void* contenido, uint32_t direccion_fisica, uint32_t bytes_a_escribir){
-    t_paquete* paquete = crear_paquete(ESCRIBIR_CONTENIDO_EN_MEMORIA_DESDE_CPU);
+    t_paquete* paquete = crear_paquete(ESCRIBIR_CONTENIDO_EN_MEMORIA);
     agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
     agregar_entero_sin_signo_a_paquete(paquete, bytes_a_escribir);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
@@ -122,11 +123,10 @@ uint32_t bytes(uint32_t direccion_fisica, uint32_t bytes_manipulados, uint32_t t
     return bytes;
 }
 
-
 //================================================== ESCRITURA=================================================================================
 
 // Pedido de escritura generica para memoria
-void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t direccion_logica){
+void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t direccion_logica, uint32_t valor_para_log){
 
     uint32_t pagina_actual = floor(direccion_logica / tam_pagina);
 
@@ -147,16 +147,14 @@ void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t 
     uint32_t escritura_guardada;
     recv(socket_cliente_memoria, &escritura_guardada, sizeof(uint32_t), MSG_WAITALL);
 
-    log_info(cpu_logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %s", contexto_ejecucion->pid, direccion_fisica_actual, (char *) contenido_a_enviar); //VER EL CASTEO DE VOID* A CHARS Y A INT
+    log_info(cpu_logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d \n", contexto_ejecucion->pid, direccion_fisica_actual, valor_para_log); //VER EL CASTEO DE VOID* A CHARS Y A INT
         
-    //free(contenido_a_enviar);
-
     bytes_escritos += bytes_en_este_marco;
 
     if (bytes_escritos < tamanio_escritura) {
 
         //Hasta aca ya copiamos la cant 'bytes_en_este_marco' del contenido total, ahora el resto se splitea
-        printf("COMIENZO DE ESCRITURA EN PARTES\n"); //a veces los logs generan condicion de carrera
+        printf("\nbytes escritos hasta el momento %d\n", bytes_escritos);
         //Se usa: *El tamanio de la escritura supera el tamanio de pagina 
         //        Y/= *El desplazamiento no es 0 y se escribe el restante en otra pagina
         
@@ -179,14 +177,11 @@ void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t 
             uint32_t escritura_guardada;
             recv(socket_cliente_memoria, &escritura_guardada, sizeof(uint32_t), MSG_WAITALL);
 
-            log_info(cpu_logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %s", contexto_ejecucion->pid,direccion_fisica_actual, (char *) contenido_a_enviar); //VER EL CASTEO DE VOID* A CHARS Y A INT
+            log_info(cpu_logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d \n", contexto_ejecucion->pid,direccion_fisica_actual, valor_para_log); //VER EL CASTEO DE VOID* A CHARS Y A INT
             
             bytes_escritos += bytes_en_este_marco;
-
-            free(contenido_a_enviar);
+            printf("\nbytes escritos hasta el momento %d\n", bytes_escritos); 
         }
-
-        printf("ESCRITURA EN PARTES FINALIZADA\n");
     }
 }
 

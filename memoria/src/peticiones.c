@@ -148,7 +148,7 @@ static void manejo_conexiones(void* conexion)
 			close(cliente);
 			break;
 
-		case ESCRIBIR_CONTENIDO_EN_MEMORIA_DESDE_CPU:
+		case ESCRIBIR_CONTENIDO_EN_MEMORIA:
 			int pid_escribir_en_memoria = sacar_entero_sin_signo_de_paquete(&stream);
 			uint32_t bytes_a_escribir = sacar_entero_sin_signo_de_paquete(&stream);
 			uint32_t direccion_fisica_a_escribir = sacar_entero_sin_signo_de_paquete(&stream);

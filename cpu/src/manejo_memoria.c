@@ -8,6 +8,7 @@ uint32_t tam_pagina;
 static void enviar_handshake();
 static void recibir_handshake();
 static void pedir_MOV_IN(uint32_t direccion_fisica, uint32_t tamanio);
+//static void pedir_MOV_OUT(uint32_t direccion_fisica, void* valor_registro, uint32_t tamanio_registro);
 static uint32_t recibir_resultado_mov_in(uint32_t tam_registro);
 
 //================================================== Handshake =====================================================================
@@ -40,8 +41,6 @@ static void recibir_handshake()
     eliminar_paquete(paquete);
 
 }
-
-
 
 //================================================== INSTRUCCIONES =================================================================================
 void resize(char *tamanio)
@@ -136,13 +135,15 @@ void mov_out(char *registro_direccion_logica, char *registro){
     //devuelve un puntero al registro (lo que tengo que escribir)
     void* valor_a_escribir = buscar_valor_registro_generico(registro);
 
+    uint32_t valor_registro_log = buscar_registro(registro);
+
     // Devuelve la direccion logica almacenada en el registro de la izquierda
     uint32_t direccion_logica = buscar_registro(registro_direccion_logica);
 
     // Devuelve cantidad de bytes que se van a escribir
     uint32_t tam_registro = tamanio_registro(registro);
 
-    escritura_en_memoria(valor_a_escribir, tam_registro, direccion_logica);
+    escritura_en_memoria(valor_a_escribir, tam_registro, direccion_logica, valor_registro_log);
 }
 
 /*

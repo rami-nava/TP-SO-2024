@@ -66,7 +66,7 @@ uint32_t tamanio_registro(char* registro);
 
 
 // FUNCIONES MMU
-void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t direccion_logica);
+void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t direccion_logica, uint32_t valor_para_log);
 uint32_t bytes(uint32_t direccion_fisica, uint32_t bytes_manipulados, uint32_t tamanio);
 
 //TLB

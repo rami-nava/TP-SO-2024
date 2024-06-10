@@ -168,6 +168,6 @@ void imprimir_tlb(t_list* tlb) { //SOLO PARA TESTING
         printf("Posicion TLB: %d - PID: %d - Pagina: %d - Marco: %d\n", index, entrada->pid, entrada->pagina, entrada->marco);
         index++;
     }
-
+    printf("\n");
     list_iterator_destroy(iterator);
 }
