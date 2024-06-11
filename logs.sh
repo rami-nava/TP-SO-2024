@@ -10,7 +10,6 @@ cd memoria/cfg/
 rm memoria.log 
 cd ..
 cd ..
-cd entradasalida/cfg/
-rm impresora1.log 
+rm entradasalida/logs/*
 cd ..
 cd ..

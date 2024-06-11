@@ -116,11 +116,6 @@ void ingresar_a_READY(t_pcb *pcb)
     encolar(cola_READY, pcb);    
     pthread_mutex_unlock(&mutex_READY);
 
-    if(!strcmp(config_valores_kernel.algoritmo, "VRR"))
-    {
-        log_ingreso_a_aux_vrr();
-    }
-
     log_ingreso_a_ready();
 
     sem_post(&hay_procesos_ready);

@@ -1,0 +1,7 @@
+
+DETENER_PLANIFICACION
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/PLANIFICACION/PLANI_1.txt"
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/PLANIFICACION/PLANI_2.txt"
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/PLANIFICACION/PLANI_3.txt"
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/PLANIFICACION/PLANI_4.txt"
+INICIAR_PLANIFICACION

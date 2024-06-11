@@ -392,7 +392,7 @@ void setear_registro(char *registros, char* valor)
     if (string_equals_ignore_case(registros, "DI"))
         contexto_ejecucion->DI = atoi(valor);
 
-    log_info(cpu_logger, "PID %d - Registro: %s - Valor: %s", contexto_ejecucion->pid, registros, valor);
+    //log_info(cpu_logger, "PID %d - Registro: %s - Valor: %s", contexto_ejecucion->pid, registros, valor);
 }
 
 void setear_registro_entero(char *registros, uint32_t valor)

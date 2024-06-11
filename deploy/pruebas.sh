@@ -15,11 +15,11 @@ case $prueba in
         echo "Prueba Base"
         cp "../deploy/Base/memoria_base.config" "../memoria/cfg/memoria.config"
         cp "../deploy/Base/cpu_base.config" "../cpu/cfg/cpu.config"
-        cp "../deploy/Base/filesystem_base.config" "../filesystem/cfg/filesystem.config"
+        cp "../deploy/Base/SLP1.config" "../entradasalida/cfg/SLP1.config"
 
         echo "1. FIFO"
         echo "2. RR"
-        echo "3. PRIORIDADES"
+        echo "3. VRR"
         read -p "Algoritmo a usar:" algoritmo
         case $algoritmo in
             1)
@@ -29,7 +29,7 @@ case $prueba in
                 cp "../deploy/Base/kernel_baseRR.config" "../kernel/cfg/kernel.config"
                 ;;
             3)
-                cp "../deploy/Base/kernel_basePRIORIDADES.config" "../kernel/cfg/kernel.config"
+                cp "../deploy/Base/kernel_baseVRR.config" "../kernel/cfg/kernel.config"
                 ;;
         esac
         echo "Configuraciones seteadas correctamente para Prueba Base"

@@ -22,7 +22,7 @@ void main_stdout(t_interfaz* interfaz_hilo)
     char* nombre = interfaz_hilo->nombre_interfaz;
     t_config* config = interfaz_hilo->config_interfaz;
 
-    char path[70] = "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/";
+    char path[70] = "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/logs/";
 
     strcat(path, nombre);
     strcat(path, ".log");

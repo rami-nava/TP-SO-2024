@@ -40,7 +40,7 @@ void main_dialfs(t_interfaz *interfaz_hilo)
     bloques_iniciales = list_create();
     nombre_con_bloque_inicial = dictionary_create();
 
-    char path[70] = "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/";
+    char path[70] = "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/logs/";
 
     strcat(path, nombre);
     strcat(path, ".log");

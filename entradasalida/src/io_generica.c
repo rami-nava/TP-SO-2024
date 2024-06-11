@@ -15,7 +15,7 @@ void main_generica(t_interfaz* interfaz){
     nombre_interfaz = interfaz->nombre_interfaz;
     t_config* config_interfaz = interfaz->config_interfaz;
 
-    char path[70] = "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/";
+    char path[70] = "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/logs/";
 
     strcat(path, nombre_interfaz);
     strcat(path, ".log");
