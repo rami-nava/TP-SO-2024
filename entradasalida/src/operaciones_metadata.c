@@ -16,17 +16,13 @@ metadata_archivo* levantar_metadata (char* nombre) {
     return metadata_archivo;
 }
 
-void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, uint32_t bloque_inicial, char* nombre_archivo) 
+void cargamos_cambios_a_metadata_ampliar(int tamanio_nuevo, char* nombre_archivo) 
 {
 	char* puntero_auxiliar = NULL;
 
 	char* path = string_from_format ("%s/%s", path_dial_fs, nombre_archivo);
     t_config * archivo = config_create (path);
 
-    puntero_auxiliar = string_from_format("%d", bloque_inicial);
-	config_set_value(archivo, "BLOQUE_INICIAL", puntero_auxiliar);
-	free(puntero_auxiliar);
-	
 	puntero_auxiliar = string_from_format("%d", tamanio_nuevo);
     config_set_value(archivo, "TAMANIO_ARCHIVO", puntero_auxiliar);
 	free(puntero_auxiliar);

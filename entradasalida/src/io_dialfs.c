@@ -244,7 +244,7 @@ static void truncar_archivo(char *nombre_archivo, uint32_t tamanio_nuevo)
     {
        ampliar_archivo(tamanio_nuevo, tamanio_actual, bloque_inicial);
 
-       cargamos_cambios_a_metadata_ampliar(tamanio_nuevo, bloque_inicial, nombre_archivo);
+       cargamos_cambios_a_metadata_ampliar(tamanio_nuevo, nombre_archivo);
 
     } else if (tamanio_nuevo < tamanio_actual)
     {
