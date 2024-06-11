@@ -323,7 +323,7 @@ static void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_
 
 static void escribir_en_memoria(void* contenido, uint32_t direccion_fisica, uint32_t bytes_a_escribir)
 {
-    t_paquete* paquete = crear_paquete(ESCRIBIR_CONTENIDO_EN_MEMORIA);
+    t_paquete* paquete = crear_paquete(ESCRIBIR_CONTENIDO_EN_MEMORIA_DESDE_DIALFS);
     agregar_entero_sin_signo_a_paquete(paquete, bytes_a_escribir);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
     agregar_bytes_a_paquete(paquete, contenido, bytes_a_escribir);

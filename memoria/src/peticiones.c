@@ -148,15 +148,37 @@ static void manejo_conexiones(void* conexion)
 			close(cliente);
 			break;
 
-		case ESCRIBIR_CONTENIDO_EN_MEMORIA:
-			int pid_escribir_en_memoria = sacar_entero_sin_signo_de_paquete(&stream);
-			uint32_t bytes_a_escribir = sacar_entero_sin_signo_de_paquete(&stream);
-			uint32_t direccion_fisica_a_escribir = sacar_entero_sin_signo_de_paquete(&stream);
-			void* valor_a_escribir = sacar_bytes_de_paquete(&stream); 
-			escribir_contenido_espacio_usuario(pid_escribir_en_memoria, direccion_fisica_a_escribir, bytes_a_escribir, valor_a_escribir);
+		case ESCRIBIR_CONTENIDO_EN_MEMORIA_DESDE_CPU:
+			int pid_escribir_en_memoria_cpu = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t bytes_a_escribir_cpu = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t direccion_fisica_a_escribir_cpu = sacar_entero_sin_signo_de_paquete(&stream);
+			void* valor_a_escribir_cpu = sacar_bytes_de_paquete(&stream); 
+			escribir_contenido_espacio_usuario(pid_escribir_en_memoria_cpu, direccion_fisica_a_escribir_cpu, bytes_a_escribir_cpu, valor_a_escribir_cpu);
 			
-			uint32_t escritura_guardada = 1; 
-			send(cliente, &escritura_guardada, sizeof(uint32_t), 0);
+			uint32_t escritura_guardada_cpu = 1; 
+			send(cliente, &escritura_guardada_cpu, sizeof(uint32_t), 0);
+			break;
+
+		case ESCRIBIR_CONTENIDO_EN_MEMORIA_DESDE_DIALFS:
+			int pid_escribir_en_memoria_dialfs = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t bytes_a_escribir_dialfs = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t direccion_fisica_a_escribir_dialfs = sacar_entero_sin_signo_de_paquete(&stream);
+			void* valor_a_escribir_dialfs = sacar_bytes_de_paquete(&stream); 
+			escribir_contenido_espacio_usuario(pid_escribir_en_memoria_dialfs, direccion_fisica_a_escribir_dialfs, bytes_a_escribir_dialfs, valor_a_escribir_dialfs);
+			
+			uint32_t escritura_guardada_dialfs = 1; 
+			send(cliente, &escritura_guardada_dialfs, sizeof(uint32_t), 0);
+			break;
+
+		case ESCRIBIR_CONTENIDO_EN_MEMORIA_DESDE_STDIN:
+			int pid_escribir_en_memoria_stdin = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t bytes_a_escribir_stdin = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t direccion_fisica_a_escribir_stdin = sacar_entero_sin_signo_de_paquete(&stream);
+			void* valor_a_escribir_stdin = sacar_bytes_de_paquete(&stream); 
+			escribir_contenido_espacio_usuario(pid_escribir_en_memoria_stdin, direccion_fisica_a_escribir_stdin, bytes_a_escribir_stdin, valor_a_escribir_stdin);
+			
+			uint32_t escritura_guardada_stdin = 1; 
+			send(cliente, &escritura_guardada_stdin, sizeof(uint32_t), 0);
 			break;
 
 		case LEER_CONTENIDO_EN_MEMORIA_DESDE_CPU:

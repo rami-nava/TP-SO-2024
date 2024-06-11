@@ -108,10 +108,10 @@ static void guardar_escritura(int pid)
 }*/
 
 static void solicitar_escritura(void* texto_a_guardar, int pid) {
-    t_paquete* paquete = crear_paquete(ESCRIBIR_CONTENIDO_EN_MEMORIA);
+    t_paquete* paquete = crear_paquete(ESCRIBIR_CONTENIDO_EN_MEMORIA_DESDE_STDIN);
     agregar_entero_a_paquete(paquete, pid);
+    agregar_entero_sin_signo_a_paquete(paquete, tamanio_registro);
     agregar_entero_sin_signo_a_paquete(paquete,direccion_fisica);
-    agregar_entero_a_paquete(paquete, tamanio_registro);
     agregar_bytes_a_paquete(paquete, texto_a_guardar, tamanio_registro);
     enviar_paquete(paquete, socket_memoria);
 }

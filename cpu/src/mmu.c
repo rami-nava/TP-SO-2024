@@ -9,7 +9,7 @@ static char log_contenido(void* contenido_a_enviar, size_t bytes_en_este_marco);
 
 
 static void pedido_escritura_mmu(void* contenido, uint32_t direccion_fisica, uint32_t bytes_a_escribir){
-    t_paquete* paquete = crear_paquete(ESCRIBIR_CONTENIDO_EN_MEMORIA);
+    t_paquete* paquete = crear_paquete(ESCRIBIR_CONTENIDO_EN_MEMORIA_DESDE_CPU);
     agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
     agregar_entero_sin_signo_a_paquete(paquete, bytes_a_escribir);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
