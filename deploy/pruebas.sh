@@ -4,7 +4,7 @@ echo "Seleccione la prueba a realizar:"
 echo "1)Base"
 echo "2)Recursos"
 echo "3)Memoria"
-echo "4)File System"
+echo "4)IO"
 echo "5)Integral"
 echo "6)Estres"
 
@@ -37,35 +37,39 @@ case $prueba in
     2)
         echo "Prueba Recursos"
         cp "../deploy/Recursos/memoria_recursos.config" "../memoria/cfg/memoria.config"
-        cp "../deploy/Recursos/filesystem_recursos.config" "../filesystem/cfg/filesystem.config"
+        cp "../deploy/Recursos/ESPERA.config" "../entradasalida/cfg/ESPERA.config"
         cp "../deploy/Recursos/kernel_recursos.config" "../kernel/cfg/kernel.config"
         echo "Configuraciones seteadas correctamente para Prueba Recursos"
         ;;
     3)
         echo "Prueba Memoria"
         cp "../deploy/Memoria/kernel_memoria.config" "../kernel/cfg/kernel.config"
-        cp "../deploy/Memoria/filesystem_memoria.config" "../filesystem/cfg/filesystem.config"
+        cp "../deploy/Memoria/memoria_memoria.config" "../memoria/cfg/memoria.config"
+        cp "../deploy/Memoria/IO_GEN_SLEEP.config" "../entradasalida/cfg/IO_GEN_SLEEP.config"
 
         echo "1. FIFO"
         echo "2. LRU"
-        read -p "Algoritmo a usar: " algMem
+        read -p "Algoritmo a usar en TLB: " algMem
         case $algMem in
             1)
-                cp "../deploy/Memoria/memoria_memoriaFIFO.config" "../memoria/cfg/memoria.config"
+                cp "../deploy/Memoria/cpu_memoriaFIFO.config" "../cpu/cfg/cpu.config"
                 ;;
             2)
-                cp "../deploy/Memoria/memoria_memoriaLRU.config" "../memoria/cfg/memoria.config"
+                cp "../deploy/Memoria/cpu_memoriaLRU.config" "../cpu/cfg/cpu.config"
                 ;;
         esac
         echo "Configuraciones seteadas correctamente para Prueba memoria"
         ;;
 
     4)
-        echo "Prueba File System"
-        cp "../deploy/FileSystem/memoria_filesystem.config" "../memoria/cfg/memoria.config"
-        cp "../deploy/FileSystem/filesystem_filesystem.config" "../filesystem/cfg/filesystem.config"
-        cp "../deploy/FileSystem/kernel_filesystem.config" "../kernel/cfg/kernel.config"
-        echo "Configuraciones seteadas correctamente para Prueba File System"
+        echo "Prueba IO"
+        cp "../deploy/IO/kernel_io.config" "../kernel/cfg/kernel.config"
+        cp "../deploy/IO/cpu_io.config" "../cpu/cfg/cpu.config"
+        cp "../deploy/IO/memoria_io.config" "../memoria/cfg/memoria.config"
+        cp "../deploy/IO/GENERICA.config" "../entradasalida/cfg/GENERICA.config"
+        cp "../deploy/IO/TECLADO.config" "../entradasalida/cfg/TECLADO.config"
+        cp "../deploy/IO/MONITOR.config" "../entradasalida/cfg/MONITOR.config"
+        echo "Configuraciones seteadas correctamente para Prueba IO"
         ;;
     5)
         echo "Prueba Integral"
