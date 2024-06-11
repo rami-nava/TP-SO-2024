@@ -19,14 +19,13 @@ void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint
 	char* mensaje = "ESCRITURA EN MEMORIA";
 
 	acceso_a_espacio_usuario(pid, mensaje, direccion_fisica, tamanio_escritura);
-
-	//Copio el contenido en el marco correspondiente			
+		
 	memcpy(espacio_usuario + direccion_fisica, contenido, tamanio_escritura); 
 
 	imprimir_contenido_memoria(espacio_usuario + direccion_fisica, tamanio_escritura);
 
 	//    PARA TESTS
-	//mem_hexdump(espacio_usuario, config_valores_memoria.tam_memoria);
+	mem_hexdump(espacio_usuario, config_valores_memoria.tam_memoria);
 				
 
 	free(contenido);
