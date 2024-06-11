@@ -182,12 +182,22 @@ static void manejo_conexiones(void* conexion)
 			break;
 
 		case LEER_CONTENIDO_EN_MEMORIA_DESDE_CPU:
+			int pid_leer_en_memoria_cpu = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t bytes_a_leer_cpu = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t direccion_fisica_a_leer_cpu = sacar_entero_sin_signo_de_paquete(&stream);
+			leer_contenido_espacio_usuario(pid_leer_en_memoria_cpu, direccion_fisica_a_leer_cpu, bytes_a_leer_cpu, LEER_CONTENIDO_EN_MEMORIA_DESDE_CPU, cliente);
+			uint32_t lectura_cpu = 1; 
+			send(cliente, &lectura_cpu, sizeof(uint32_t), 0);
+			break;
+		/*
+		case LEER_CONTENIDO_EN_MEMORIA_DESDE_STDOUT:
 			int pid_leer_en_memoria = sacar_entero_sin_signo_de_paquete(&stream);
 			uint32_t bytes_a_leer = sacar_entero_sin_signo_de_paquete(&stream);
 			uint32_t direccion_fisica_a_leer = sacar_entero_sin_signo_de_paquete(&stream);
 			leer_contenido_espacio_usuario(pid_leer_en_memoria, direccion_fisica_a_leer, tamanio_lectura, LEER_CONTENIDO_EN_MEMORIA_DESDE_CPU, cliente);
-			//send....
-			break;
+			uint32_t lectura_cpu = 1; 
+			send(cliente, &lectura_cpu, sizeof(uint32_t), 0);
+			break;*/
 
 		default:
 			break;
