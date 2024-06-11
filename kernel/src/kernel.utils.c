@@ -34,7 +34,6 @@ void inicializar_semaforos(){
     pthread_mutex_init(&mutex_NEW, NULL);
     pthread_mutex_init(&mutex_READY,NULL); 
     pthread_mutex_init(&mutex_BLOQUEADOS_recursos,NULL); 
-    pthread_mutex_init(&mutex_FIN_QUANTUM,NULL); 
     pthread_mutex_init(&mutex_PROCESOS_DEL_SISTEMA,NULL);
     pthread_mutex_init(&mutex_AUX_VRR,NULL); 
     pthread_mutex_init(&mutex_corriendo, NULL);
@@ -50,6 +49,7 @@ void inicializar_semaforos(){
     sem_init(&mutex_pid, 0, 1);
     sem_init(&grado_multiprogramacion, 0, config_valores_kernel.grado_multiprogramacion);
     sem_init(&ciclo_actual_quantum_sem, 0, 0);
+    sem_init(&rompiendo_reloj, 0, 1);
     sem_init(&exit_sem, 0, 0);
 }
 

@@ -102,6 +102,24 @@ void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio) {
 
 }
 
+void agregar_bytes_a_paquete(t_paquete* paquete, void* contenido, uint32_t tamanio_bytes)
+{
+    int size = paquete->buffer->size;
+
+    // Re-aloca el buffer del paquete para hacer espacio para los nuevos datos y su tamanio
+    paquete->buffer->stream = realloc(paquete->buffer->stream, 
+    size + tamanio_bytes + sizeof(uint32_t));
+
+    // Copiar el tamaño de los bytes al stream
+    memcpy(paquete->buffer->stream + size, &tamanio_bytes, sizeof(uint32_t));
+
+    // Copiar los bytes al stream
+    memcpy(paquete->buffer->stream + size + sizeof(uint32_t), contenido, tamanio_bytes);
+    
+    // Incrementa el tamaño total del buffer
+    paquete->buffer->size += tamanio_bytes + sizeof(uint32_t);
+}
+
 void agregar_cadena_a_paquete(t_paquete* paquete, char* palabra)
 {
 	agregar_a_paquete(paquete, (void*)palabra, string_length(palabra) +1);
@@ -143,20 +161,6 @@ void agregar_puntero_a_paquete(t_paquete* paquete, void* puntero, uint32_t taman
     }
 }
 
-void agregar_bytes_a_paquete(t_paquete* paquete, void* bytes, uint32_t tamanio_bytes)
-{
-    // Re-aloca el buffer del paquete para hacer espacio para los nuevos datos y su tamanio
-    paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size 
-    + sizeof(uint32_t) + tamanio_bytes);
-
-    // Copiar el tamaño de los bytes al stream
-    memcpy(paquete->buffer->stream + paquete->buffer->size, &tamanio_bytes, sizeof(uint32_t));
-    paquete->buffer->size += sizeof(uint32_t);
-
-    // Copiar los bytes al stream
-    memcpy(paquete->buffer->stream + paquete->buffer->size, bytes, tamanio_bytes);
-    paquete->buffer->size += tamanio_bytes;
-}
 
 t_paquete* recibir_paquete(int conexion)  
 {
@@ -183,6 +187,32 @@ t_paquete* recibir_paquete(int conexion)
     return paquete;
 }
 
+void* recibir_buffer(int socket_cliente){
+
+    // Recibir el tamanio
+    int tamanio = 0;
+    int *size = &tamanio; 
+	recv(socket_cliente, size, sizeof(uint32_t), MSG_WAITALL);
+
+    // Recibir el buffer
+	void* buffer = malloc(*size);
+	recv(socket_cliente, buffer, *size, MSG_WAITALL);
+
+	return buffer;
+}
+
+int recibir_operacion(int socket_cliente){
+	int cod_op = 0;
+
+    // Si recibo algo lo devuelvo, si no, devuelvo -1
+	if(recv(socket_cliente, &cod_op, sizeof(int), MSG_WAITALL) > 0)
+		return cod_op;
+	else
+	{
+		close(socket_cliente);
+		return -1;
+	}
+}
 
 char* sacar_cadena_de_paquete(void** stream) {
 
@@ -205,7 +235,29 @@ char* sacar_cadena_de_paquete(void** stream) {
   *stream += tamanio_cadena;
 
   return cadena;
+}
 
+void* sacar_bytes_de_paquete(void** stream)
+{
+    uint32_t tamanio_bytes = 0;
+    void* contenido = NULL;
+
+    // Copio el tamaño de los bytes desde el stream
+    memcpy(&tamanio_bytes, *stream, sizeof(int)); 
+
+    //Avanzo el puntero del stream hasta el final de los bytes
+    *stream += sizeof(int); 
+
+    // Aloco memoria para los bytes
+    contenido = malloc(tamanio_bytes);
+
+    // Copio los bytes desde el stream
+    memcpy(contenido, *stream, tamanio_bytes);
+
+    // Avanzo el puntero del stream hasta el final de los bytes
+    *stream += tamanio_bytes;
+
+    return contenido;
 }
 
 int sacar_entero_de_paquete(void** stream)
@@ -243,7 +295,6 @@ uint8_t sacar_byte_sin_signo_de_paquete(void** stream)
 
     return byte;
 }
-
 
 char** sacar_array_cadenas_de_paquete(void** stream)
 {
@@ -291,28 +342,6 @@ void* sacar_puntero_de_paquete(void** stream)
     return puntero;
 }
 
-void* sacar_bytes_de_paquete(void** stream, uint32_t tamanio_bytes)
-{
-    //tamanio_bytes = 0;  
-
-    // Copio el tamaño de los bytes desde el stream
-    memcpy(&tamanio_bytes, *stream, sizeof(uint32_t));
-
-    //Avanzo el puntero del stream hasta el final de los bytes
-    *stream += sizeof(uint32_t);
-
-    // Aloco memoria para los bytes
-    void* bytes = malloc(tamanio_bytes);
-
-    // Copio los bytes desde el stream
-    memcpy(bytes, *stream, tamanio_bytes);
-
-    // Avanzo el puntero del stream hasta el final de los bytes
-    *stream += tamanio_bytes;
-
-    return bytes;
-}
-
 //============================================== Liberar memoria ===================================================
 void free_array(char ** array){
 	int tamanio = string_array_size(array);
@@ -320,12 +349,6 @@ void free_array(char ** array){
 	free(array);
 }
 
-void free_lista(t_list* lista) {
-	int tamanio = list_size(lista);
-    for (int i = 0; i < tamanio; i++) {
-        free(list_get(lista, i));  
-    }
-}
 
 void eliminar_paquete(t_paquete* paquete)
 {

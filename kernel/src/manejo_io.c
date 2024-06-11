@@ -189,6 +189,8 @@ void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion) {
     strcat(motivo, ": ");
     strcat(motivo, interfaz->nombre);
 
+    //Permite que el reloj calcule el tiempo restante del quantum antes que
+    //el kernel llame a otro proceso
     if(!strcmp(config_valores_kernel.algoritmo, "VRR")){
         sem_wait(&ciclo_actual_quantum_sem);
         proceso->quantum = ciclo_actual_quantum;
@@ -197,7 +199,7 @@ void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion) {
     ingresar_a_BLOCKED_IO(interfaz->cola_bloqueados ,proceso, motivo, interfaz->cola_bloqueado_mutex, interfaz->tipo_interfaz);
     logear_cola_io_bloqueados(interfaz); //NO es obligatorio
 
-    t_paquete_io* paquete_io = malloc(sizeof(paquete_io));
+    t_paquete_io* paquete_io = malloc(sizeof(t_paquete_io));
     paquete_io->interfaz = interfaz;
     paquete_io->paquete = peticion;
     paquete_io->pid = proceso->pid;
@@ -211,13 +213,20 @@ static void esperar_io(t_paquete_io* paquete_io)
 {
 int termino_io;
 
+
 sem_wait(&paquete_io->interfaz->sem_comunicacion_interfaz);
 
 if(existe_proceso(paquete_io->pid)){ //Si fue finalizado el proceso, el hilo no hace nada
     enviar_paquete(paquete_io->paquete, paquete_io->interfaz->socket_conectado);
     recv(paquete_io->interfaz->socket_conectado, &termino_io, sizeof(int), MSG_WAITALL);
     if(termino_io == 1){ //Si no recibe 1 es porque el proceso fue finalizado durante el IO
-        ingresar_de_BLOCKED_a_READY_IO(paquete_io->interfaz->cola_bloqueados, paquete_io->interfaz->cola_bloqueado_mutex);
+        t_pcb* proceso_IO = buscar_pcb_en_lista(paquete_io->interfaz->cola_bloqueados, paquete_io->pid);
+
+        if(proceso_IO->eliminado == 1){
+            mandar_a_EXIT(proceso_IO, "Pedido de finalizacion");
+        }else{
+            ingresar_de_BLOCKED_a_READY_IO(paquete_io->interfaz->cola_bloqueados, paquete_io->interfaz->cola_bloqueado_mutex);
+        }
     }
 }
 
@@ -248,7 +257,7 @@ static void eliminar_interfaz(t_interfaz* interfaz){
                 if(!strcmp(interfaz_lista->nombre, interfaz->nombre)){
                     list_remove(interfaces_genericas, i);
                     liberar_memoria(interfaz_lista);
-                    break;
+                    return;
                 }
             }
     }    
@@ -261,7 +270,7 @@ static void eliminar_interfaz(t_interfaz* interfaz){
                 if(!strcmp(interfaz_lista->nombre, interfaz->nombre)){
                     list_remove(interfaces_stdin, i);
                     liberar_memoria(interfaz_lista);
-                    break;
+                    return;
                 }
             }
     }        
@@ -274,7 +283,7 @@ static void eliminar_interfaz(t_interfaz* interfaz){
                 if(!strcmp(interfaz_lista->nombre, interfaz->nombre)){
                     list_remove(interfaces_stdout, i);
                     liberar_memoria(interfaz_lista);
-                    break;
+                    return;
                 }
             }
     }        
@@ -287,7 +296,7 @@ static void eliminar_interfaz(t_interfaz* interfaz){
                 if(!strcmp(interfaz_lista->nombre, interfaz->nombre)){
                     list_remove(interfaces_dialfs, i);
                     liberar_memoria(interfaz_lista);
-                    break;
+                    return;
                 }
            }      
     }
@@ -307,12 +316,4 @@ static void liberar_memoria(t_interfaz* interfaz){
         sem_destroy(&interfaz->sem_comunicacion_interfaz);
         pthread_mutex_destroy(&interfaz->cola_bloqueado_mutex);
         list_destroy(interfaz->cola_bloqueados);
-}
-
-void interrumpir_io(t_interfaz* interfaz){
-    
-    //AVISARLE A IO QUE FINALIZE LA OPERACION ACTUAL
-    t_paquete* paquete = crear_paquete(FINALIZAR_OPERACION_IO);
-    agregar_entero_a_paquete(paquete,1);
-    enviar_paquete(paquete, interfaz->socket_conectado);
 }

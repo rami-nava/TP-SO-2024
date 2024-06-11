@@ -27,9 +27,9 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
 static void reducir_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uint32_t bloque_inicial);
 static void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t bytes_a_leer, uint32_t direccion_fisica);
 static void escribir_en_memoria(void* contenido, uint32_t direccion_fisica, uint32_t bytes_a_escribir);
-static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t bytes_a_escribir, uint32_t direccion_fisica);
-static void solicitar_contenido_a_memoria(uint32_t cantidad_bytes, uint32_t direccion_fisica);
-static void* obtener_contenido_a_escribir(uint32_t cantidad_bytes);
+static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t bytes_a_escribir, uint32_t direccion_fisica, int pid);
+static void solicitar_contenido_a_memoria(int pid, uint32_t cantidad_bytes, uint32_t direccion_fisica);
+static void* obtener_contenido_a_escribir();
 static void reposicionamiento_del_puntero_de_archivo(uint32_t puntero_archivo, char *nombre_archivo);
 
 
@@ -40,7 +40,7 @@ void main_dialfs(t_interfaz *interfaz_hilo)
     bloques_iniciales = list_create();
     nombre_con_bloque_inicial = dictionary_create();
 
-    char path[70] = "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/";
+    char path[70] = "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/logs/";
 
     strcat(path, nombre);
     strcat(path, ".log");
@@ -85,7 +85,7 @@ static void recibir_peticiones_de_kernel()
         int hasta;
         uint32_t puntero_archivo = 0;
         uint32_t tamanio = 0;
-        uint32_t direccion_fisica = 0;
+        uint32_t direccion_fisica = 0; //la interfaz recibe la direccion logica ya traducida a fisica
         uint32_t tamanio_archivo = 0;
 
         consumir_una_unidad_de_tiempo_de_trabajo();
@@ -120,14 +120,24 @@ static void recibir_peticiones_de_kernel()
             log_info(dialfs_logger, "PID: %d - Leer Archivo: %s - Tamaño a leer : %d - Puntero archivo: %d \n", proceso_conectado, nombre, puntero_archivo, tamanio);
             leer_archivo(nombre, puntero_archivo, tamanio, direccion_fisica);
             break;
+
         case ESCRIBIR_ARCHIVO:
             nombre = sacar_cadena_de_paquete(&stream);
+            
+            //escribir lo leido de memoria en el archivo apartir de aca
             puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream);
+
+            //cantidad bytes a leer de memoria
             tamanio = sacar_entero_sin_signo_de_paquete(&stream);
             proceso_conectado = sacar_entero_de_paquete(&stream);
+
+            //direccion desde la que empiezo a leer de memoria
             direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
-            log_info(dialfs_logger, "PID: %d - Escribir Archivo: %s - Tamaño a escribir : %d - Puntero archivo: %d \n", proceso_conectado, nombre, puntero_archivo, tamanio);
-            escribir_archivo(nombre, puntero_archivo, tamanio, direccion_fisica);
+
+            log_info(dialfs_logger, "PID: %d - Escribir Archivo: %s - Tamaño a escribir : %d - Puntero archivo: %d \n", proceso_conectado, nombre, tamanio, puntero_archivo);
+            escribir_archivo(nombre, puntero_archivo, tamanio, direccion_fisica, proceso_conectado);
+            break;
+
         case LEER_BITMAP:
             desde = sacar_entero_de_paquete(&stream);
             hasta = sacar_entero_de_paquete(&stream);
@@ -275,6 +285,8 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
         compactar(bloques_a_agregar, bloque_final_archivo);
 
         usleep(1000 * retraso_compactacion);
+
+        log_info(dialfs_logger, "Se compacto el archivo \n");
         
    } else printf ("Se encontraron bloques contiguos suficientes \n");
 
@@ -311,21 +323,21 @@ static void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_
 
 static void escribir_en_memoria(void* contenido, uint32_t direccion_fisica, uint32_t bytes_a_escribir)
 {
-    t_paquete* paquete = crear_paquete(ESCRIBIR_CONTENIDO_EN_MEMORIA);
+    t_paquete* paquete = crear_paquete(ESCRIBIR_CONTENIDO_EN_MEMORIA_DESDE_DIALFS);
     agregar_entero_sin_signo_a_paquete(paquete, bytes_a_escribir);
-    agregar_bytes_a_paquete(paquete, contenido, bytes_a_escribir);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
+    agregar_bytes_a_paquete(paquete, contenido, bytes_a_escribir);
     enviar_paquete(paquete, socket_memoria);
     free(contenido);
 }
 
-static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t cantidad_bytes, uint32_t direccion_fisica)
+static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t cantidad_bytes, uint32_t direccion_fisica, int pid)
 {
     //uint32_t cantidad_bloques = puntero_archivo + ceil(cantidad_bytes / tamanio_bloque);
     
-    solicitar_contenido_a_memoria(cantidad_bytes, direccion_fisica);
+    solicitar_contenido_a_memoria(pid, cantidad_bytes, direccion_fisica);
 
-    void* contenido = obtener_contenido_a_escribir(cantidad_bytes);
+    void* contenido = obtener_contenido_a_escribir();
 
     reposicionamiento_del_puntero_de_archivo(puntero_archivo, nombre_archivo);
     
@@ -336,29 +348,29 @@ static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uin
 	free(contenido);
 }
 
-static void solicitar_contenido_a_memoria(uint32_t cantidad_bytes, uint32_t direccion_fisica)
+static void solicitar_contenido_a_memoria(int pid, uint32_t cantidad_bytes, uint32_t direccion_fisica)
 {
 	t_paquete* paquete = crear_paquete(LEER_CONTENIDO_EN_MEMORIA);
+    agregar_entero_a_paquete(paquete, pid);
 	agregar_entero_sin_signo_a_paquete(paquete, cantidad_bytes);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
 	enviar_paquete(paquete, socket_memoria);
 }
 
-static void* obtener_contenido_a_escribir(uint32_t cantidad_bytes)
+static void* obtener_contenido_a_escribir()
 {
-    t_paquete* paquete = recibir_paquete(socket_memoria);
-    void* stream = paquete->buffer->stream;
+     int cod_op = recibir_operacion(socket_memoria);
 
-    if (paquete->codigo_operacion == DEVOLVER_LECTURA)
-    {
-        void* contenido = sacar_bytes_de_paquete(&stream, cantidad_bytes);
+    if (cod_op == VALOR_LECTURA){
+
+        void* contenido = recibir_buffer(socket_memoria);
+
         return contenido;
-    } else
-    {
-        perror("Error al obtener el contenido a escribir");
-        return NULL;
     }
-    eliminar_paquete(paquete);
+    else{
+        log_error(dialfs_logger, "No me enviaste el contenido \n");
+        abort();
+    }
 }
    
 static void reposicionamiento_del_puntero_de_archivo(uint32_t puntero_archivo, char *nombre_archivo)

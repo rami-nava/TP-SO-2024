@@ -9,7 +9,7 @@ int socket_cliente_dispatch;
 int socket_cliente_interrupt;
 t_log *cpu_logger;
 
-t_queue* tlb;
+t_list* tlb;
 int cantidad_entradas_tlb;
 char* algoritmo_tlb;
 
@@ -28,7 +28,7 @@ int main(void)
 
     cantidad_entradas_tlb =  config_valores_cpu.cantidad_entradas_tlb;
     algoritmo_tlb = config_valores_cpu.algoritmo_tlb;  
-    tlb = queue_create();
+    tlb = list_create();
 
     socket_servidor_dispatch = iniciar_servidor(config_valores_cpu.ip_cpu, config_valores_cpu.puerto_escucha_dispatch);
     socket_servidor_interrupt = iniciar_servidor(config_valores_cpu.ip_cpu, config_valores_cpu.puerto_escucha_interrupt);

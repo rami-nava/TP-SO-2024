@@ -141,10 +141,10 @@ void consola_finalizar_proceso(int pid) {
   if(pcb_asociado != NULL){
     //Si existe y esta ejecutando, lo desalojo
     if (pcb_asociado->estado == EXEC){
-        t_paquete *paquete_fin = crear_paquete(DESALOJO);
-        int interrupcion_exit = 3;
-        agregar_entero_a_paquete(paquete_fin, interrupcion_exit);
-        enviar_paquete(paquete_fin, socket_cpu_interrupt);
+        desalojo(3);
+    }else if(actualmente_en_IO(pcb_asociado)){
+      //si esta en IO espero a que vuelva para eliminarlo
+      pcb_asociado->eliminado = 1;
     }else{
       //si existe pero esta en otro estado, lo mando a exit
       mandar_a_EXIT(pcb_asociado, "Pedido de finalizacion");

@@ -192,12 +192,13 @@ static void check_interrupt(){
         pthread_mutex_lock(&interrupcion_mutex);
 
         if(tipo_interrupcion == 1){
-            if(contexto_ejecucion->motivo_desalojo->comando != EXIT){ //De esta forma si hay un FQ cuando hay un EXIT se ejecuta el EXIT
-                log_info(cpu_logger, "Recibi una interrupcion de Fin de Quantum del proceso PID: %d\n", contexto_ejecucion->pid);
-                modificar_motivo (FIN_QUANTUM, 0, "", "", "", "", "");
-            }else{
-                modificar_motivo(EXIT_MAS_FIN_QUANTUM, 1,"SUCCESS","","","","");
-            }
+            log_info(cpu_logger, "Recibi una interrupcion de Fin de Quantum del proceso PID: %d\n", contexto_ejecucion->pid);
+            contexto_ejecucion->hay_fin_de_quantum = 1;
+            
+        }else if(tipo_interrupcion == 2){
+            log_info(cpu_logger,"Recibi una interrupcion de finalizacion por signal del proceso PID: %d\n", contexto_ejecucion->pid);
+            modificar_motivo (EXIT, 1, "INVALID_RESOURCE", "", "", "", "");
+        
         }else if(tipo_interrupcion == 3){
             log_info(cpu_logger,"Recibi una interrupcion de finalizacion del proceso PID: %d\n", contexto_ejecucion->pid);
             modificar_motivo (EXIT, 1, "Pedido de finalizacion", "", "", "", "");
@@ -207,8 +208,9 @@ static void check_interrupt(){
     }
     pthread_mutex_unlock(&interrupcion_mutex);
 
-    if(hay_que_devolver_contexto())
+    if(hay_que_devolver_contexto() || contexto_ejecucion->hay_fin_de_quantum){
         enviar_contexto(socket_cliente_dispatch);
+    }
 }
 
 void atender_interrupt(void * socket_servidor_interrupt){
@@ -338,7 +340,10 @@ static void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_dir
     char direccion_fisica[12];
     char puntero_archivo[12];
 
+    //especifica que el valor debe ser formateado como un entero sin signo de 32 bits
     sprintf(puntero_archivo, "%" PRIu32, buscar_registro(registro_puntero_archivo));
+
+    //el registro guarda la direccion logica
     sprintf(direccion_fisica, "%" PRIu32, traducir_de_logica_a_fisica(buscar_registro(registro_direccion)));
     sprintf(tamanio, "%" PRIu32, buscar_registro(tamanio_registro));
 
@@ -387,7 +392,35 @@ void setear_registro(char *registros, char* valor)
     if (string_equals_ignore_case(registros, "DI"))
         contexto_ejecucion->DI = atoi(valor);
 
-    log_info(cpu_logger, "PID %d - Registro: %s - Valor: %s", contexto_ejecucion->pid, registros, valor);
+    //log_info(cpu_logger, "PID %d - Registro: %s - Valor: %s", contexto_ejecucion->pid, registros, valor);
+}
+
+void setear_registro_entero(char *registros, uint32_t valor)
+{
+    if (string_equals_ignore_case(registros, "PC"))
+        contexto_ejecucion->PC = valor;
+    if (string_equals_ignore_case(registros, "AX"))
+        contexto_ejecucion->AX = valor;
+    if (string_equals_ignore_case(registros, "BX"))
+        contexto_ejecucion->BX = valor;
+    if (string_equals_ignore_case(registros, "CX"))
+        contexto_ejecucion->CX = valor;
+    if (string_equals_ignore_case(registros, "DX"))
+        contexto_ejecucion->DX = valor;
+    if (string_equals_ignore_case(registros, "EAX"))
+        contexto_ejecucion->EAX = valor;
+    if (string_equals_ignore_case(registros, "EBX"))
+        contexto_ejecucion->EBX = valor;
+    if (string_equals_ignore_case(registros, "ECX"))
+        contexto_ejecucion->ECX = valor;
+    if (string_equals_ignore_case(registros, "EDX"))
+        contexto_ejecucion->EDX = valor;
+    if (string_equals_ignore_case(registros, "SI"))
+        contexto_ejecucion->SI = valor;
+    if (string_equals_ignore_case(registros, "DI"))
+        contexto_ejecucion->DI = valor;
+
+    log_info(cpu_logger, "PID %d - Registro: %s - Valor: %d", contexto_ejecucion->pid, registros, valor);
 }
 
 uint32_t buscar_registro(char *registro)
@@ -475,7 +508,7 @@ uint32_t tamanio_registro(char* registro) {
 void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char* parm1, char* parm2, char* parm3, char* parm4, char* parm5) { 
     char* (parametros[5]) = { parm1, parm2, parm3, parm4, parm5 };
     contexto_ejecucion->motivo_desalojo->comando = comando;
-
+    
     for (int i = 0; i < cantidad_parametros; i++)
         contexto_ejecucion->motivo_desalojo->parametros[i] = string_duplicate(parametros[i]);
     contexto_ejecucion->motivo_desalojo->cantidad_parametros = cantidad_parametros;
@@ -485,7 +518,6 @@ static void liberar_memoria() {
     for (int i = 0; i <= cantidad_parametros; i++) free(elementos_instrucciones[i]);
     free(elementos_instrucciones);
 }
-
 
 static bool hay_que_devolver_contexto(){
     int operacion = contexto_ejecucion->motivo_desalojo->comando;

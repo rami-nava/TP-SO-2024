@@ -59,7 +59,6 @@ typedef struct {
     int nro_marco;
 	int pid_proceso;
 	int nro_pagina;
-	bool libre;
 } t_marco;
 
 typedef struct {
@@ -112,9 +111,10 @@ int cantidad_de_marcos_necesarios(int tamanio);
 t_marco* buscar_marco_por_numero(int numero_de_marco);
 uint32_t buscar_marco(uint32_t numero_pagina, int pid);
 int numero_marco(uint32_t direccion_fisica);
+t_marco* ocupar_marco_con_contenido(uint32_t direccion_fisica, uint32_t bytes_a_escribir);
 
 //ESCRITURA Y LECTURA
 void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido);
-void* leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_lectura);
+void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_lectura, op_code operacion, int cliente);
 
 #endif

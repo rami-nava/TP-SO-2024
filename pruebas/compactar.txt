@@ -1,0 +1,8 @@
+SET EAX 128
+SET EBX 256
+IO_FS_CREATE filesystem1 notas.txt
+IO_FS_TRUNCATE filesystem1 notas.txt EAX
+IO_FS_CREATE filesystem1 muro.txt
+IO_FS_TRUNCATE filesystem1 muro.txt EAX
+IO_FS_TRUNCATE filesystem1 notas.txt EBX
+EXIT

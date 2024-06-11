@@ -1,0 +1,2 @@
+IO_FS_DELETE filesystem1 consolas.txt
+EXIT

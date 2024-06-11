@@ -14,8 +14,6 @@
 #include "contexto.h"
 #include <commons/collections/queue.h>
 
-
-
 // Estructuras //
 typedef struct  
 {
@@ -55,6 +53,7 @@ void mov_out(char* direccion_logica, char* registro);
 void resize(char* tamanio);
 void copy_string(char* tamanio);
 void setear_registro(char* registro, char* valor);
+void setear_registro_entero(char* registro, uint32_t valor);
 bool no_es_bloqueante(codigo_instrucciones instruccion_actual);
 void ciclo_de_instruccion();
 uint32_t buscar_registro(char*registro);
@@ -65,6 +64,10 @@ void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, ch
 void* buscar_valor_registro_generico(char* registro);
 uint32_t tamanio_registro(char* registro);
 
+
+// FUNCIONES MMU
+void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t direccion_logica, uint32_t valor_para_log);
+uint32_t bytes(uint32_t direccion_fisica, uint32_t bytes_manipulados, uint32_t tamanio);
 
 //TLB
 
@@ -79,24 +82,24 @@ uint32_t tamanio_registro(char* registro);
 
 
 
-extern t_queue* tlb;
+extern t_list* tlb;
 extern int cantidad_entradas_tlb;
 extern char* algoritmo_tlb;
+extern uint32_t tam_pagina;
 
 
 typedef struct {
 	int pid;
-   int pagina;
-   int marco; 
+   uint32_t pagina;
+   uint32_t marco; 
+   int ultimo_uso;
+   int tiempo_carga;
 } t_entrada;
 
 
-
-int consultar_tlb(int pid, int pagina); //HIT: marco - MISS: -1
-void agregar_entrada_tlb(int pid, int pagina, int marco); 
-void imprimir_tlb(t_queue* tlb);
-
-
-
+uint32_t consultar_tlb(int pid, uint32_t pagina); //HIT: marco - MISS: -1
+void agregar_entrada_tlb(int pid, uint32_t pagina, uint32_t marco); 
+void imprimir_tlb(t_list* tlb);
+uint32_t buscar_marco_tlb_o_memoria (uint32_t numero_pagina);
 
 #endif 

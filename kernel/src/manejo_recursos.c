@@ -49,7 +49,7 @@ void wait_s(t_pcb *proceso, char **parametros){
     //Si el recurso no existe, mando el proceso a exit
     if (indice_pedido == -1)
     {
-        mandar_a_EXIT(proceso, "Error de wait, el recurso solicitado no existe"); 
+        desalojo(3);
         return;
     }
 
@@ -63,6 +63,9 @@ void wait_s(t_pcb *proceso, char **parametros){
     //Si no hay instancias disponibles
     if (instancias < 0)
     {
+        // Rompemos el reloj
+        romper_el_reloj();
+
         //Busco el recurso en la lista de bloqueados y agrego el proceso a la cola de bloqueos del recurso
         list_add(obtener_lista_recurso_buscado(indice_pedido), (void *)proceso);
 
@@ -73,7 +76,7 @@ void wait_s(t_pcb *proceso, char **parametros){
         char* recurso_para_asignar = string_duplicate(recurso);
         list_add(proceso->recursos_asignados, recurso_para_asignar);
 
-        ingresar_a_READY(proceso);
+        cambio_de_proceso = false;
     }
 }
 
@@ -83,7 +86,7 @@ void signal_s(t_pcb *proceso, char **parametros){
 
      // Si el recurso no existe, mando el proceso a exit
     if (indice_pedido == -1){
-        mandar_a_EXIT(proceso, "Error de signal, el recurso solicitado no existe"); 
+        desalojo(2);
         return;
     }
 
@@ -123,7 +126,9 @@ void signal_s(t_pcb *proceso, char **parametros){
     }else free(recurso_para_asignar);
 
     //si llega como instruccion algo distinto de EXIT, el proceso sigue su ejecucion 
-    if (strncmp (parametros[2], "EXIT", 4)) volver_a_CPU(proceso);
+    if (strncmp (parametros[2], "EXIT", 4)){
+        cambio_de_proceso = false;
+    }
 }
 
 /*Si el proceso hizo un wait pero nunca le di el recurso, tengo que igualmente sacarlo de la cola

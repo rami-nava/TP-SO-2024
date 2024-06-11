@@ -2,6 +2,7 @@
 
 pthread_mutex_t proceso_en_ejecucion_RR_mutex;
 sem_t ciclo_actual_quantum_sem;
+sem_t rompiendo_reloj;
 sem_t exit_sem;
 
 static int quantum_total;
@@ -46,9 +47,15 @@ static t_pcb *proximo_a_ejecutar_FIFO_RR(){
 
 static t_pcb *proximo_a_ejecutar_VRR(){
     if(list_size(cola_AUX_VRR) > 0){
-        return desencolar(cola_AUX_VRR);
+        pthread_mutex_lock(&mutex_AUX_VRR);
+        t_pcb *pcb = desencolar(cola_AUX_VRR);
+        pthread_mutex_unlock(&mutex_AUX_VRR);
+        return pcb;
     }else{
-        return desencolar(cola_READY);
+        pthread_mutex_lock(&mutex_READY);
+        t_pcb* pcb = desencolar(cola_READY);
+        pthread_mutex_unlock(&mutex_READY);
+        return pcb;
     }
 }
 
@@ -84,9 +91,10 @@ void* comenzar_reloj_RR(){
                 if(!proceso_en_ejecucion_RR) 
                 {
                 pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
-                    //Hubo salida por I/O o Exit
 
-                     if(!strcmp(config_valores_kernel.algoritmo, "VRR") && ocurrio_IO(contexto_ejecucion)){
+                    //Hubo salida por I/O o Exit
+                     if(!strcmp(config_valores_kernel.algoritmo, "VRR") && ocurrio_IO(contexto_ejecucion)){ 
+                        //el ocurrio_IO para darle prioridad a los IO BOUND y no a aquellos que hagan WAIT por ejemplo
                         ciclo_actual_quantum = temporal_gettime(reloj);
                         sem_post(&ciclo_actual_quantum_sem); //Si no es exit no habria que hacer post
                     }
@@ -98,15 +106,26 @@ void* comenzar_reloj_RR(){
                     if(contexto_ejecucion->motivo_desalojo->comando == EXIT){
                         sem_post(&exit_sem); //Para evitar condiciones de carrera y se pueda reiniciar el quantum
                     }
+
+                    //Avisar que ya rompi el reloj antes de iniciar un nuevo proceso
+                    sem_post(&rompiendo_reloj);
+
                 pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
                 }
                 else if (temporal_gettime(reloj) >= quantum_total)
                 {
+
+                    ciclo_actual_quantum = 0;
+                    sem_post(&ciclo_actual_quantum_sem); //Para que no se bloquee si hay FQ y IO
+
                     pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
-                    log_info(kernel_logger, "PID: %d - Desalojado por fin de Quantum\n",proceso_en_ejecucion->pid);
                     desalojo(1); //Interrumpo la ejecucion por fin de quantum
                     temporal_destroy(reloj);
                     reloj = NULL;
+
+                    //Avisar que ya rompi el reloj antes de iniciar un nuevo proceso
+                    sem_post(&rompiendo_reloj);
+
                     pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
                 }
                 pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
@@ -117,4 +136,12 @@ void* comenzar_reloj_RR(){
     }
 }
 
-// Funciones de algoritmo VRR //
+// Es cuando desalojan el proceso sin que haya fin de Quantum
+void romper_el_reloj()
+{
+    pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
+    proceso_en_ejecucion_RR = false;
+    pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
+
+    instruccion_bloqueante = true;
+}

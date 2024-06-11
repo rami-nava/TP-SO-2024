@@ -30,6 +30,8 @@ extern t_pcb* proceso_en_ejecucion;
 extern int ciclo_actual_quantum;
 extern bool proceso_en_ejecucion_RR;
 extern char* pids;
+extern bool cambio_de_proceso;
+extern bool instruccion_bloqueante; //Evita casos de bloqueo y fin de quantum al mismo tiempo
 
 extern int socket_cpu_dispatch;
 extern int socket_cpu_interrupt;
@@ -44,11 +46,11 @@ extern sem_t hay_procesos_ready;
 extern sem_t grado_multiprogramacion;
 extern sem_t ciclo_actual_quantum_sem;
 extern sem_t exit_sem;
+extern sem_t rompiendo_reloj;
 
 
 extern pthread_mutex_t mutex_NEW;
 extern pthread_mutex_t mutex_READY;
-extern pthread_mutex_t mutex_FIN_QUANTUM;
 extern pthread_mutex_t mutex_PROCESOS_DEL_SISTEMA;
 extern pthread_mutex_t mutex_AUX_VRR;
 extern pthread_mutex_t mutex_corriendo;
@@ -142,6 +144,7 @@ void ingresar_de_BLOCKED_a_READY_recursos(t_pcb* pcb_desbloqueado);
 void ingresar_a_AUX_VRR(t_pcb *pcb);
 void desalojo(int tipo_interrupcion);
 void* comenzar_reloj_RR();
+void romper_el_reloj();
 void log_ingreso_a_ready();
 void log_ingreso_a_aux_vrr();
 void logear_cola_io_bloqueados(t_interfaz* interfaz);
@@ -203,7 +206,6 @@ bool admite_operacion_interfaz(t_interfaz* interfaz, codigo_instrucciones operac
 t_interfaz* obtener_interfaz_por_nombre(char* nombre_interfaz);
 void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion);
 void crear_hilo_io_generica(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion);
-void interrumpir_io(t_interfaz* interfaz);
-
+bool actualmente_en_IO(t_pcb* pcb);
 
 #endif

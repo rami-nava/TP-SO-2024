@@ -1,0 +1,30 @@
+INICIAR_PROCESO "/home/utnso/Desktop/pruebas.txt"
+
+DEADLOCK===========
+EJECUTAR_SCRIPT "/home/utnso/tp-2024-1c-SegmenFault/pruebas/script_DEADLOCK.txt"
+
+ESTRES=============
+EJECUTAR_SCRIPT "/home/utnso/tp-2024-1c-SegmenFault/pruebas/script_ESTRES.txt"
+
+MEMORIA============
+EJECUTAR_SCRIPT "/home/utnso/tp-2024-1c-SegmenFault/pruebas/script_MEMORIA.txt"
+
+make memcheck ARGS="filesystem1 /home/utnso/tp-2024-1c-SegmenFault/IO_configs/filesystem1.config" 
+
+make memcheck ARGS="impresora1 /home/utnso/tp-2024-1c-SegmenFault/IO_configs/impresora1.config" 
+
+./entradasalida impresora1 "/home/utnso/tp-2024-1c-SegmenFault/IO_configs/impresora1.config" 
+./entradasalida filesystem1 "/home/utnso/tp-2024-1c-SegmenFault/IO_configs/filesystem1.config" 
+
+TECLADO ===========
+
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/MEMORIA_1.txt"
+
+=================================================================================
+
+======================== 	PRELIMINARES	     ============================
+
+PRUEBA IO ========================================================================
+EJECUTAR_SCRIPT "/home/utnso/tp-2024-1c-SegmenFault/pruebas/script_IO.txt"
+
+./entradasalida TECLADO "/home/utnso/tp-2024-1c-SegmenFault/IO_configs/TECLADO.config" 

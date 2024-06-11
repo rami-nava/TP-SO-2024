@@ -7,7 +7,7 @@
 typedef struct {
 	codigo_instrucciones comando; 
 	int cantidad_parametros;
-	char* parametros[3]; 
+	char* parametros[5]; 
 } t_motivo_de_desalojo; 
 
 typedef struct {
@@ -25,6 +25,8 @@ typedef struct {
     uint32_t SI;
     uint32_t DI;
     int quantum;
+    int hay_fin_de_quantum;
+    int eliminado;
 } t_contexto;
 
 extern t_contexto* contexto_ejecucion;
