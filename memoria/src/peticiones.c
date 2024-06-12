@@ -106,19 +106,6 @@ static void manejo_conexiones(void* conexion)
 			uint32_t tamanio_lectura = sacar_entero_sin_signo_de_paquete(&stream);
 			leer_contenido_espacio_usuario(pid_lectura, direccion_fisica_lectura, tamanio_lectura, REALIZAR_LECTURA, cliente);
 			break;
-			
-		/*case PEDIDO_MOV_OUT:
-			int pid_mov_out = sacar_entero_de_paquete(&stream);
-		    uint32_t dir_fisica = sacar_entero_sin_signo_de_paquete(&stream);
-			uint32_t tamanio_registro = sacar_entero_sin_signo_de_paquete(&stream);
-			void* valor = sacar_bytes_de_paquete(&stream); 
-			
-			escribir_contenido_espacio_usuario(pid_mov_out, dir_fisica, tamanio_registro, valor);
-
-			//Avisamos que se escribio
-			uint32_t escritura_guardada = 1; 
-			send(cliente, &escritura_guardada, sizeof(uint32_t), 0);
-			break;*/
 
 		case PEDIDO_RESIZE:
 			int process_id = sacar_entero_de_paquete(&stream);
