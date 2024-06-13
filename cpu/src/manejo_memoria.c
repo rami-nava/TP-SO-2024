@@ -90,43 +90,20 @@ void mov_in(char *registro, char *registro_direccion_logica){
     // Buscamos la direccion logica
     uint32_t direccion_logica = buscar_registro(registro_direccion_logica);
 
-    // Traducimos la direccion logica a fisica
-    uint32_t direccion_fisica = traducir_de_logica_a_fisica(direccion_logica);
-
-    // Buscamos el tamanio del registro
+    // Buscamos el tamanio del registro (cantidad de bytes que voy a leer)
     uint32_t tam_registro = tamanio_registro(registro);
 
     // Enviamos el pedido de MOV_IN
-    pedir_MOV_IN(direccion_fisica, tam_registro);
+    void* valor_leido = lectura_en_memoria(tam_registro, direccion_logica);
 
-    // Recibimos el valor del MOV_IN
-    uint32_t valor_leido = recibir_resultado_mov_in(tam_registro);
+    // lo pongo aca porque capaz para el stdout usamos la misma funcion de leer 
+    // y no se si el stdout hace lo mismo que el mov in
+    char ascii_char = *((char*)valor_leido);
+    uint32_t valor = (uint32_t)ascii_char;
 
     // Actualizamos el valor del registro
-    setear_registro_entero(registro, valor_leido); 
-
-    log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %d \n", contexto_ejecucion->pid, "LEER", direccion_fisica, valor_leido);
-}
-
-static uint32_t recibir_resultado_mov_in(uint32_t tam_registro){
-    int cod_op = recibir_operacion(socket_cliente_memoria);
-
-    if (cod_op == RESULTADO_MOV_IN){
-
-        void* buffer_dato = recibir_buffer(socket_cliente_memoria);
-
-        uint32_t dato_a_guardar;
-    
-        memcpy(&dato_a_guardar, buffer_dato, sizeof(uint32_t));
-
-        free(buffer_dato);
-
-        return dato_a_guardar;
-    }
-    else{
-        log_error(cpu_logger, "No me enviaste el valor :( \n");
-        abort();
-    }
+    setear_registro_entero(registro, valor); 
+    free(valor_leido);
 }
 
 // Escribe el valor del registro de la derecha en la direccion de la izquierda
@@ -145,24 +122,3 @@ void mov_out(char *registro_direccion_logica, char *registro){
 
     escritura_en_memoria(valor_a_escribir, tam_registro, direccion_logica, valor_registro_log);
 }
-
-/*
-static void pedir_MOV_OUT(uint32_t direccion_fisica, void* valor_registro, uint32_t tamanio_registro){
-    
-    t_paquete *paquete = crear_paquete(PEDIDO_MOV_OUT);
-    agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
-    agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
-    agregar_entero_sin_signo_a_paquete(paquete, tamanio_registro);
-    agregar_bytes_a_paquete(paquete, valor_registro, tamanio_registro);
-    enviar_paquete(paquete, socket_cliente_memoria);
-}*/
-
-static void pedir_MOV_IN(uint32_t direccion_fisica, uint32_t tamanio){
-
-    t_paquete *paquete = crear_paquete(PEDIDO_MOV_IN);
-    agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
-    agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
-    agregar_entero_sin_signo_a_paquete(paquete, tamanio);
-    enviar_paquete(paquete, socket_cliente_memoria);
-}
-

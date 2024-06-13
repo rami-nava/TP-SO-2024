@@ -4,6 +4,7 @@ int tiempo = 0;
 int tiempo_carga = 0;
 pthread_mutex_t mutex_tiempo;
 pthread_mutex_t mutex_tiempo_carga;
+pthread_mutex_t mutex_tlb;
 
 static int obtener_tiempo();
 static int obtener_tiempo_carga();
@@ -21,12 +22,17 @@ uint32_t consultar_tlb(int pid, uint32_t pagina){
         //tlb deshabilitada
         return -2;
     }else {
+        pthread_mutex_lock(&mutex_tlb);
         int tamanio_actual_tlb = list_size(tlb);
+        pthread_mutex_unlock(&mutex_tlb);
 
         //HIT: MARCO
         for (int i = 0; i < tamanio_actual_tlb; i++) {
             
+            pthread_mutex_lock(&mutex_tlb);
             t_entrada* entrada_actual = (t_entrada*) list_get(tlb, i);
+            pthread_mutex_unlock(&mutex_tlb);
+
 
             if (entrada_actual->pid == pid && entrada_actual->pagina == pagina) {
 
@@ -70,7 +76,9 @@ void agregar_entrada_tlb(int pid, uint32_t pagina, uint32_t marco){
 
     if( (tamanio_actual_tlb < cantidad_entradas_tlb) ){
         //No importa el algoritmo siempre encolo
+        pthread_mutex_lock(&mutex_tlb);
         list_add(tlb, nueva_entrada);
+        pthread_mutex_unlock(&mutex_tlb);
         imprimir_tlb(tlb);
 
     }else{ 
@@ -101,11 +109,16 @@ static bool mas_vieja(t_entrada* siguiente_entrada, t_entrada* mas_vieja){
 static int buscar_indice_entrada_menor_uso(t_list* lista) {
 
     //agarro la primera y voy comparando con el resto
+    pthread_mutex_lock(&mutex_tlb);
     t_entrada* menor = list_get(lista, 0);
+    pthread_mutex_unlock(&mutex_tlb);
+
     int indice_menor_uso = 0;
 
     for (int i = 1; i < list_size(lista); i++) {
+        pthread_mutex_lock(&mutex_tlb);
         t_entrada* siguiente_entrada = list_get(lista, i);
+        pthread_mutex_unlock(&mutex_tlb);
         if (menor_uso(siguiente_entrada, menor)) {
             menor = siguiente_entrada;
             indice_menor_uso = i;
@@ -117,11 +130,17 @@ static int buscar_indice_entrada_menor_uso(t_list* lista) {
 static int buscar_indice_entrada_mas_vieja(t_list* lista) {
 
     //agarro la primera y voy comparando con el resto
+    pthread_mutex_lock(&mutex_tlb);
     t_entrada* entrada_mas_vieja = list_get(lista, 0);
+    pthread_mutex_unlock(&mutex_tlb);
+
     int indice_mas_vieja = 0;
 
     for (int i = 1; i < list_size(lista); i++) {
+        pthread_mutex_lock(&mutex_tlb);
         t_entrada* siguiente_entrada = list_get(lista, i);
+        pthread_mutex_unlock(&mutex_tlb);
+
         if (mas_vieja(siguiente_entrada, entrada_mas_vieja)) {
             entrada_mas_vieja = siguiente_entrada;
             indice_mas_vieja = i;
@@ -135,20 +154,23 @@ static void reemplazo_por_LRU(t_entrada* nueva_entrada){
 
     //saco la entrada menos usada
     int indice_menos_usada = buscar_indice_entrada_menor_uso(tlb);
-    list_remove(tlb, indice_menos_usada);
 
-    //pongo en el indice que saque, la nueva entrada
+    pthread_mutex_lock(&mutex_tlb);
+    list_remove(tlb, indice_menos_usada);
     list_add_in_index(tlb, indice_menos_usada, nueva_entrada);
+    pthread_mutex_unlock(&mutex_tlb);
+
     printf("reemplazo lru indice %d\n", indice_menos_usada);
 }
 
 static void reemplazo_por_FIFO(t_entrada* nueva_entrada){
     
     int indice_mas_vieja = buscar_indice_entrada_mas_vieja(tlb);
-    list_remove(tlb, indice_mas_vieja);
 
-    //pongo en el indice que saque, la nueva entrada
+    pthread_mutex_lock(&mutex_tlb);
+    list_remove(tlb, indice_mas_vieja);
     list_add_in_index(tlb, indice_mas_vieja, nueva_entrada);
+    pthread_mutex_unlock(&mutex_tlb);
 }
 
 void imprimir_tlb(t_list* tlb) { //SOLO PARA TESTING

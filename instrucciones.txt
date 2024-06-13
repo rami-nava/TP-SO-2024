@@ -18,7 +18,7 @@ make memcheck ARGS="impresora1 /home/utnso/tp-2024-1c-SegmenFault/IO_configs/imp
 
 TECLADO ===========
 
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/MEMORIA_1.txt"
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/MEMORIA_2.txt"
 
 =================================================================================
 

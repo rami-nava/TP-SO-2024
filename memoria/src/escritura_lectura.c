@@ -22,10 +22,10 @@ void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint
 		
 	memcpy(espacio_usuario + direccion_fisica, contenido, tamanio_escritura); 
 
-	imprimir_contenido_memoria(espacio_usuario + direccion_fisica, tamanio_escritura);
+	//imprimir_contenido_memoria(espacio_usuario + direccion_fisica, tamanio_escritura);
 
 	//    PARA TESTS
-	mem_hexdump(espacio_usuario, config_valores_memoria.tam_memoria);
+	//mem_hexdump(espacio_usuario, config_valores_memoria.tam_memoria);
 				
 
 	free(contenido);
@@ -56,10 +56,10 @@ void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t
     // Leemos el marco, puede una parte si el offset es mas que 0
     memcpy(contenido_leido, espacio_usuario + direccion_fisica, tamanio_lectura);
 
-	imprimir_contenido_memoria(contenido_leido, tamanio_lectura);
+	//imprimir_contenido_memoria(contenido_leido, tamanio_lectura);
 
 	// Devolver el contenido leído -> según instrucción
-	if(operacion == PEDIDO_MOV_IN){
+	if(operacion == LEER_CONTENIDO_EN_MEMORIA_DESDE_CPU){
 		t_paquete* paquete_mov_in = crear_paquete(RESULTADO_MOV_IN);
 		agregar_bytes_a_paquete(paquete_mov_in, contenido_leido, tamanio_lectura);
 		enviar_paquete(paquete_mov_in, cliente);

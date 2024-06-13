@@ -3,7 +3,7 @@
 static uint32_t traducir_pagina_a_marco(uint32_t numero_pagina);
 static void pedir_numero_frame(uint32_t numero_pagina);
 static uint32_t recibir_numero_marco_pagina();
-static char log_contenido(void* contenido_a_enviar, size_t bytes_en_este_marco);
+static void* recibir_resultado_mov_in();
 
 //==================================================AUXILIARES=================================================================================
 
@@ -67,7 +67,6 @@ uint32_t buscar_marco_tlb_o_memoria (uint32_t numero_pagina) {
 }
 
 static void pedir_numero_frame(uint32_t numero_pagina){
-
     t_paquete *paquete = crear_paquete(TRADUCIR_PAGINA_A_MARCO);
     agregar_entero_sin_signo_a_paquete(paquete, numero_pagina);
     agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
@@ -123,7 +122,7 @@ uint32_t bytes(uint32_t direccion_fisica, uint32_t bytes_manipulados, uint32_t t
     return bytes;
 }
 
-//================================================== ESCRITURA=================================================================================
+//================================================== ESCRITURA =================================================================================
 
 // Pedido de escritura generica para memoria
 void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t direccion_logica, uint32_t valor_para_log){
@@ -154,7 +153,6 @@ void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t 
     if (bytes_escritos < tamanio_escritura) {
 
         //Hasta aca ya copiamos la cant 'bytes_en_este_marco' del contenido total, ahora el resto se splitea
-        printf("\nbytes escritos hasta el momento %d\n", bytes_escritos);
         //Se usa: *El tamanio de la escritura supera el tamanio de pagina 
         //        Y/= *El desplazamiento no es 0 y se escribe el restante en otra pagina
         
@@ -180,9 +178,89 @@ void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t 
             log_info(cpu_logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d \n", contexto_ejecucion->pid,direccion_fisica_actual, valor_para_log); //VER EL CASTEO DE VOID* A CHARS Y A INT
             
             bytes_escritos += bytes_en_este_marco;
-            printf("\nbytes escritos hasta el momento %d\n", bytes_escritos); 
         }
     }
 }
 
-//================================================== LECTURA=================================================================================
+//================================================== LECTURA =================================================================================
+
+// Pedido de lectura generica para memoria
+void* lectura_en_memoria(uint32_t tamanio_lectura, uint32_t direccion_logica){
+
+    uint32_t pagina_actual = floor(direccion_logica / tam_pagina);
+
+    uint32_t marco_actual = -1;
+    
+    uint32_t bytes_leidos = 0;
+
+    // Lo que se va a escribir en el registro
+    void* contenido_leido_total = malloc(tamanio_lectura); 
+
+    uint32_t direccion_fisica_actual = traducir_de_logica_a_fisica(direccion_logica);
+    uint32_t direccion_fisica_pedida_para_log = direccion_fisica_actual;
+
+    uint32_t bytes_en_este_marco = bytes(direccion_fisica_actual, bytes_leidos, tamanio_lectura); //bytes en este marco, pueden ser menos q el tampag si el desp no es 0
+
+    pedido_lectura_mmu(direccion_fisica_actual, bytes_en_este_marco);
+
+    // Buffer para cada dato que recibimos
+    void* valor_leido_en_este_marco = malloc(bytes_en_este_marco);
+    valor_leido_en_este_marco = recibir_resultado_mov_in();
+    memcpy(contenido_leido_total, valor_leido_en_este_marco, bytes_en_este_marco);
+    free(valor_leido_en_este_marco);
+        
+    bytes_leidos += bytes_en_este_marco;
+
+    if (bytes_leidos < tamanio_lectura) {
+
+        //Hasta aca ya leimos la cant 'bytes_en_este_marco' del contenido total, ahora el resto se splitea
+        //Se usa: *El tamanio de la escritura supera el tamanio de pagina 
+        //        Y/= *El desplazamiento no es 0 y se escribe el restante en otra pagina
+        
+        for (int i=1; bytes_leidos < tamanio_lectura; i++){
+
+            pagina_actual ++;
+
+            marco_actual = buscar_marco_tlb_o_memoria(pagina_actual); 
+            
+            direccion_fisica_actual = marco_actual * tam_pagina;
+
+            bytes_en_este_marco = bytes(direccion_fisica_actual, bytes_leidos, tamanio_lectura);
+
+            pedido_lectura_mmu(direccion_fisica_actual, bytes_en_este_marco);
+
+            void* valor_leido_en_este_marco = malloc(bytes_en_este_marco);
+            valor_leido_en_este_marco = recibir_resultado_mov_in();
+            memcpy(contenido_leido_total + bytes_leidos, valor_leido_en_este_marco + bytes_leidos, bytes_en_este_marco);
+            free(valor_leido_en_este_marco);
+            
+            bytes_leidos += bytes_en_este_marco;
+        }
+    }
+
+    char ascii_char = *((char*)contenido_leido_total);
+    uint32_t valor = (uint32_t)ascii_char;
+
+    log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %u \n", contexto_ejecucion->pid, "LEER", direccion_fisica_pedida_para_log, valor);
+
+    return contenido_leido_total;
+}
+
+//puede recibir caracteres tambien? era uint32_t antes
+static void* recibir_resultado_mov_in(){
+    t_paquete *paquete = recibir_paquete(socket_cliente_memoria);
+    void *stream = paquete->buffer->stream;
+    if (paquete->codigo_operacion == RESULTADO_MOV_IN){
+        
+        void* dato_a_guardar = sacar_bytes_de_paquete(&stream);
+
+        eliminar_paquete(paquete);
+
+        return dato_a_guardar;
+    }
+    else{
+        log_error(cpu_logger, "No me enviaste el resultado :( \n");
+        abort();
+    }
+    eliminar_paquete(paquete);
+}
