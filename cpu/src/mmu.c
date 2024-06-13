@@ -232,6 +232,24 @@ void* lectura_en_memoria(uint32_t tamanio_total, t_list* lista_accesos_memoria){
     return contenido_leido_total;
 }
 
+static void* recibir_resultado_lectura(){
+    t_paquete *paquete = recibir_paquete(socket_cliente_memoria);
+    void *stream = paquete->buffer->stream;
+    if (paquete->codigo_operacion == RESULTADO_MOV_IN){
+        
+        void* dato_a_guardar = sacar_bytes_de_paquete(&stream);
+
+        eliminar_paquete(paquete);
+
+        return dato_a_guardar;
+    }
+    else{
+        log_error(cpu_logger, "No me enviaste el resultado :( \n");
+        abort();
+    }
+    eliminar_paquete(paquete);
+}
+
 /* Pedido de escritura generica para memoria
 void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t direccion_logica, uint32_t valor_para_log){
 
@@ -351,27 +369,6 @@ void* lectura_en_memoria(uint32_t tamanio_lectura, uint32_t direccion_logica){
 
     return contenido_leido_total;
 }*/
-
-static void* recibir_resultado_lectura(){
-    t_paquete *paquete = recibir_paquete(socket_cliente_memoria);
-    void *stream = paquete->buffer->stream;
-    if (paquete->codigo_operacion == RESULTADO_MOV_IN){
-        
-        void* dato_a_guardar = sacar_bytes_de_paquete(&stream);
-
-        eliminar_paquete(paquete);
-
-        return dato_a_guardar;
-    }
-    else{
-        log_error(cpu_logger, "No me enviaste el resultado :( \n");
-        abort();
-    }
-    eliminar_paquete(paquete);
-}
-
-
-
 
 /*
 
