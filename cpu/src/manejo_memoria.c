@@ -7,9 +7,6 @@ uint32_t tam_pagina;
 // FUNCIONES INTERNAS //
 static void enviar_handshake();
 static void recibir_handshake();
-static void pedir_MOV_IN(uint32_t direccion_fisica, uint32_t tamanio);
-//static void pedir_MOV_OUT(uint32_t direccion_fisica, void* valor_registro, uint32_t tamanio_registro);
-static uint32_t recibir_resultado_mov_in(uint32_t tam_registro);
 
 //================================================== Handshake =====================================================================
 void realizar_handshake()
@@ -93,8 +90,10 @@ void mov_in(char *registro, char *registro_direccion_logica){
     // Buscamos el tamanio del registro (cantidad de bytes que voy a leer)
     uint32_t tam_registro = tamanio_registro(registro);
 
+    t_list* direcciones_fisicas_a_leer = obtener_direcciones_fisicas_mmu(tam_registro, direccion_logica);
+
     // Enviamos el pedido de MOV_IN
-    void* valor_leido = lectura_en_memoria(tam_registro, direccion_logica);
+    void* valor_leido = lectura_en_memoria(tam_registro, direcciones_fisicas_a_leer);
 
     // lo pongo aca porque capaz para el stdout usamos la misma funcion de leer 
     // y no se si el stdout hace lo mismo que el mov in
@@ -112,13 +111,40 @@ void mov_out(char *registro_direccion_logica, char *registro){
     //devuelve un puntero al registro (lo que tengo que escribir)
     void* valor_a_escribir = buscar_valor_registro_generico(registro);
 
-    uint32_t valor_registro_log = buscar_registro(registro);
-
     // Devuelve la direccion logica almacenada en el registro de la izquierda
     uint32_t direccion_logica = buscar_registro(registro_direccion_logica);
 
     // Devuelve cantidad de bytes que se van a escribir
     uint32_t tam_registro = tamanio_registro(registro);
 
-    escritura_en_memoria(valor_a_escribir, tam_registro, direccion_logica, valor_registro_log);
+    // A partir de la direccion logica inicial y el tamanio total a escribir me devuelve las direcciones fisicas de las paginas que voy a necesitar
+    t_list* direcciones_fisicas_a_escribir = obtener_direcciones_fisicas_mmu(tam_registro, direccion_logica);
+
+    // Solo para el log
+    uint32_t valor_registro_log = buscar_registro(registro);
+    t_acceso_memoria* primera_df = ((t_acceso_memoria*)list_get(direcciones_fisicas_a_escribir, 0));
+
+    uint32_t direccion_fisica_para_log = primera_df->direccion_fisica;
+    log_info(cpu_logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d \n", contexto_ejecucion->pid, direccion_fisica_para_log, valor_registro_log); 
+
+    escritura_en_memoria(valor_a_escribir, direcciones_fisicas_a_escribir);
+}
+
+//======================================== AUXILIARES ==============================
+void pedido_escritura(void* contenido, uint32_t direccion_fisica, uint32_t bytes_a_escribir){
+    t_paquete* paquete = crear_paquete(ESCRIBIR_CONTENIDO_EN_MEMORIA_DESDE_CPU);
+    agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
+    agregar_entero_sin_signo_a_paquete(paquete, bytes_a_escribir);
+    agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
+    agregar_bytes_a_paquete(paquete, contenido, bytes_a_escribir);
+    enviar_paquete(paquete, socket_cliente_memoria);
+    free(contenido);
+}
+
+void pedido_lectura(uint32_t direccion_fisica, uint32_t bytes_a_leer){
+    t_paquete *paquete = crear_paquete(LEER_CONTENIDO_EN_MEMORIA_DESDE_CPU);
+    agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
+    agregar_entero_sin_signo_a_paquete(paquete, bytes_a_leer);
+    agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
+    enviar_paquete(paquete, socket_cliente_memoria);
 }

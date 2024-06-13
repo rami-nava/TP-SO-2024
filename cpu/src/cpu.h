@@ -26,7 +26,20 @@ typedef struct
    char* algoritmo_tlb;
 } arch_config;
 
-extern arch_config config_valores_cpu; //PUEDE QUE ESTO AL FINAL NO SE USA? se declara en cpu_utils puede confudirse lo mismo el t_config, y lo mismo pasa en la memoria.
+typedef struct {
+    uint32_t direccion_fisica;
+    uint32_t tamanio;
+} t_acceso_memoria;
+
+typedef struct {
+	int pid;
+   uint32_t pagina;
+   uint32_t marco; 
+   int ultimo_uso;
+   int tiempo_carga;
+} t_entrada;
+
+extern arch_config config_valores_cpu; 
 
 
 //Variables
@@ -42,6 +55,11 @@ extern bool seguir_ejecutando;
 
 extern pthread_mutex_t interrupcion_mutex;
 extern pthread_mutex_t seguir_ejecutando_mutex;
+
+extern t_list* tlb;
+extern int cantidad_entradas_tlb;
+extern char* algoritmo_tlb;
+extern uint32_t tam_pagina;
 
 
 // FUNCIONES
@@ -66,8 +84,8 @@ uint32_t tamanio_registro(char* registro);
 
 
 // FUNCIONES MMU
-void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t direccion_logica, uint32_t valor_para_log);
-void* lectura_en_memoria(uint32_t tamanio_lectura, uint32_t direccion_logica);
+void escritura_en_memoria(void* contenido, t_list* lista_accesos_memoria);
+void* lectura_en_memoria(uint32_t tamanio_total, t_list* lista_accesos_memoria);
 uint32_t bytes(uint32_t direccion_fisica, uint32_t bytes_manipulados, uint32_t tamanio);
 
 //TLB
@@ -81,26 +99,12 @@ uint32_t bytes(uint32_t direccion_fisica, uint32_t bytes_manipulados, uint32_t t
                                 -TLB AJUSTA LISTAS SEGUN ALGORITMO
 */
 
-
-
-extern t_list* tlb;
-extern int cantidad_entradas_tlb;
-extern char* algoritmo_tlb;
-extern uint32_t tam_pagina;
-
-
-typedef struct {
-	int pid;
-   uint32_t pagina;
-   uint32_t marco; 
-   int ultimo_uso;
-   int tiempo_carga;
-} t_entrada;
-
-
 uint32_t consultar_tlb(int pid, uint32_t pagina); //HIT: marco - MISS: -1
 void agregar_entrada_tlb(int pid, uint32_t pagina, uint32_t marco); 
 void imprimir_tlb(t_list* tlb);
 uint32_t buscar_marco_tlb_o_memoria (uint32_t numero_pagina);
+void pedido_escritura(void* contenido, uint32_t direccion_fisica, uint32_t bytes_a_escribir);
+void pedido_lectura(uint32_t direccion_fisica, uint32_t bytes_a_leer);
+t_list* obtener_direcciones_fisicas_mmu(uint32_t tamanio_total, uint32_t direccion_logica_inicial);
 
 #endif 

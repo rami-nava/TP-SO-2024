@@ -5,28 +5,9 @@ static void pedir_numero_frame(uint32_t numero_pagina);
 static uint32_t recibir_numero_marco_pagina();
 static void* recibir_resultado_mov_in();
 
+pthread_mutex_t mutex_direcciones_fisicas;
+
 //==================================================AUXILIARES=================================================================================
-
-//CAMBIAR NOMBRE DE ESTAS A UNO GENERICO, PQ NO LO PIDE LA MMU, LO PIDEN LOS PROCESOS, Y DEBERIAN ESTAR EN MANEJO_MEMORIA CON LOS METODOS NUEVOS DE ESCRITURA/LECT.
-//LA MMU SOLO BUSCA LAS DFS, EL RESTO ES PROPIO DE LOS PROCESOS
-
-static void pedido_escritura_mmu(void* contenido, uint32_t direccion_fisica, uint32_t bytes_a_escribir){
-    t_paquete* paquete = crear_paquete(ESCRIBIR_CONTENIDO_EN_MEMORIA_DESDE_CPU);
-    agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
-    agregar_entero_sin_signo_a_paquete(paquete, bytes_a_escribir);
-    agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
-    agregar_bytes_a_paquete(paquete, contenido, bytes_a_escribir);
-    enviar_paquete(paquete, socket_cliente_memoria);
-    free(contenido);
-}
-
-static void pedido_lectura_mmu(uint32_t direccion_fisica, uint32_t bytes_a_leer){
-    t_paquete *paquete = crear_paquete(LEER_CONTENIDO_EN_MEMORIA_DESDE_CPU);
-    agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
-    agregar_entero_sin_signo_a_paquete(paquete, bytes_a_leer);
-    agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
-    enviar_paquete(paquete, socket_cliente_memoria);
-}
 
 static uint32_t traducir_pagina_a_marco(uint32_t numero_pagina){
     
@@ -116,6 +97,61 @@ uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica){
     return direccion_fisica;
 }
 
+//ME DA TODAS LAS DFS QUE NECESITO Y CUANTO ESCRIBIR EN CADA UNA PARA UNA ACCION (ESCRITURA-LECTURA) EN MEMORIA
+t_list* obtener_direcciones_fisicas_mmu(uint32_t tamanio_total, uint32_t direccion_logica_inicial){
+
+    uint32_t marco_actual = -1;
+    uint32_t bytes_cargados = 0;
+
+    t_list* lista_direcciones_fisicas = list_create();
+
+    //PRIMERA PAGINA/MARCO
+    uint32_t pagina_actual = floor(direccion_logica_inicial / tam_pagina);
+    uint32_t direccion_fisica_actual = traducir_de_logica_a_fisica(direccion_logica_inicial);
+    uint32_t bytes_en_este_marco = bytes(direccion_fisica_actual, bytes_cargados, tamanio_total);
+
+    t_acceso_memoria* acceso = malloc(sizeof(t_acceso_memoria));
+    acceso->direccion_fisica = direccion_fisica_actual;
+    acceso->tamanio = bytes_en_este_marco;
+
+    list_add(lista_direcciones_fisicas, acceso);
+
+    bytes_cargados += bytes_en_este_marco;
+
+    // PAGINAS/MARCOS SIGUIENTES SI ES QUE HAY
+
+    if (bytes_cargados < tamanio_total){
+        //EL DATO DEBERA PARTIRSE, PORQUE TAMAÑO ES MAYOR A LA PAGINA, O HAY DESPLAZAMIENTO, ETC.
+
+        for (int i=1; bytes_cargados < tamanio_total; i++){
+
+            pagina_actual ++;
+            marco_actual = buscar_marco_tlb_o_memoria(pagina_actual); 
+            
+            //Las dfs siguientes al primer marco comenzaran todas en desplazamiento=0 porque se busca completar el dato entero
+            direccion_fisica_actual = marco_actual * tam_pagina; 
+            bytes_en_este_marco = bytes(direccion_fisica_actual, bytes_cargados, tamanio_total);
+
+            t_acceso_memoria* acceso_nuevo = malloc(sizeof(t_acceso_memoria));
+            acceso_nuevo->direccion_fisica = direccion_fisica_actual;
+            acceso_nuevo->tamanio = bytes_en_este_marco;
+
+            list_add(lista_direcciones_fisicas, acceso_nuevo);
+
+            bytes_cargados += bytes_en_este_marco;
+        }
+    }
+    return lista_direcciones_fisicas;
+}
+
+
+//mmu traduce una lista de direccions
+// uso esa en las de memoria
+// en io las mando al kernel y este se las manda a las io
+
+
+//================================================== ESCRITURA =================================================================================
+
 uint32_t bytes(uint32_t direccion_fisica, uint32_t bytes_manipulados, uint32_t tamanio){
     uint32_t bytes = tam_pagina - (direccion_fisica % tam_pagina);
     if (bytes > tamanio - bytes_manipulados) {
@@ -124,11 +160,79 @@ uint32_t bytes(uint32_t direccion_fisica, uint32_t bytes_manipulados, uint32_t t
     return bytes;
 }
 
+void escritura_en_memoria(void* contenido, t_list* lista_accesos_memoria){
 
+    //RECORRO TODAS LAS DFS QUE HAYA EN LA LISTA QUE ME HIZO PREVIAMENTE LA MMU Y COPIO EN MEMORIA
+    uint32_t escritura_ok;
+    uint32_t tamanio_copiado_actual = 0;
 
-//================================================== ESCRITURA =================================================================================
+    t_list_iterator* iterator = list_iterator_create(lista_accesos_memoria);
+    while (list_iterator_has_next(iterator)) {
 
-// Pedido de escritura generica para memoria
+        t_acceso_memoria* acceso = (t_acceso_memoria*) list_iterator_next(iterator);
+        
+        void* contenido_a_escribir_actual = malloc(acceso->tamanio);
+
+        memcpy(contenido_a_escribir_actual, contenido + tamanio_copiado_actual, acceso->tamanio);
+
+        pedido_escritura(contenido_a_escribir_actual, acceso->direccion_fisica, acceso->tamanio);
+        recv(socket_cliente_memoria, &escritura_ok, sizeof(uint32_t), MSG_WAITALL);
+
+        if (escritura_ok == 1){
+            tamanio_copiado_actual += acceso->tamanio; 
+        }else{
+            log_error(cpu_logger, "Escritura fallida\n");
+            abort();
+        }        
+    }
+    list_iterator_destroy(iterator);
+    
+    //CUANDO SE TERMINA DE HACER LA ESCRITURA, HAY QUE MATAR LA LISTA DE DFS SINO QUEDA MEMORIA VOLANDO EN CUALQUIER LADO
+    //TODO : HACER LO MISMO CUANDO SE HAGA ESCRITURA/LECTURA EN IO
+    list_destroy(lista_accesos_memoria);
+}
+
+// En la lectura me dan el tamanio de lo que leo
+void* lectura_en_memoria(uint32_t tamanio_total, t_list* lista_accesos_memoria){
+
+    uint32_t tamanio_leido_actual = 0;
+    void* contenido_leido_total = malloc(tamanio_total); 
+
+    t_acceso_memoria* primera_df = ((t_acceso_memoria*)list_get(lista_accesos_memoria, 0));
+    uint32_t direccion_fisica_para_log = primera_df->direccion_fisica;
+
+    t_list_iterator* iterator = list_iterator_create(lista_accesos_memoria);
+    while (list_iterator_has_next(iterator)) {
+
+        t_acceso_memoria* acceso = (t_acceso_memoria*) list_iterator_next(iterator);
+        
+        pedido_lectura(acceso->direccion_fisica, acceso->tamanio);
+
+        void* valor_leido = malloc(acceso->tamanio);
+        valor_leido = recibir_resultado_mov_in(); //si todos reciben la misma instruccion rompe
+        memcpy(contenido_leido_total + tamanio_leido_actual, valor_leido, acceso->tamanio);
+
+        tamanio_leido_actual += acceso->tamanio;
+
+        free(valor_leido);        
+        free(acceso);
+        
+    }
+
+    char valor_como_char = *((char*)contenido_leido_total);
+    uint32_t valor = (uint32_t)valor_como_char;
+
+    log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %u \n", contexto_ejecucion->pid, "LEER", direccion_fisica_para_log, valor);
+
+    list_iterator_destroy(iterator);
+    
+    //CUANDO SE TERMINA DE HACER LA LECTURA, HAY QUE MATAR LA LISTA DE DFS SINO QUEDA MEMORIA VOLANDO EN CUALQUIER LADO
+    list_destroy(lista_accesos_memoria);
+
+    return contenido_leido_total;
+}
+
+/* Pedido de escritura generica para memoria
 void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t direccion_logica, uint32_t valor_para_log){
 
     uint32_t pagina_actual = floor(direccion_logica / tam_pagina);
@@ -186,8 +290,6 @@ void escritura_en_memoria(void* contenido, uint32_t tamanio_escritura, uint32_t 
     }
 }
 
-//================================================== LECTURA =================================================================================
-
 // Pedido de lectura generica para memoria
 void* lectura_en_memoria(uint32_t tamanio_lectura, uint32_t direccion_logica){
 
@@ -242,15 +344,14 @@ void* lectura_en_memoria(uint32_t tamanio_lectura, uint32_t direccion_logica){
         }
     }
 
-    char ascii_char = *((char*)contenido_leido_total);
-    uint32_t valor = (uint32_t)ascii_char;
+    char valor_como_char = *((char*)contenido_leido_total);
+    uint32_t valor = (uint32_t)valor_como_char;
 
     log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %u \n", contexto_ejecucion->pid, "LEER", direccion_fisica_pedida_para_log, valor);
 
     return contenido_leido_total;
-}
+}*/
 
-//puede recibir caracteres tambien? era uint32_t antes
 static void* recibir_resultado_mov_in(){
     t_paquete *paquete = recibir_paquete(socket_cliente_memoria);
     void *stream = paquete->buffer->stream;
@@ -284,22 +385,20 @@ typedef struct {
     uint32_t tamanio;
 } t_acceso_memoria;
 
-
 //ME DA TODAS LAS DFS QUE NECESITO Y CUANTO ESCRIBIR EN CADA UNA PARA UNA ACCION (ESCRITURA-LECTURA) EN MEMORIA
 t_list* obtener_direcciones_fisicas_mmu(uint32_t tamanio_total, uint32_t direccion_logica_inicial){
 
     uint32_t marco_actual = -1;
     uint32_t bytes_cargados = 0;
-    
-    t_acceso_memoria* acceso = malloc(sizeof(t_acceso_memoria));
 
     t_list* lista_accesos_memoria = list_create();
 
     //PRIMERA PAGINA/MARCO
-    uint32_t pagina_actual = floor(direccion_logica / tam_pagina);
+    uint32_t pagina_actual = floor(direccion_logica_inicial / tam_pagina);
     uint32_t direccion_fisica_actual = traducir_de_logica_a_fisica(direccion_logica_inicial);
-    uint32_t bytes_en_este_marco = bytes(direccion_fisica_actual, bytes_escritos, tamanio_escritura);
+    uint32_t bytes_en_este_marco = bytes(direccion_fisica_actual, bytes_cargados, tamanio_total);
 
+    t_acceso_memoria* acceso = malloc(sizeof(t_acceso_memoria));
     acceso->direccion_fisica = direccion_fisica_actual;
     acceso->tamanio = bytes_en_este_marco;
 
@@ -338,9 +437,6 @@ t_list* obtener_direcciones_fisicas_mmu(uint32_t tamanio_total, uint32_t direcci
 
     return lista_direcciones_fisicas;
 }
-
-
-
 
 //NUEVA ESCRITURA ESPERO QUE FINAL LPM
 void escritura_en_memoria(void* contenido, t_list* lista_accesos_memoria){
