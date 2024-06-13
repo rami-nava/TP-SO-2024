@@ -272,9 +272,10 @@ static void* recibir_resultado_mov_in(){
 
 
 
-
+/*
 
 //================================================== SPLIT DE DIRECCIONES FISICAS ==============================================================
+
 
 //ESTO PONERLO EN UTILS!!!
 typedef struct {
@@ -469,3 +470,4 @@ void* lectura_en_memoria(t_list* lista_accesos_memoria){
     return contenido_leido_total;
 }
 
+*/
