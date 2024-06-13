@@ -49,6 +49,7 @@ void crear_marcos_memoria() {
 		marco->nro_pagina = -1;
 		marco->nro_marco = i;
 		marco->pid_proceso = -1;
+		marco->libre = true;
         
 		list_add(marcos, marco);
 	}
@@ -107,6 +108,8 @@ void liberar_marco(int marco_a_liberar){
 
 	marco->nro_pagina = -1;
 	marco->pid_proceso = -1;
+	marco->nro_pagina = -1;
+	marco->libre = true;
 }
 
 t_marco* buscar_marco_por_numero(int numero_de_marco) {
@@ -138,9 +141,11 @@ void asignar_marcos_a_proceso(t_proceso_en_memoria* proceso, int cantidad_de_mar
 	for(int i = 0; i< cantidad_marcos; i++){
 		if(contador < cantidad_de_marcos_necesarios){
 			marco_obtenido = (t_marco*) list_get(marcos,i);
-			
-			asignar_proceso_a_marco(proceso, marco_obtenido); //TAMBIEN AGREGA PAGINA A PROCESO
-			contador++;
+
+			if(marco_obtenido->libre) {
+				asignar_proceso_a_marco(proceso, marco_obtenido); //TAMBIEN AGREGA PAGINA A PROCESO
+				contador++;
+			}			
 		} else {
 			break;
 		}
@@ -153,6 +158,7 @@ void asignar_proceso_a_marco(t_proceso_en_memoria* proceso, t_marco* marco){
 	
 	marco->pid_proceso = proceso->pid;
 	marco->nro_pagina = list_size(proceso->paginas_en_memoria)-1;
+	marco->libre = false;
 }
 
 //Busca en los procesos cuyas instrucciones ya fueron cargadas

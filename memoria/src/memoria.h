@@ -59,6 +59,7 @@ typedef struct {
     int nro_marco;
 	int pid_proceso;
 	int nro_pagina;
+	bool libre;
 } t_marco;
 
 typedef struct {
