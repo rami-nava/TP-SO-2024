@@ -3,7 +3,7 @@
 static uint32_t traducir_pagina_a_marco(uint32_t numero_pagina);
 static void pedir_numero_frame(uint32_t numero_pagina);
 static uint32_t recibir_numero_marco_pagina();
-static void* recibir_resultado_mov_in();
+static void* recibir_resultado_lectura();
 
 pthread_mutex_t mutex_direcciones_fisicas;
 
@@ -209,7 +209,7 @@ void* lectura_en_memoria(uint32_t tamanio_total, t_list* lista_accesos_memoria){
         pedido_lectura(acceso->direccion_fisica, acceso->tamanio);
 
         void* valor_leido = malloc(acceso->tamanio);
-        valor_leido = recibir_resultado_mov_in(); //si todos reciben la misma instruccion rompe
+        valor_leido = recibir_resultado_lectura(); //si todos reciben la misma instruccion rompe
         memcpy(contenido_leido_total + tamanio_leido_actual, valor_leido, acceso->tamanio);
 
         tamanio_leido_actual += acceso->tamanio;
@@ -352,7 +352,7 @@ void* lectura_en_memoria(uint32_t tamanio_lectura, uint32_t direccion_logica){
     return contenido_leido_total;
 }*/
 
-static void* recibir_resultado_mov_in(){
+static void* recibir_resultado_lectura(){
     t_paquete *paquete = recibir_paquete(socket_cliente_memoria);
     void *stream = paquete->buffer->stream;
     if (paquete->codigo_operacion == RESULTADO_MOV_IN){
