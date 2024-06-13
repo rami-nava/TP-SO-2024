@@ -51,6 +51,32 @@ typedef struct
     t_config* config_interfaz; 
 } t_interfaz;
 
+typedef struct 
+{
+    int pid;
+    int tiempo_sleep;
+} t_peticion_generica;
+
+typedef struct 
+{
+    int pid;
+    uint32_t direccion_fisica;
+    uint32_t tamanio_registro;
+} t_peticion_std;
+
+typedef struct
+{
+    int op_code;
+    int pid;
+    char* nombre;
+    int desde;
+    int hasta;
+    uint32_t puntero_archivo;
+    uint32_t tamanio;
+    uint32_t direccion_fisica;
+    uint32_t tamanio_archivo;
+} t_peticion_dialfs;
+
 //.................................. INICIALIZACION IO .......................................................................
 void iniciar_interfaz(char* nombre, char* path_de_config);
 void main_generica(t_interfaz* interfaz_hilo);

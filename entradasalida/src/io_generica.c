@@ -7,8 +7,13 @@ static int socket_kernel;
 static int tiempo_unidad_de_trabajo;
 t_log* generica_logger;
 static char* nombre_interfaz;
+static pthread_t hilo_sleep;
+static t_list* peticiones;
+static sem_t hay_peticiones;
+static pthread_mutex_t mutex_lista_peticiones;
 
 static void realizar_sleep();
+static void recibir_peticion();
 
 void main_generica(t_interfaz* interfaz){
 
@@ -31,14 +36,19 @@ void main_generica(t_interfaz* interfaz){
     socket_kernel = crear_conexion(ip_kernel, puerto_kernel);
 
     conectarse_a_kernel(socket_kernel, INTERFAZ_GENERICA, nombre_interfaz, "GENERICA");
+
+    sem_init(&hay_peticiones, 0, 0);
+    pthread_mutex_init(&mutex_lista_peticiones, NULL);
     
-    realizar_sleep();
+    recibir_peticion();
 }
 
-void realizar_sleep() 
+void recibir_peticion() 
 {
-    int proceso_conectado;
-    int cantidad_tiempo;
+    peticiones = list_create();
+
+    pthread_create(&hilo_sleep, NULL, (void* ) realizar_sleep, NULL);
+    pthread_detach(hilo_sleep);
     
     while(1)
     {
@@ -48,19 +58,16 @@ void realizar_sleep()
 
         if(paquete->codigo_operacion == GENERICA_IO_SLEEP) {
 
-        proceso_conectado = sacar_entero_de_paquete(&stream);
-        cantidad_tiempo = sacar_entero_de_paquete(&stream);
-
-        log_info(generica_logger, "PID: %d - Operacion: IO_GEN_SLEEP\n", proceso_conectado);
-
-        int tiempo_sleep = tiempo_unidad_de_trabajo * cantidad_tiempo * 1000;
+        t_peticion_generica* peticion = malloc(sizeof(t_peticion_generica));
         
-        usleep(tiempo_sleep);
-        
-        log_info(generica_logger, "El proceso finalizo IO\n");
+        peticion->pid = sacar_entero_de_paquete(&stream);
+        peticion->tiempo_sleep = sacar_entero_de_paquete(&stream);
 
-        int termino_io = 1;
-        send(socket_kernel, &termino_io, sizeof(int), 0);
+        pthread_mutex_lock(&mutex_lista_peticiones);
+        list_add(peticiones, peticion);
+        pthread_mutex_unlock(&mutex_lista_peticiones);
+
+        sem_post(&hay_peticiones);
 
         }else if(paquete->codigo_operacion == FINALIZAR_OPERACION_IO){
             sacar_entero_de_paquete(&stream);
@@ -71,5 +78,29 @@ void realizar_sleep()
         }
         
         eliminar_paquete(paquete);
+    }
+}
+//TODO AGREGAR MUTEX A LA LISTA
+
+void realizar_sleep(){
+
+    while(true){
+        sem_wait(&hay_peticiones);
+
+        pthread_mutex_lock(&mutex_lista_peticiones);
+        t_peticion_generica* peticion = list_remove(peticiones, 0);
+        pthread_mutex_unlock(&mutex_lista_peticiones);
+        
+        log_info(generica_logger, "PID: %d - Operacion: IO_GEN_SLEEP\n", peticion->pid);
+
+        int tiempo_sleep = tiempo_unidad_de_trabajo * peticion->tiempo_sleep * 1000;
+
+        usleep(tiempo_sleep);
+
+        log_info(generica_logger, "El proceso finalizo IO\n");
+
+        send(socket_kernel, &peticion->pid, sizeof(int), 0);
+
+        free(peticion);
     }
 }

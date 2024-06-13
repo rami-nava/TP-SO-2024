@@ -16,10 +16,13 @@ t_log *dialfs_logger;
 t_list* bloques_iniciales;
 t_dictionary* nombre_con_bloque_inicial;
 bool compactar_desde_comienzo;
+static pthread_t hilo_dialfs;
+static t_list* peticiones;
+static sem_t hay_peticiones;
+static pthread_mutex_t mutex_lista_peticiones;
 
-static void recibir_peticiones_de_kernel();
+static void recibir_peticion();
 static void consumir_una_unidad_de_tiempo_de_trabajo();
-static void aviso_de_operacion_finalizada_a_kernel();
 static void crear_archivo(char *nombre_archivo);
 static void eliminar_archivo(char *nombre_archivo);
 static void truncar_archivo(char *nombre_archivo, uint32_t tamanio_nuevo);
@@ -31,6 +34,7 @@ static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uin
 static void solicitar_contenido_a_memoria(int pid, uint32_t cantidad_bytes, uint32_t direccion_fisica);
 static void* obtener_contenido_a_escribir();
 static void reposicionamiento_del_puntero_de_archivo(uint32_t puntero_archivo, char *nombre_archivo);
+static void atender_peticion();
 
 
 void main_dialfs(t_interfaz *interfaz_hilo)
@@ -70,98 +74,145 @@ void main_dialfs(t_interfaz *interfaz_hilo)
 
     cargar_bitmap(cantidad_bloques);
 
-    recibir_peticiones_de_kernel();
+    sem_init(&hay_peticiones, 0, 0);
+    pthread_mutex_init(&mutex_lista_peticiones, NULL);
+
+    recibir_peticion();
 }
 
-static void recibir_peticiones_de_kernel()
+static void recibir_peticion()
 {
+    peticiones = list_create();
+    
+    pthread_create(&hilo_dialfs, NULL, (void* ) atender_peticion, NULL);
+    pthread_detach(hilo_dialfs);
+
     while (1)
     {
         t_paquete *paquete = recibir_paquete(socket_kernel);
         void *stream = paquete->buffer->stream;
-        int proceso_conectado = -1;
-        char* nombre = NULL;
-        int desde;
-        int hasta;
-        uint32_t puntero_archivo = 0;
-        uint32_t tamanio = 0;
-        uint32_t direccion_fisica = 0; //la interfaz recibe la direccion logica ya traducida a fisica
-        uint32_t tamanio_archivo = 0;
 
         consumir_una_unidad_de_tiempo_de_trabajo();
 
+        t_peticion_dialfs* peticion = malloc(sizeof(t_peticion_dialfs));
+        peticion->op_code = paquete->codigo_operacion;
+
         switch (paquete->codigo_operacion)
         {
-        case CREAR_ARCHIVO:
-            nombre = sacar_cadena_de_paquete(&stream);
-            proceso_conectado = sacar_entero_de_paquete(&stream);
-            log_info(dialfs_logger, "PID: %d - Crear Archivo: %s \n", proceso_conectado, nombre);
-            crear_archivo(nombre);
+        case CREAR_ARCHIVO:         
+            peticion->nombre = sacar_cadena_de_paquete(&stream);
+            peticion->pid = sacar_entero_de_paquete(&stream);
+            log_info(dialfs_logger, "PID: %d - Crear Archivo: %s \n", peticion->pid, peticion->nombre);
+            pthread_mutex_lock(&mutex_lista_peticiones);
+            list_add(peticiones, peticion);
+            pthread_mutex_unlock(&mutex_lista_peticiones);
+            sem_post(&hay_peticiones);
             break;
         case ELIMINAR_ARCHIVO:
-            nombre = sacar_cadena_de_paquete(&stream);
-            proceso_conectado = sacar_entero_de_paquete(&stream);
-            log_info(dialfs_logger, "PID: %d - Eliminar Archivo: %s \n", proceso_conectado, nombre);
-            eliminar_archivo(nombre);
+            peticion->nombre = sacar_cadena_de_paquete(&stream);
+            peticion->pid = sacar_entero_de_paquete(&stream);
+            log_info(dialfs_logger, "PID: %d - Eliminar Archivo: %s \n", peticion->pid, peticion->nombre);
+            pthread_mutex_lock(&mutex_lista_peticiones);
+            list_add(peticiones, peticion);
+            pthread_mutex_unlock(&mutex_lista_peticiones);
+            sem_post(&hay_peticiones);
             break;
         case TRUNCAR_ARCHIVO:
-            nombre = sacar_cadena_de_paquete(&stream);
-            tamanio_archivo = sacar_entero_sin_signo_de_paquete(&stream);
-            proceso_conectado = sacar_entero_de_paquete(&stream);
-            log_info(dialfs_logger, "PID: %d - Truncar Archivo: %s, Tamaño: %d \n", proceso_conectado, nombre, tamanio_archivo);
-            truncar_archivo(nombre, tamanio_archivo);
+            peticion->nombre = sacar_cadena_de_paquete(&stream);
+            peticion->tamanio_archivo = sacar_entero_sin_signo_de_paquete(&stream);
+            peticion->pid = sacar_entero_de_paquete(&stream);
+            log_info(dialfs_logger, "PID: %d - Truncar Archivo: %s, Tamaño: %d \n", peticion->pid, peticion->nombre, peticion->tamanio_archivo);
+            pthread_mutex_lock(&mutex_lista_peticiones);
+            list_add(peticiones, peticion);
+            pthread_mutex_unlock(&mutex_lista_peticiones);
+            sem_post(&hay_peticiones);
             break;
         case LEER_ARCHIVO:
-            nombre = sacar_cadena_de_paquete(&stream);
-            puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream);
-            tamanio = sacar_entero_sin_signo_de_paquete(&stream);
-            proceso_conectado = sacar_entero_de_paquete(&stream);
-            direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
-            log_info(dialfs_logger, "PID: %d - Leer Archivo: %s - Tamaño a leer : %d - Puntero archivo: %d \n", proceso_conectado, nombre, puntero_archivo, tamanio);
-            leer_archivo(nombre, puntero_archivo, tamanio, direccion_fisica);
+            peticion->nombre = sacar_cadena_de_paquete(&stream);
+            peticion->puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream);
+            peticion->tamanio = sacar_entero_sin_signo_de_paquete(&stream);
+            peticion->pid = sacar_entero_de_paquete(&stream);
+            peticion->direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+            log_info(dialfs_logger, "PID: %d - Leer Archivo: %s - Tamaño a leer : %d - Puntero archivo: %d \n", peticion->pid, peticion->nombre, peticion->puntero_archivo, peticion->tamanio);
+            pthread_mutex_lock(&mutex_lista_peticiones);
+            list_add(peticiones, peticion);
+            pthread_mutex_unlock(&mutex_lista_peticiones);
+            sem_post(&hay_peticiones);
             break;
-
         case ESCRIBIR_ARCHIVO:
-            nombre = sacar_cadena_de_paquete(&stream);
+            peticion->nombre = sacar_cadena_de_paquete(&stream);
             
             //escribir lo leido de memoria en el archivo apartir de aca
-            puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream);
+            peticion->puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream);
 
             //cantidad bytes a leer de memoria
-            tamanio = sacar_entero_sin_signo_de_paquete(&stream);
-            proceso_conectado = sacar_entero_de_paquete(&stream);
+            peticion->tamanio = sacar_entero_sin_signo_de_paquete(&stream);
+            peticion->pid = sacar_entero_de_paquete(&stream);
 
             //direccion desde la que empiezo a leer de memoria
-            direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+            peticion->direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 
-            log_info(dialfs_logger, "PID: %d - Escribir Archivo: %s - Tamaño a escribir : %d - Puntero archivo: %d \n", proceso_conectado, nombre, tamanio, puntero_archivo);
-            escribir_archivo(nombre, puntero_archivo, tamanio, direccion_fisica, proceso_conectado);
+            log_info(dialfs_logger, "PID: %d - Escribir Archivo: %s - Tamaño a escribir : %d - Puntero archivo: %d \n", peticion->pid, peticion->nombre, peticion->tamanio, peticion->puntero_archivo);
+            pthread_mutex_lock(&mutex_lista_peticiones);
+            list_add(peticiones, peticion);
+            pthread_mutex_unlock(&mutex_lista_peticiones);
+            sem_post(&hay_peticiones);
             break;
-
         case LEER_BITMAP:
-            desde = sacar_entero_de_paquete(&stream);
-            hasta = sacar_entero_de_paquete(&stream);
-            leer_bitmap(desde, hasta);
+            peticion->desde = sacar_entero_de_paquete(&stream);
+            peticion->hasta = sacar_entero_de_paquete(&stream);
+            pthread_mutex_lock(&mutex_lista_peticiones);
+            list_add(peticiones, peticion);
+            pthread_mutex_unlock(&mutex_lista_peticiones);
+            sem_post(&hay_peticiones);
             break;
         default:
             break;
         }
 
         eliminar_paquete(paquete);
+    }
+}
 
-        aviso_de_operacion_finalizada_a_kernel();
+static void atender_peticion(){
+    while(true){
+        sem_wait(&hay_peticiones);
+        pthread_mutex_lock(&mutex_lista_peticiones);
+        t_peticion_dialfs* peticion = list_remove(peticiones, 0);
+        pthread_mutex_unlock(&mutex_lista_peticiones);
+
+        switch(peticion->op_code){
+            case CREAR_ARCHIVO:
+                crear_archivo(peticion->nombre);
+                break;
+            case ELIMINAR_ARCHIVO:
+                eliminar_archivo(peticion->nombre);
+                break;
+            case TRUNCAR_ARCHIVO:
+                truncar_archivo(peticion->nombre, peticion->tamanio_archivo);
+                break;
+            case LEER_ARCHIVO:
+                leer_archivo(peticion->nombre, peticion->puntero_archivo, peticion->tamanio, peticion->direccion_fisica);
+                break;
+            case ESCRIBIR_ARCHIVO:
+                escribir_archivo(peticion->nombre, peticion->puntero_archivo, peticion->tamanio, peticion->direccion_fisica, peticion->pid);
+                break;
+            case LEER_BITMAP:
+                leer_bitmap(peticion->desde, peticion->hasta);
+                break;
+            default:
+                break;
+        }
+
+        send(socket_kernel, &peticion->pid, sizeof(int), 0);
+
+        free(peticion);
     }
 }
 
 static void consumir_una_unidad_de_tiempo_de_trabajo()
 {
     usleep(tiempo_unidad_trabajo * 1000);
-}
-
-static void aviso_de_operacion_finalizada_a_kernel()
-{
-    int termino_io = 1;
-    send(socket_kernel, &termino_io, sizeof(int), 0);
 }
 
 static void crear_archivo(char *nombre_archivo)

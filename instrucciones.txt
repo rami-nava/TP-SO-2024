@@ -13,6 +13,8 @@ make memcheck ARGS="filesystem1 /home/utnso/tp-2024-1c-SegmenFault/IO_configs/fi
 
 make memcheck ARGS="impresora1 /home/utnso/tp-2024-1c-SegmenFault/IO_configs/impresora1.config" 
 
+make memcheck ARGS="SLP1 /home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/SLP1.config" 
+
 ./entradasalida impresora1 "/home/utnso/tp-2024-1c-SegmenFault/IO_configs/impresora1.config" 
 ./entradasalida filesystem1 "/home/utnso/tp-2024-1c-SegmenFault/IO_configs/filesystem1.config" 
 

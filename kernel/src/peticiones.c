@@ -219,8 +219,8 @@ static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz)
     t_paquete* paquete = crear_paquete(GENERICA_IO_SLEEP);
     agregar_entero_a_paquete(paquete, proceso->pid);
     agregar_entero_a_paquete(paquete, tiempo_sleep);
-
-    crear_hilo_io(proceso, interfaz, paquete);
+    
+    enviar_peticion_io(proceso,interfaz,paquete);
 }
 
 static void a_leer_o_escribir_interfaz(op_code codigo, t_pcb * proceso, uint32_t direccion, uint32_t tamanio, t_interfaz* interfaz) 
@@ -230,7 +230,7 @@ static void a_leer_o_escribir_interfaz(op_code codigo, t_pcb * proceso, uint32_t
     agregar_entero_sin_signo_a_paquete(paquete, direccion);
     agregar_entero_sin_signo_a_paquete(paquete, tamanio);
 
-    crear_hilo_io(proceso, interfaz, paquete);
+    enviar_peticion_io(proceso,interfaz,paquete);
 }
 
 static void a_crear_o_eliminar_archivo(op_code codigo, t_pcb * proceso, char* nombre_archivo, t_interfaz* interfaz)
@@ -239,7 +239,7 @@ static void a_crear_o_eliminar_archivo(op_code codigo, t_pcb * proceso, char* no
     agregar_cadena_a_paquete(paquete, nombre_archivo);
     agregar_entero_a_paquete(paquete, proceso->pid);
 
-    crear_hilo_io(proceso, interfaz, paquete);
+    enviar_peticion_io(proceso,interfaz,paquete);
 }
 
 static void a_truncar_archivo(t_pcb * proceso, uint32_t tamanio, char* nombre_archivo, t_interfaz* interfaz)
@@ -249,7 +249,7 @@ static void a_truncar_archivo(t_pcb * proceso, uint32_t tamanio, char* nombre_ar
     agregar_entero_sin_signo_a_paquete(paquete, tamanio);
     agregar_entero_a_paquete(paquete, proceso->pid);
 
-    crear_hilo_io(proceso, interfaz, paquete);
+    enviar_peticion_io(proceso,interfaz,paquete);
 }
 
 static void a_leer_o_escribir_archivo(op_code codigo, t_pcb * proceso, uint32_t puntero, uint32_t tamanio, uint32_t direccion, char* nombre_archivo, t_interfaz* interfaz)
@@ -261,7 +261,7 @@ static void a_leer_o_escribir_archivo(op_code codigo, t_pcb * proceso, uint32_t 
     agregar_entero_a_paquete(paquete, proceso->pid);
     agregar_entero_sin_signo_a_paquete(paquete, direccion);
 
-    crear_hilo_io(proceso, interfaz, paquete);
+    enviar_peticion_io(proceso,interfaz,paquete);
 }
 
 static void exit_c(t_pcb* proceso, char **parametros){ 

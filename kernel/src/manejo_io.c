@@ -5,7 +5,7 @@ pthread_mutex_t mutex_INTERFAZ_STDIN;
 pthread_mutex_t mutex_INTERFAZ_STDOUT;
 pthread_mutex_t mutex_INTERFAZ_DIALFS;
 
-static void esperar_io(t_paquete_io* paquete_io);
+static void esperar_io(t_interfaz* interfaz);
 static void eliminar_interfaz(t_interfaz* interfaz);
 static void manejar_desconexion(int socket, char* nombre);
 static void liberar_memoria(t_interfaz* interfaz);
@@ -46,6 +46,10 @@ void atender_io(int* socket_io)
         sem_init(&interfaz_nueva->sem_comunicacion_interfaz, 0, 1);
         pthread_mutex_init(&interfaz_nueva->cola_bloqueado_mutex, NULL);
         interfaz_nueva->cola_bloqueados = list_create();
+
+        pthread_t hilo_recepcion_io;
+        pthread_create(&hilo_recepcion_io, NULL, (void* ) esperar_io, interfaz_nueva);
+        pthread_detach(hilo_recepcion_io);
 
         switch(paquete->codigo_operacion) {
             case INTERFAZ_GENERICA:
@@ -181,7 +185,7 @@ bool admite_operacion_interfaz(t_interfaz* interfaz, codigo_instrucciones operac
     return false;
 }
 
-void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion) {
+void enviar_peticion_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion) {
     char motivo[35] = "";
 
     strcat(motivo, "INTERFAZ ");
@@ -199,39 +203,23 @@ void crear_hilo_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticion) {
     ingresar_a_BLOCKED_IO(interfaz->cola_bloqueados ,proceso, motivo, interfaz->cola_bloqueado_mutex, interfaz->tipo_interfaz);
     logear_cola_io_bloqueados(interfaz); //NO es obligatorio
 
-    t_paquete_io* paquete_io = malloc(sizeof(t_paquete_io));
-    paquete_io->interfaz = interfaz;
-    paquete_io->paquete = peticion;
-    paquete_io->pid = proceso->pid;
-
-    pthread_t hilo_manejo_io;
-    pthread_create(&hilo_manejo_io, NULL, (void* ) esperar_io, paquete_io);
-    pthread_detach(hilo_manejo_io);
+    enviar_paquete(peticion, interfaz->socket_conectado);
 }
 
-static void esperar_io(t_paquete_io* paquete_io)
+static void esperar_io(t_interfaz* interfaz)
 {
-int termino_io;
+    while(true){
+        int pid;
 
+        recv(interfaz->socket_conectado, &pid, sizeof(int), MSG_WAITALL);
+        t_pcb* proceso_IO = buscar_pcb_en_lista(interfaz->cola_bloqueados, pid);
 
-sem_wait(&paquete_io->interfaz->sem_comunicacion_interfaz);
-
-if(existe_proceso(paquete_io->pid)){ //Si fue finalizado el proceso, el hilo no hace nada
-    enviar_paquete(paquete_io->paquete, paquete_io->interfaz->socket_conectado);
-    recv(paquete_io->interfaz->socket_conectado, &termino_io, sizeof(int), MSG_WAITALL);
-    if(termino_io == 1){ //Si no recibe 1 es porque el proceso fue finalizado durante el IO
-        t_pcb* proceso_IO = buscar_pcb_en_lista(paquete_io->interfaz->cola_bloqueados, paquete_io->pid);
-
-        if(proceso_IO->eliminado == 1){
-            mandar_a_EXIT(proceso_IO, "Pedido de finalizacion");
-        }else{
-            ingresar_de_BLOCKED_a_READY_IO(paquete_io->interfaz->cola_bloqueados, paquete_io->interfaz->cola_bloqueado_mutex);
-        }
+            if(proceso_IO->eliminado == 1){
+                mandar_a_EXIT(proceso_IO, "Pedido de finalizacion");
+            }else{
+                ingresar_de_BLOCKED_a_READY_IO(interfaz->cola_bloqueados, interfaz->cola_bloqueado_mutex);
+            }
     }
-}
-
-sem_post(&paquete_io->interfaz->sem_comunicacion_interfaz);
-free(paquete_io);
 }
 
 static void manejar_desconexion(int socket, char* nombre){

@@ -114,11 +114,11 @@ void* comenzar_reloj_RR(){
                 }
                 else if (temporal_gettime(reloj) >= quantum_total)
                 {
-
+                    pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
+                    
                     ciclo_actual_quantum = 0;
                     sem_post(&ciclo_actual_quantum_sem); //Para que no se bloquee si hay FQ y IO
 
-                    pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
                     desalojo(1); //Interrumpo la ejecucion por fin de quantum
                     temporal_destroy(reloj);
                     reloj = NULL;
