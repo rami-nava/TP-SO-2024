@@ -284,20 +284,22 @@ static void io_stdin_read(char* interfaz, char* registro_direccion, char* regist
 
     sprintf(tamanio_escritura, "%" PRIu32, buscar_registro(registro_tamanio));
 
-    modificar_motivo(IO_STDIN_READ, 3, interfaz, "", tamanio_escritura, "", "");
+    modificar_motivo(IO_STDIN_READ, 2, interfaz, tamanio_escritura, "", "", "");
 }
 
 static void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio)
 {
-    char direccion_fisica[12];
-    char tamanio[12]; 
+    char tamanio_lectura[12]; 
 
     uint32_t direccion_logica = buscar_registro(registro_direccion);
 
-    sprintf(direccion_fisica, "%" PRIu32,traducir_de_logica_a_fisica(direccion_logica));
-    sprintf(tamanio, "%" PRIu32, buscar_registro(registro_tamanio));
+    uint32_t cantidad_bytes_a_escribir = tamanio_registro(registro_direccion);
 
-    modificar_motivo(IO_STDOUT_WRITE, 3, interfaz, direccion_fisica, tamanio, "", "");
+    contexto_ejecucion->direcciones_fisicas = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_escribir, direccion_logica);
+
+    sprintf(tamanio_lectura, "%" PRIu32, buscar_registro(registro_tamanio));
+
+    modificar_motivo(IO_STDOUT_WRITE, 2, interfaz, tamanio_lectura, "", "", "");
 }
 
 static void io_fs_create(char* interfaz, char* nombre_archivo)

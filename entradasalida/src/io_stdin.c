@@ -2,7 +2,8 @@
 
 // Funciones Locales //
 static void guardar_escritura();
-static void solicitar_escritura(void* texto_a_guardar, int pid, uint32_t direccion_fisica, uint32_t tamanio_registro);
+static void solicitar_escritura(void* texto_a_guardar, t_list* direcciones_fisicas, int pid);
+static void pedido_escritura(void* contenido, uint32_t direccion_fisica, uint32_t bytes_a_escribir, int pid);
 static void recibir_peticion();
 
 static char *ip_kernel;
@@ -64,7 +65,7 @@ static void recibir_peticion()
             t_peticion_std* peticion = malloc(sizeof(t_peticion_std));
 
             peticion->pid= sacar_entero_de_paquete(&stream);
-            peticion->direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+            peticion->direcciones_fisicas = sacar_lista_de_accesos_de_paquete(&stream);
             peticion->tamanio_registro = sacar_entero_sin_signo_de_paquete(&stream);
 
             pthread_mutex_lock(&mutex_lista_peticiones);
@@ -74,7 +75,8 @@ static void recibir_peticion()
             sem_post(&hay_peticiones);
         } 
         else{
-            //TODO hacer un log?
+            log_error(stdin_logger, "Se recibio una peticion invalida: %d\n", paquete->codigo_operacion);
+            abort();
         }
         
         eliminar_paquete(paquete);
@@ -98,18 +100,15 @@ static void guardar_escritura()
         leer_linea = readline("Ingrese el texto que desea guardar en memoria > \n");
         
         if(leer_linea){
-            strncpy(texto_a_guardar, leer_linea, peticion->tamanio_registro); //Solo se va a guardar dependiendo de la cantidad especificada en el parametro
+            //Solo se va a guardar dependiendo de la cantidad especificada en el parametro tamanio
+            strncpy(texto_a_guardar, leer_linea, peticion->tamanio_registro); 
             texto_a_guardar[peticion->tamanio_registro] = '\0';
             free(leer_linea);
 
             log_info(stdin_logger, "Guardando texto en memoria: %s\n", texto_a_guardar);
             
             //IO solicita que memoria guarde el texto en la direccion especificada
-            solicitar_escritura(texto_a_guardar, peticion->pid, peticion->direccion_fisica, peticion->tamanio_registro);
-            
-            //Memoria confirma que guardo el texto en la direccion especificada
-            uint32_t escritura_guardada;
-            recv(socket_memoria, &escritura_guardada, sizeof(uint32_t), MSG_WAITALL); 
+            solicitar_escritura(texto_a_guardar, peticion->direcciones_fisicas, peticion->pid);
 
             //Le avisa a kernel que el texto fue guardado en memoria
             send(socket_kernel, &peticion->pid, sizeof(int), 0);
@@ -119,22 +118,49 @@ static void guardar_escritura()
     }
 }
 
-/*static void solicitar_escritura(void* texto_a_guardar, int pid) {
-    t_paquete* paquete = crear_paquete(PEDIDO_MOV_OUT);
-    agregar_entero_a_paquete(paquete, pid);
-    agregar_entero_sin_signo_a_paquete(paquete,direccion_fisica);
-    agregar_entero_a_paquete(paquete, tamanio_registro);
-    agregar_bytes_a_paquete(paquete, texto_a_guardar, tamanio_registro);
-    enviar_paquete(paquete, socket_memoria);
-}*/
+static void solicitar_escritura(void* texto_a_guardar, t_list* direcciones_fisicas, int pid)
+{
+    uint32_t escritura_guardada_stdin;
+    uint32_t tamanio_copiado_actual = 0;
 
-static void solicitar_escritura(void* texto_a_guardar, int pid, uint32_t direccion_fisica, uint32_t tamanio_registro){
+    t_list_iterator* iterator = list_iterator_create(direcciones_fisicas);
+
+    // Mientras haya una df a escribir, sigo escribiendo
+    while (list_iterator_has_next(iterator)) {
+
+        // Obtengo el próximo acceso de la lista
+        t_acceso_memoria* acceso = (t_acceso_memoria*) list_iterator_next(iterator);
+        
+        // Buffer donde se va a copiar el contenido de a poco
+        void* contenido_a_escribir_actual = malloc(acceso->tamanio);
+
+        // Copio el contenido en el buffer
+        memcpy(contenido_a_escribir_actual, texto_a_guardar + tamanio_copiado_actual, acceso->tamanio);
+
+        // Lo escribo en memoria
+        pedido_escritura(contenido_a_escribir_actual, acceso->direccion_fisica, acceso->tamanio, pid);
+        recv(socket_memoria, &escritura_guardada_stdin, sizeof(uint32_t), MSG_WAITALL);
+
+        if (escritura_guardada_stdin == 1){
+            tamanio_copiado_actual += acceso->tamanio; 
+        }else{
+            log_error(stdin_logger, "Escritura fallida\n");
+            abort();
+        }        
+    }
+    list_iterator_destroy(iterator);
+    
+    list_destroy_and_destroy_elements(direcciones_fisicas, free);
+}
+
+static void pedido_escritura(void* contenido, uint32_t direccion_fisica, uint32_t bytes_a_escribir, int pid){
     t_paquete* paquete = crear_paquete(ESCRIBIR_CONTENIDO_EN_MEMORIA_DESDE_STDIN);
     agregar_entero_a_paquete(paquete, pid);
-    agregar_entero_sin_signo_a_paquete(paquete, tamanio_registro);
-    agregar_entero_sin_signo_a_paquete(paquete,direccion_fisica);
-    agregar_bytes_a_paquete(paquete, texto_a_guardar, tamanio_registro);
+    agregar_entero_sin_signo_a_paquete(paquete, bytes_a_escribir);
+    agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
+    agregar_bytes_a_paquete(paquete, contenido, bytes_a_escribir);
     enviar_paquete(paquete, socket_memoria);
+    free(contenido);
 }
 
 void desconectar_stdin(){

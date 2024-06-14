@@ -2,11 +2,13 @@
 
 int indice_pid = 0;
 sem_t mutex_pid;
+pthread_mutex_t mutex_PROCESOS_DEL_SISTEMA;
+t_list* cola_PROCESOS_DEL_SISTEMA;
+
 //==================================================== FUNCIONES ESTATICAS ====================================================================================
 static int incrementar_pid();
 static void enviar_creacion_estructuras_memoria(int pid, char* path_proceso);
-pthread_mutex_t mutex_PROCESOS_DEL_SISTEMA;
-t_list* cola_PROCESOS_DEL_SISTEMA;
+
 
 //==================================================== CREAR_PCB ====================================================================================
 t_pcb* crear_pcb(char* path) 
@@ -33,6 +35,8 @@ t_pcb* crear_pcb(char* path)
     nuevo_pcb->SI = 0;
     nuevo_pcb->DI = 0;
     nuevo_pcb->quantum = 0;
+    nuevo_pcb->eliminado = 0;
+    //nuevo_pcb->direcciones_fisicas = list_create();
 
     ingresar_a_NEW(nuevo_pcb);
     enviar_creacion_estructuras_memoria(nuevo_pcb->pid, path);
@@ -98,6 +102,7 @@ void actualizar_PCB(t_pcb* proceso){
     proceso->DI = contexto_ejecucion->DI;
     proceso->quantum = contexto_ejecucion->quantum;
     proceso->eliminado = contexto_ejecucion->eliminado;
+    //proceso->direcciones_fisicas = contexto_ejecucion->direcciones_fisicas;
 }
 
 void asignar_PBC_a_contexto(t_pcb* proceso){
@@ -116,6 +121,7 @@ void asignar_PBC_a_contexto(t_pcb* proceso){
     contexto_ejecucion->DI = proceso->DI;
     contexto_ejecucion->quantum = proceso->quantum;
     contexto_ejecucion->eliminado = proceso->eliminado;
+    //contexto_ejecucion->direcciones_fisicas = proceso->direcciones_fisicas;
 }
 
 void agregar_proceso_a_lista_procesos_del_sistema(t_pcb *proceso){

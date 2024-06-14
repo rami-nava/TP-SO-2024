@@ -139,7 +139,6 @@ void escritura_en_memoria(void* contenido, t_list* lista_accesos_memoria){
         t_acceso_memoria* acceso = (t_acceso_memoria*) list_iterator_next(iterator);
         
         // Buffer donde se va a copiar el contenido de a poco
-        // Memory Leak?? TODO
         void* contenido_a_escribir_actual = malloc(acceso->tamanio);
 
         // Copio el contenido en el buffer
@@ -148,6 +147,8 @@ void escritura_en_memoria(void* contenido, t_list* lista_accesos_memoria){
         // Lo escribo en memoria
         pedido_escritura(contenido_a_escribir_actual, acceso->direccion_fisica, acceso->tamanio);
         recv(socket_cliente_memoria, &escritura_ok, sizeof(uint32_t), MSG_WAITALL);
+
+        printf("Se escribio %d en memoria: \n", acceso->tamanio);
 
         if (escritura_ok == 1){
             tamanio_copiado_actual += acceso->tamanio; 
@@ -158,7 +159,6 @@ void escritura_en_memoria(void* contenido, t_list* lista_accesos_memoria){
     }
     list_iterator_destroy(iterator);
     
-    // REVISAR - TODO
     list_destroy_and_destroy_elements(lista_accesos_memoria, free);
 }
 
@@ -189,18 +189,17 @@ void* lectura_en_memoria(uint32_t tamanio_total, t_list* lista_accesos_memoria){
         // Actualizo el tamanio leido
         tamanio_leido_actual += acceso->tamanio;
 
-        // Libero la memoria
+        // Libero la memoria del buffer
         free(valor_leido); 
-        // Aca no vuela con el log? TODO      
-        free(acceso);
-        
+
+        printf("Se leyo %d en memoria: \n", acceso->tamanio);
     }
 
     loggear_lectura_en_memoria(contenido_leido_total, lista_accesos_memoria);
 
     list_iterator_destroy(iterator);
     
-    list_destroy(lista_accesos_memoria);
+    list_destroy_and_destroy_elements(lista_accesos_memoria, free);
 
     return contenido_leido_total;
 }

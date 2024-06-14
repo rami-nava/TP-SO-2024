@@ -15,7 +15,7 @@ static pthread_mutex_t mutex_lista_peticiones;
 
 // Funciones Locales //
 static void recibir_peticion();
-static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio, int pid); 
+static void pedir_lectura(t_list* direcciones_fisicas, uint32_t tamanio, int pid); 
 static char* recibir_lectura(uint32_t tamanio);
 static void leer_memoria(); 
 
@@ -67,7 +67,7 @@ static void recibir_peticion ()
             t_peticion_std* peticion = malloc(sizeof(t_peticion_std));
 
             peticion->pid = sacar_entero_de_paquete(&stream);
-            peticion->direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+            peticion->direcciones_fisicas = sacar_lista_de_accesos_de_paquete(&stream);
             peticion->tamanio_registro = sacar_entero_sin_signo_de_paquete(&stream);
 
             pthread_mutex_lock(&mutex_lista_peticiones);
@@ -76,12 +76,12 @@ static void recibir_peticion ()
 
             sem_post(&hay_peticiones);
         } 
-        else{
-            //TODO hacer un log?
+        else {
+            log_error(stdout_logger, "Se recibio un paquete erroneo: %d", paquete->codigo_operacion);
+            abort();
         }
         eliminar_paquete(paquete);
     }
-    
 }
 
 static void leer_memoria(){
@@ -96,7 +96,7 @@ static void leer_memoria(){
         log_info(stdout_logger, "PID: %d - Operacion: IO_STDOUT_WRITE\n", peticion->pid);
 
         //Le pide la lectura de esa direccion a la memoria 
-        pedir_lectura(peticion->direccion_fisica, peticion->tamanio_registro, peticion->pid);
+        pedir_lectura(peticion->direcciones_fisicas, peticion->tamanio_registro, peticion->pid);
 
         //Recibe la lectura de la memoria
         char* lectura = recibir_lectura(peticion->tamanio_registro);
@@ -112,11 +112,11 @@ static void leer_memoria(){
    }
 }
 
-static void pedir_lectura(uint32_t direccion_fisica, uint32_t tamanio, int pid) 
+static void pedir_lectura(t_list* direcciones_fisicas, uint32_t tamanio, int pid) 
 {
     t_paquete* paquete = crear_paquete(REALIZAR_LECTURA);
     agregar_entero_a_paquete(paquete, pid);
-    agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
+    //agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
     agregar_entero_sin_signo_a_paquete(paquete, tamanio);
     enviar_paquete(paquete, socket_memoria);
 }

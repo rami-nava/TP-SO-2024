@@ -60,7 +60,7 @@ typedef struct
 typedef struct 
 {
     int pid;
-    uint32_t direccion_fisica;
+    t_list* direcciones_fisicas;
     uint32_t tamanio_registro;
 } t_peticion_std;
 

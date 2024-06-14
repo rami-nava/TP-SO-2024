@@ -13,7 +13,7 @@ static void fin_quantum(t_pcb* proceso);
 static void exit_c(t_pcb* proceso, char **parametros);
 
 static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz);
-static void a_leer_o_escribir_interfaz(op_code codigo, t_pcb * proceso, uint32_t direccion, uint32_t tamanio, t_interfaz* interfaz);
+static void a_leer_o_escribir_interfaz(op_code codigo, t_pcb * proceso, t_list* direccion, uint32_t tamanio, t_interfaz* interfaz);
 static void a_crear_o_eliminar_archivo(op_code codigo, t_pcb * proceso, char* nombre_archivo, t_interfaz* interfaz);
 static void a_truncar_archivo(t_pcb * proceso, uint32_t tamanio, char* nombre_archivo, t_interfaz* interfaz);
 static void a_leer_o_escribir_archivo(op_code codigo, t_pcb * proceso, uint32_t puntero, uint32_t tamanio, uint32_t direccion, char* nombre_archivo, t_interfaz* interfaz);
@@ -121,29 +121,29 @@ static void io_gen_sleep(t_pcb *proceso, char **parametros){
 
 static void io_stdin_read(t_pcb *proceso, char **parametros){
     char* nombre_interfaz = parametros[0];
-    uint32_t direccion = atoi(parametros[1]);
-    uint32_t tamanio = atoi(parametros[2]);
+    uint32_t tamanio = atoi(parametros[1]);
+
+    t_list* direcciones = contexto_ejecucion->direcciones_fisicas; // TODO capaz muy probale list_duplicate
 
     t_interfaz* interfaz = obtener_interfaz_por_nombre(nombre_interfaz);
 
     bool peticion_valida = peticiones_de_io(proceso, interfaz);
 
     if (peticion_valida) {
-        a_leer_o_escribir_interfaz(STDIN_READ, proceso, direccion, tamanio, interfaz);
+        a_leer_o_escribir_interfaz(STDIN_READ, proceso, direcciones, tamanio, interfaz);
     }
 }
 
 static void io_stdout_write(t_pcb *proceso, char **parametros){
     char* nombre_interfaz = parametros[0];
-    uint32_t direccion = atoi(parametros[1]);
-    uint32_t tamanio = atoi(parametros[2]);
+    uint32_t tamanio = atoi(parametros[1]);
 
     t_interfaz* interfaz = obtener_interfaz_por_nombre(nombre_interfaz);
 
     bool peticion_valida = peticiones_de_io(proceso, interfaz);
 
     if (peticion_valida) {
-        a_leer_o_escribir_interfaz(STDOUT_WRITE, proceso, direccion, tamanio, interfaz);
+        a_leer_o_escribir_interfaz(STDOUT_WRITE, proceso, contexto_ejecucion->direcciones_fisicas, tamanio, interfaz);
     }
 }
 
@@ -223,11 +223,11 @@ static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz)
     enviar_peticion_io(proceso,interfaz,paquete);
 }
 
-static void a_leer_o_escribir_interfaz(op_code codigo, t_pcb * proceso, uint32_t direccion, uint32_t tamanio, t_interfaz* interfaz) 
+static void a_leer_o_escribir_interfaz(op_code codigo, t_pcb * proceso, t_list* direcciones, uint32_t tamanio, t_interfaz* interfaz) 
 {
     t_paquete* paquete = crear_paquete(codigo);
     agregar_entero_a_paquete(paquete, proceso->pid);
-    agregar_entero_sin_signo_a_paquete(paquete, direccion);
+    agregar_lista_de_accesos_a_paquete(paquete, direcciones);
     agregar_entero_sin_signo_a_paquete(paquete, tamanio);
 
     enviar_peticion_io(proceso,interfaz,paquete);

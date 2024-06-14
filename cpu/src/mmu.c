@@ -103,6 +103,7 @@ t_list* obtener_direcciones_fisicas_mmu(uint32_t tamanio_total, uint32_t direcci
 
     uint32_t marco_actual = -1;
     uint32_t bytes_cargados = 0;
+    uint32_t cantidad_de_marcos_total = ceil(tamanio_total / tam_pagina);
 
     t_list* lista_direcciones_fisicas = list_create();
 
@@ -124,7 +125,7 @@ t_list* obtener_direcciones_fisicas_mmu(uint32_t tamanio_total, uint32_t direcci
     //SI EL TAMAÑO ES MAYOR A LA PAGINA, SE PARTE EL DATO ENTRE MARCOS
     if (bytes_cargados < tamanio_total){
 
-        for (int i=1; bytes_cargados < tamanio_total; i++){
+        for (int i=1; i < cantidad_de_marcos_total; i++){
             
             //SIGUENTE PAGINA/MARCO
             pagina_actual ++;
@@ -141,8 +142,12 @@ t_list* obtener_direcciones_fisicas_mmu(uint32_t tamanio_total, uint32_t direcci
             list_add(lista_direcciones_fisicas, acceso_nuevo);
 
             bytes_cargados += bytes_marco_actual;
+
         }
     }
+
+    printf("Se han cargado en la lista %d marcos\n", list_size(lista_direcciones_fisicas));
+    
     return lista_direcciones_fisicas;
 }
 
