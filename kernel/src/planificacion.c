@@ -198,17 +198,17 @@ void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo)
    
     sacar_proceso_de_cola_estado_donde_esta(pcb_asociado);
 
-    //si es un error de signal, no quiero mandarlo a liberar un recurso que no existe porque entra en un bucle
-    if(strcmp(motivo, "Error de signal, el recurso solicitado no existe") != 0){
-        liberar_recursos_asignados(pcb_asociado);
-    }
-
     pcb_asociado->estado = SALIDA;
     loggear_cambio_de_estado(pcb_asociado->pid, anterior, pcb_asociado->estado);
 
     //Avisas pq finalizo el proceso
     loggear_finalizacion_proceso(pcb_asociado, motivo); 
-    
+
+    //si es un error de signal, no quiero mandarlo a liberar un recurso que no existe porque entra en un bucle
+   // if(strcmp(motivo, "INVALID_RESOURCE para el SIGNAL") != 0){
+        liberar_recursos_asignados(pcb_asociado);
+   // }
+
     //Liberamos memoria
     liberar_PCB(pcb_asociado);
 

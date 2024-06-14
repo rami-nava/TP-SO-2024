@@ -49,7 +49,7 @@ void wait_s(t_pcb *proceso, char **parametros){
     //Si el recurso no existe, mando el proceso a exit
     if (indice_pedido == -1)
     {
-        desalojo(2);
+        mandar_a_EXIT(proceso, "INVALID_RESOURCE para el WAIT");
         return;
     }
 
@@ -85,8 +85,9 @@ void signal_s(t_pcb *proceso, char **parametros){
     int indice_pedido = indice_recurso(recurso_pedido);
 
      // Si el recurso no existe, mando el proceso a exit
-    if (indice_pedido == -1){
-        desalojo(2);
+    if (indice_pedido == -1)
+    {
+        mandar_a_EXIT(proceso, "INVALID_RESOURCE para el SIGNAL");
         return;
     }
 
