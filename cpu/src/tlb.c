@@ -156,7 +156,7 @@ static void reemplazo_por_LRU(t_entrada* nueva_entrada){
     int indice_menos_usada = buscar_indice_entrada_menor_uso(tlb);
 
     pthread_mutex_lock(&mutex_tlb);
-    list_remove(tlb, indice_menos_usada);
+    list_remove_and_destroy_element(tlb, indice_menos_usada, free);
     list_add_in_index(tlb, indice_menos_usada, nueva_entrada);
     pthread_mutex_unlock(&mutex_tlb);
 
@@ -168,7 +168,7 @@ static void reemplazo_por_FIFO(t_entrada* nueva_entrada){
     int indice_mas_vieja = buscar_indice_entrada_mas_vieja(tlb);
 
     pthread_mutex_lock(&mutex_tlb);
-    list_remove(tlb, indice_mas_vieja);
+    list_remove_and_destroy_element(tlb, indice_mas_vieja, free);
     list_add_in_index(tlb, indice_mas_vieja, nueva_entrada);
     pthread_mutex_unlock(&mutex_tlb);
 }

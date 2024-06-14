@@ -25,6 +25,7 @@ void iniciar_contexto()
     contexto_ejecucion->motivo_desalojo->comando = 0;
     contexto_ejecucion->hay_fin_de_quantum = 0;
     contexto_ejecucion->eliminado = 0;
+    contexto_ejecucion->direcciones_fisicas = list_create();
 }
 
 //================================== ENVIAR/RECIBIR CONTEXTO ================================================================
@@ -52,9 +53,10 @@ void enviar_contexto(int socket_cliente)
     agregar_entero_a_paquete(paquete, contexto_ejecucion->quantum);
     agregar_entero_a_paquete(paquete, contexto_ejecucion->hay_fin_de_quantum);
     agregar_entero_a_paquete(paquete, contexto_ejecucion->eliminado);
+    if(contexto_ejecucion->direcciones_fisicas->head != NULL)
+    agregar_lista_de_accesos_a_paquete(paquete, contexto_ejecucion->direcciones_fisicas);
 
     enviar_paquete(paquete, socket_cliente);
-    
 }
 
 void recibir_contexto(int socket_cliente)
@@ -86,6 +88,8 @@ void recibir_contexto(int socket_cliente)
     contexto_ejecucion->quantum = sacar_entero_de_paquete(&stream);
     contexto_ejecucion->hay_fin_de_quantum = sacar_entero_de_paquete(&stream);
     contexto_ejecucion->eliminado = sacar_entero_de_paquete(&stream);
+    if(contexto_ejecucion->direcciones_fisicas->head != NULL)
+    contexto_ejecucion->direcciones_fisicas = sacar_lista_de_accesos_de_paquete(&stream);
     eliminar_paquete(paquete);
 }
 
@@ -115,6 +119,8 @@ void recibir_contexto_cpu(t_paquete* paquete, void* stream)
     contexto_ejecucion->quantum = sacar_entero_de_paquete(&stream);
     contexto_ejecucion->hay_fin_de_quantum = sacar_entero_de_paquete(&stream);
     contexto_ejecucion->eliminado = sacar_entero_de_paquete(&stream);
+    if(contexto_ejecucion->direcciones_fisicas->head != NULL)
+    contexto_ejecucion->direcciones_fisicas = sacar_lista_de_accesos_de_paquete(&stream);
     eliminar_paquete(paquete);
 }
 //================================== LIBERAR MEMORIA ================================================================
@@ -124,6 +130,7 @@ void liberar_memoria_contexto()
         if (strcmp(contexto_ejecucion->motivo_desalojo->parametros[i], ""))
             free(contexto_ejecucion->motivo_desalojo->parametros[i]);
     free(contexto_ejecucion->motivo_desalojo);
+    list_destroy_and_destroy_elements(contexto_ejecucion->direcciones_fisicas, (void*)free);
     free(contexto_ejecucion);
     contexto_ejecucion = NULL;
 }

@@ -131,6 +131,10 @@ typedef struct{
 	int eliminado;
 }t_pcb; 
 
+typedef struct {
+    uint32_t direccion_fisica;
+    uint32_t tamanio;
+} t_acceso_memoria;
 
 //======================================================= CREAR PAQUETES ==========================================================================================================
 t_paquete* crear_paquete(op_code );
@@ -150,6 +154,7 @@ void agregar_lista_de_cadenas_a_paquete(t_paquete* , t_list*);
 void agregar_puntero_a_paquete(t_paquete* , void* , uint32_t);
 void agregar_a_paquete(t_paquete* , void* , int );
 void agregar_bytes_a_paquete(t_paquete* , void* , uint32_t);
+void agregar_lista_de_accesos_a_paquete(t_paquete* paquete, t_list* accesos);
 
 //======================================================= SACAR_DE_PAQUETE =========================================================================================================
 char* sacar_cadena_de_paquete(void** );
@@ -160,7 +165,7 @@ char** sacar_array_cadenas_de_paquete(void** );
 t_list* sacar_lista_de_cadenas_de_paquete(void**);
 void* sacar_puntero_de_paquete(void** );
 void* sacar_bytes_de_paquete(void**);
-
+t_list* sacar_lista_de_accesos_de_paquete(void** stream) ;
 //======================================================= LIBERAR_MEMORIA ==============================================================================================================
 void eliminar_paquete(t_paquete* );
 void free_array (char ** );

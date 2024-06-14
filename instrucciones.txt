@@ -15,6 +15,8 @@ make memcheck ARGS="impresora1 /home/utnso/tp-2024-1c-SegmenFault/IO_configs/imp
 
 make memcheck ARGS="SLP1 /home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/SLP1.config" 
 
+make memcheck ARGS="ESPERA /home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/ESPERA.config" 
+
 ./entradasalida impresora1 "/home/utnso/tp-2024-1c-SegmenFault/IO_configs/impresora1.config" 
 ./entradasalida filesystem1 "/home/utnso/tp-2024-1c-SegmenFault/IO_configs/filesystem1.config" 
 

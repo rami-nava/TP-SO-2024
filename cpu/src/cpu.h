@@ -27,11 +27,6 @@ typedef struct
 } arch_config;
 
 typedef struct {
-    uint32_t direccion_fisica;
-    uint32_t tamanio;
-} t_acceso_memoria;
-
-typedef struct {
 	int pid;
    uint32_t pagina;
    uint32_t marco; 
@@ -66,45 +61,34 @@ extern uint32_t tam_pagina;
 void cargar_configuracion(char *path);
 void atender_dispatch();
 void atender_interrupt(void * socket_servidor_interrupt);
-void mov_in(char* registro, char* direccion_logica);
-void mov_out(char* direccion_logica, char* registro);
-void resize(char* tamanio);
-void copy_string(char* tamanio);
 void setear_registro(char* registro, char* valor);
 void setear_registro_entero(char* registro, uint32_t valor);
 bool no_es_bloqueante(codigo_instrucciones instruccion_actual);
 void ciclo_de_instruccion();
 uint32_t buscar_registro(char*registro);
 void inicializar_semaforos();
-void realizar_handshake();
-uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica);
 void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char* parm1, char* parm2, char* parm3, char* parm4, char* parm5);
 void* buscar_valor_registro_generico(char* registro);
 uint32_t tamanio_registro(char* registro);
 
-
-// FUNCIONES MMU
-void escritura_en_memoria(void* contenido, t_list* lista_accesos_memoria);
-void* lectura_en_memoria(uint32_t tamanio_total, t_list* lista_accesos_memoria);
-uint32_t bytes(uint32_t direccion_fisica, uint32_t bytes_manipulados, uint32_t tamanio);
+// MMU
+uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica);
+t_list* obtener_direcciones_fisicas_mmu(uint32_t tamanio_total, uint32_t direccion_logica_inicial);
+uint32_t buscar_marco_tlb_o_memoria (uint32_t numero_pagina);
 
 //TLB
-
-/* La idea es:
-   cada vez que la cpu necesita traducir una DL = (PAG-DESP)
-   CONSULTA A TLB -> TLB HIT : -CPU OBTIENE MARCO, CALCULA DF Y ACCEDE A MEMORIA 
-                               -TLB AJUSTA LISTAS SEGUN ALGORITMO
-                  -> TLB MISS : -CPU OBTIENE -1, PIDE A MEMORIA MARCO, CALCULA DF, ACCEDE A MEMORIA
-                                -PIDE A TLB AGREGAR LA ENTRADA (PID-PAG-MARCO)
-                                -TLB AJUSTA LISTAS SEGUN ALGORITMO
-*/
-
-uint32_t consultar_tlb(int pid, uint32_t pagina); //HIT: marco - MISS: -1
+uint32_t consultar_tlb(int pid, uint32_t pagina); 
 void agregar_entrada_tlb(int pid, uint32_t pagina, uint32_t marco); 
 void imprimir_tlb(t_list* tlb);
-uint32_t buscar_marco_tlb_o_memoria (uint32_t numero_pagina);
-void pedido_escritura(void* contenido, uint32_t direccion_fisica, uint32_t bytes_a_escribir);
-void pedido_lectura(uint32_t direccion_fisica, uint32_t bytes_a_leer);
-t_list* obtener_direcciones_fisicas_mmu(uint32_t tamanio_total, uint32_t direccion_logica_inicial);
+
+// MANEJO DE MEMORIA
+void realizar_handshake();
+void escritura_en_memoria(void* contenido, t_list* lista_accesos_memoria);
+void* lectura_en_memoria(uint32_t tamanio_total, t_list* lista_accesos_memoria);
+void mov_in(char* registro, char* direccion_logica);
+void mov_out(char* direccion_logica, char* registro);
+void resize(char* tamanio);
+void copy_string(char* tamanio);
+
 
 #endif 

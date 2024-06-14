@@ -107,7 +107,6 @@ void asignar_proceso_a_marco(t_proceso_en_memoria* proceso, t_marco* marco);
 void agregar_pagina_a_proceso(t_proceso_en_memoria* proceso, t_marco* marco);
 
 // FUNCIONES MARCOS/PAGINAS ///
-int cantidad_de_marcos_libres();
 int cantidad_de_marcos_necesarios(int tamanio);
 t_marco* buscar_marco_por_numero(int numero_de_marco);
 uint32_t buscar_marco(uint32_t numero_pagina, int pid);

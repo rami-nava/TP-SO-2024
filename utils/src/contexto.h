@@ -27,6 +27,7 @@ typedef struct {
     int quantum;
     int hay_fin_de_quantum;
     int eliminado;
+    t_list* direcciones_fisicas;
 } t_contexto;
 
 extern t_contexto* contexto_ejecucion;

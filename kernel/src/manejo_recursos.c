@@ -49,7 +49,7 @@ void wait_s(t_pcb *proceso, char **parametros){
     //Si el recurso no existe, mando el proceso a exit
     if (indice_pedido == -1)
     {
-        desalojo(3);
+        desalojo(2);
         return;
     }
 

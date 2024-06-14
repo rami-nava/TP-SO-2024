@@ -88,7 +88,7 @@ bool peticiones_de_io(t_pcb *proceso, t_interfaz* interfaz)
     //Si existe la interfaz y esta conectada
     if (interfaz == NULL) {
         log_error(kernel_logger, "Interfaz inexistente");
-        mandar_a_EXIT(proceso, "ERROR con IO");
+        mandar_a_EXIT(proceso, "INVALID INTERFACE");
         return false;
     }
 
@@ -96,7 +96,7 @@ bool peticiones_de_io(t_pcb *proceso, t_interfaz* interfaz)
     if(!admite_operacion_interfaz(interfaz, contexto_ejecucion->motivo_desalojo->comando))
     {
         log_error(kernel_logger, "Interfaz incorrecta");
-        mandar_a_EXIT(proceso, "ERROR con IO");
+        mandar_a_EXIT(proceso, "INVALID INTERFACE");
         return false;
     }
 

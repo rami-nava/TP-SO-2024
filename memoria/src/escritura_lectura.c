@@ -43,8 +43,8 @@ void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t
     }
 
     // Obtener el número de página
-    t_marco* marco = marco_desde_df(direccion_fisica);
-	int pagina = marco->nro_pagina;
+    //t_marco* marco = marco_desde_df(direccion_fisica);
+	//int pagina = marco->nro_pagina;
 
     // Crear un buffer para almacenar el contenido leído
     void* contenido_leido = malloc(tamanio_lectura);
