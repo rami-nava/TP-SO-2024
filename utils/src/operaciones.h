@@ -128,7 +128,7 @@ typedef struct{
     uint32_t DI;
 	int quantum;
 	int eliminado;
-	//t_list* direcciones_fisicas;
+	t_list* direcciones_fisicas;
 }t_pcb; 
 
 typedef struct {

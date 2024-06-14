@@ -12,7 +12,7 @@ static char *ip_memoria;
 static char *puerto_memoria;
 static int socket_kernel;
 static int socket_memoria;
-t_log* stdin_logger;
+static t_log* stdin_logger;
 static pthread_t hilo_stdin;
 static t_list* peticiones;
 static sem_t hay_peticiones;
@@ -67,6 +67,12 @@ static void recibir_peticion()
             peticion->pid= sacar_entero_de_paquete(&stream);
             peticion->direcciones_fisicas = sacar_lista_de_accesos_de_paquete(&stream);
             peticion->tamanio_registro = sacar_entero_sin_signo_de_paquete(&stream);
+
+            for(int i = 0; i < list_size(peticion->direcciones_fisicas); i++){
+                t_acceso_memoria* acceso = list_get(peticion->direcciones_fisicas, i);
+                log_info(stdin_logger, "Me llego como direcciones fisicas: %d\n", acceso->direccion_fisica);
+                log_info(stdin_logger, "Me llego como tamanio: %d\n", acceso->tamanio);
+            }
 
             pthread_mutex_lock(&mutex_lista_peticiones);
             list_add(peticiones, peticion);

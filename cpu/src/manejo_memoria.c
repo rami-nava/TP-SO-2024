@@ -148,8 +148,6 @@ void escritura_en_memoria(void* contenido, t_list* lista_accesos_memoria){
         pedido_escritura(contenido_a_escribir_actual, acceso->direccion_fisica, acceso->tamanio);
         recv(socket_cliente_memoria, &escritura_ok, sizeof(uint32_t), MSG_WAITALL);
 
-        printf("Se escribio %d en memoria: \n", acceso->tamanio);
-
         if (escritura_ok == 1){
             tamanio_copiado_actual += acceso->tamanio; 
         }else{
@@ -157,6 +155,7 @@ void escritura_en_memoria(void* contenido, t_list* lista_accesos_memoria){
             abort();
         }        
     }
+
     list_iterator_destroy(iterator);
     
     list_destroy_and_destroy_elements(lista_accesos_memoria, free);
@@ -191,8 +190,6 @@ void* lectura_en_memoria(uint32_t tamanio_total, t_list* lista_accesos_memoria){
 
         // Libero la memoria del buffer
         free(valor_leido); 
-
-        printf("Se leyo %d en memoria: \n", acceso->tamanio);
     }
 
     loggear_lectura_en_memoria(contenido_leido_total, lista_accesos_memoria);

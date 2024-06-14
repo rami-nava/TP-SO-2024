@@ -123,14 +123,12 @@ static void io_stdin_read(t_pcb *proceso, char **parametros){
     char* nombre_interfaz = parametros[0];
     uint32_t tamanio = atoi(parametros[1]);
 
-    t_list* direcciones = contexto_ejecucion->direcciones_fisicas; // TODO capaz muy probale list_duplicate
-
     t_interfaz* interfaz = obtener_interfaz_por_nombre(nombre_interfaz);
 
     bool peticion_valida = peticiones_de_io(proceso, interfaz);
 
     if (peticion_valida) {
-        a_leer_o_escribir_interfaz(STDIN_READ, proceso, direcciones, tamanio, interfaz);
+        a_leer_o_escribir_interfaz(STDIN_READ, proceso, proceso->direcciones_fisicas, tamanio, interfaz);
     }
 }
 
@@ -143,7 +141,7 @@ static void io_stdout_write(t_pcb *proceso, char **parametros){
     bool peticion_valida = peticiones_de_io(proceso, interfaz);
 
     if (peticion_valida) {
-        a_leer_o_escribir_interfaz(STDOUT_WRITE, proceso, contexto_ejecucion->direcciones_fisicas, tamanio, interfaz);
+        a_leer_o_escribir_interfaz(STDOUT_WRITE, proceso, proceso->direcciones_fisicas, tamanio, interfaz);
     }
 }
 
