@@ -84,8 +84,14 @@ void main_stdin(t_interfaz* interfaz_hilo);
 void main_stdout(t_interfaz* interfaz_hilo);
 void main_dialfs(t_interfaz* interfaz_hilo);
 void conectarse_a_kernel(int socket, op_code codigo_operacion ,char* nombre, char* tipo_interfaz);
+
+//.................................. DESCONEXION IO .......................................................................
 void handle_sigint(int sig);
 void desconectarse();
+void desconectar_generica();
+void desconectar_stdin();
+void desconectar_stdout();
+void desconectar_dialfs();
 void desconectar_memoria_stdin();
 void desconectar_memoria_stdout();
 void desconectar_memoria_dialfs();

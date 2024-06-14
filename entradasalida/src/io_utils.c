@@ -1,8 +1,7 @@
 #include "io.h"
 
 static t_interfaz* crear_interfaz(char* nombre);
-static void desconexion_kernel(int socket_kernel_desconexion);
-static void desconectar_memoria(char* tipo_interfaz);
+static char* tipo_interfaz;
 
 t_config* config;
 char* nombre_interfaz;
@@ -21,7 +20,7 @@ void iniciar_interfaz(char* nombre, char* path_config) {
         abort();
     }
 
-    char* tipo_interfaz = config_get_string_value(config, "TIPO_INTERFAZ");
+    tipo_interfaz = config_get_string_value(config, "TIPO_INTERFAZ");
 
     if (strcmp(tipo_interfaz, "GENERICA") == 0) {
         main_generica(interfaz);
@@ -55,46 +54,18 @@ void conectarse_a_kernel(int socket_kernel, op_code codigo_operacion ,char* nomb
 }
 
 void desconectarse(){ //TODO que deberia pasar si hay un proceso en IO?
-
-    char* ip_kernel = config_get_string_value(config, "IP_KERNEL");
-    char* puerto_kernel = config_get_string_value(config, "PUERTO_KERNEL");
-    char* tipo_interfaz = config_get_string_value(config, "TIPO_INTERFAZ");
-    
-    int socket_kernel_desconexion = crear_conexion(ip_kernel, puerto_kernel);
-
-    if(strcmp(tipo_interfaz, "GENERICA")){ //Si no es generica
-        desconectar_memoria(tipo_interfaz);
+    if(!strcmp(tipo_interfaz, "GENERICA")){
+        desconectar_generica();
     }
-
-    /*pthread_t hilo_desconexion_kernel;
-    pthread_create(&hilo_desconexion_kernel, NULL, desconexion_kernel, socket_kernel_desconexion);
-    pthread_detach(&hilo_desconexion_kernel);
-    
-    while(desconectado_kernel != 1){}*/
-
-    desconexion_kernel(socket_kernel_desconexion);
-
-    abort();
-}
-
-static void desconexion_kernel(int socket_kernel_desconexion){
-    t_paquete* paquete = crear_paquete(DESCONECTAR_IO);
-    agregar_cadena_a_paquete(paquete, nombre_interfaz);
-    enviar_paquete(paquete, socket_kernel_desconexion);
-
-    desconectado_kernel = 0;
-    recv(socket_kernel_desconexion, &desconectado_kernel , sizeof(int), MSG_WAITALL);
-}
-
-static void desconectar_memoria(char* tipo_interfaz){
-
     if(!strcmp(tipo_interfaz, "STDIN")){ 
-        desconectar_memoria_stdin(tipo_interfaz);
+        desconectar_stdin();
     }
     if(!strcmp(tipo_interfaz, "STDOUT")){
-        desconectar_memoria_stdout(tipo_interfaz);
+        desconectar_stdout();
     }
     if(!strcmp(tipo_interfaz, "DIALFS")){ 
-        desconectar_memoria_dialfs(tipo_interfaz);
+        desconectar_dialfs();
     }
+
+    abort();
 }

@@ -446,6 +446,16 @@ static void reposicionamiento_del_puntero_de_archivo(uint32_t puntero_archivo, c
 
 }
 
+void desconectar_dialfs(){
+    desconectar_memoria_stdin();
+
+    int desconexion = -1;
+    send(socket_kernel, &desconexion, sizeof(int), 0);
+
+    int desconectado_kernel = 0;
+    recv(socket_kernel, &desconectado_kernel , sizeof(int), MSG_WAITALL);
+}
+
 void desconectar_memoria_dialfs(){
     t_paquete* paquete = crear_paquete(DESCONECTAR_IO);
     agregar_entero_a_paquete(paquete,1);

@@ -73,12 +73,8 @@ static void recibir_peticion()
 
             sem_post(&hay_peticiones);
         } 
-        else if(paquete->codigo_operacion == FINALIZAR_OPERACION_IO){
-            sacar_entero_de_paquete(&stream);
-            
-            //Enviar paquete para que el hilo de kernel no quede esperando 
-            int termino_io = -1;
-            send(socket_kernel, &termino_io, sizeof(int), 0);
+        else{
+            //TODO hacer un log?
         }
         
         eliminar_paquete(paquete);
@@ -139,6 +135,16 @@ static void solicitar_escritura(void* texto_a_guardar, int pid, uint32_t direcci
     agregar_entero_sin_signo_a_paquete(paquete,direccion_fisica);
     agregar_bytes_a_paquete(paquete, texto_a_guardar, tamanio_registro);
     enviar_paquete(paquete, socket_memoria);
+}
+
+void desconectar_stdin(){
+    desconectar_memoria_stdin();
+
+    int desconexion = -1;
+    send(socket_kernel, &desconexion, sizeof(int), 0);
+
+    int desconectado_kernel = 0;
+    recv(socket_kernel, &desconectado_kernel , sizeof(int), MSG_WAITALL);
 }
 
 void desconectar_memoria_stdin(){

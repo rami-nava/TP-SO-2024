@@ -76,12 +76,8 @@ static void recibir_peticion ()
 
             sem_post(&hay_peticiones);
         } 
-        else if(paquete->codigo_operacion == FINALIZAR_OPERACION_IO){
-            sacar_entero_de_paquete(&stream);
-            
-            //Enviar paquete para que el hilo de kernel no quede esperando 
-            int termino_io = -1;
-            send(socket_kernel, &termino_io, sizeof(int), 0);
+        else{
+            //TODO hacer un log?
         }
         eliminar_paquete(paquete);
     }
@@ -164,6 +160,16 @@ static char* recibir_lectura(uint32_t tamanio)
         abort();
     }
 }*/
+
+void desconectar_stdout(){
+    desconectar_memoria_stdin();
+
+    int desconexion = -1;
+    send(socket_kernel, &desconexion, sizeof(int), 0);
+
+    int desconectado_kernel = 0;
+    recv(socket_kernel, &desconectado_kernel , sizeof(int), MSG_WAITALL);
+}
 
 void desconectar_memoria_stdout(){
     t_paquete* paquete = crear_paquete(DESCONECTAR_IO);

@@ -194,11 +194,6 @@ static void check_interrupt(){
         if(tipo_interrupcion == 1){
             log_info(cpu_logger, "Recibi una interrupcion de Fin de Quantum del proceso PID: %d\n", contexto_ejecucion->pid);
             contexto_ejecucion->hay_fin_de_quantum = 1;
-            
-        }else if(tipo_interrupcion == 2){
-            log_info(cpu_logger,"Recibi una interrupcion de finalizacion por signal del proceso PID: %d\n", contexto_ejecucion->pid);
-            modificar_motivo (EXIT, 1, "INVALID_RESOURCE", "", "", "", "");
-        
         }else if(tipo_interrupcion == 3){
             log_info(cpu_logger,"Recibi una interrupcion de finalizacion del proceso PID: %d\n", contexto_ejecucion->pid);
             modificar_motivo (EXIT, 1, "Pedido de finalizacion", "", "", "", "");
