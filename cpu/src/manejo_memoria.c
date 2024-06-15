@@ -72,21 +72,27 @@ void resize(char *tamanio)
 }
 
 // COPY STRING - REVISAR
-void copy_string(char* tamanio)
+void copy_string(char* registro_tamanio)
 {
-    uint32_t cantidad_bytes_a_copiar = atoi(tamanio);
+    uint32_t cantidad_bytes_a_copiar = buscar_registro(registro_tamanio);
     uint32_t posicion_de_string_a_copiar = buscar_registro("SI");
     uint32_t posicion_de_memoria_donde_copiar = buscar_registro("DI");
 
-    uint32_t direccion_fisica_a_copiar = traducir_de_logica_a_fisica(posicion_de_string_a_copiar);
-    uint32_t direccion_fisica_donde_copiar = traducir_de_logica_a_fisica(posicion_de_memoria_donde_copiar);
-    
-    t_paquete *paquete = crear_paquete(PEDIDO_COPY_STRING);
-    agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
-    agregar_entero_sin_signo_a_paquete(paquete, cantidad_bytes_a_copiar);
-    agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica_a_copiar);
-    agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica_donde_copiar);
-    enviar_paquete(paquete, socket_cliente_memoria);
+    // Puede ser que lo tengo para leer este en paginas distintas
+    t_list* direcciones_fisicas_donde_leer = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_copiar, posicion_de_string_a_copiar);
+    t_list* direcciones_fisicas_donde_escribir = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_copiar, posicion_de_memoria_donde_copiar);
+
+    // Leo de memoria a apartir de esta direccion fisica la cantidad_bytes_a_copiar
+    void* string_a_copiar = lectura_en_memoria(cantidad_bytes_a_copiar, direcciones_fisicas_donde_leer);
+
+    loggear_lectura_en_memoria(string_a_copiar, direcciones_fisicas_donde_leer);
+
+    // Lo escribo en memoria a la posicion donde queremos copiarlo
+    escritura_en_memoria(string_a_copiar, direcciones_fisicas_donde_escribir);
+
+    uint32_t valor_a_copiar_para_log = casteo_de_void_a_uint32_t(string_a_copiar);
+
+    loggear_escritura_en_memoria(valor_a_copiar_para_log, direcciones_fisicas_donde_leer);
 }
 
 // MOV_IN - Lee un valor de memoria, a partir de una direccion, y lo almacena en un registro

@@ -24,7 +24,7 @@ make memcheck ARGS="ESPERA /home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/
 
 TECLADO ===========
 
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/MEMORIA_2.txt"
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/MEMORIA_1.txt"
 
 =================================================================================
 
