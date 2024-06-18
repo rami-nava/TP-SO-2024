@@ -85,8 +85,6 @@ void copy_string(char* registro_tamanio)
     // Leo de memoria a apartir de esta direccion fisica la cantidad_bytes_a_copiar
     void* string_a_copiar = lectura_en_memoria(cantidad_bytes_a_copiar, direcciones_fisicas_donde_leer);
 
-    loggear_lectura_en_memoria(string_a_copiar, direcciones_fisicas_donde_leer);
-
     // Lo escribo en memoria a la posicion donde queremos copiarlo
     escritura_en_memoria(string_a_copiar, direcciones_fisicas_donde_escribir);
 
