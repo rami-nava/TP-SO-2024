@@ -24,8 +24,6 @@ char *comandos[] = {
     [EXIT] = "EXIT", //0
 };
 
-
-
 char* instruccion_a_ejecutar; 
 char** elementos_instrucciones;  
 int cantidad_parametros;
@@ -293,9 +291,9 @@ static void io_stdout_write(char* interfaz, char* registro_direccion, char* regi
 
     uint32_t direccion_logica = buscar_registro(registro_direccion);
 
-    uint32_t cantidad_bytes_a_escribir = buscar_registro(registro_direccion);
+    uint32_t cantidad_bytes_a_leer = buscar_registro(registro_direccion);
 
-    contexto_ejecucion->direcciones_fisicas = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_escribir, direccion_logica);
+    contexto_ejecucion->direcciones_fisicas = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_leer, direccion_logica);
 
     sprintf(tamanio_lectura, "%" PRIu32, buscar_registro(registro_tamanio));
 

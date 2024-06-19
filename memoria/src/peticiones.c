@@ -86,18 +86,18 @@ static void manejo_conexiones(void* conexion)
 			traducir_pagina_a_marcos(numero_pagina, pid_mmu, cliente);
 			break;
 
-		case LEER_CONTENIDO_EN_MEMORIA:
+		case LEER_CONTENIDO_EN_MEMORIA_DIALFS:
 			int pid_fs_write = sacar_entero_de_paquete(&stream);
 			uint32_t cantidad_bytes_a_leer = sacar_entero_de_paquete(&stream);
 			uint32_t direccion_fisica_fs_write = sacar_entero_sin_signo_de_paquete(&stream);
-			leer_contenido_espacio_usuario(pid_fs_write, direccion_fisica_fs_write, cantidad_bytes_a_leer, LEER_CONTENIDO_EN_MEMORIA, cliente);
+			leer_contenido_espacio_usuario(pid_fs_write, direccion_fisica_fs_write, cantidad_bytes_a_leer, LEER_CONTENIDO_EN_MEMORIA_DIALFS, cliente);
 			break;
 		
-		case REALIZAR_LECTURA:
-			int pid_lectura = sacar_entero_de_paquete(&stream);
-			uint32_t direccion_fisica_lectura = sacar_entero_sin_signo_de_paquete(&stream);
-			uint32_t tamanio_lectura = sacar_entero_sin_signo_de_paquete(&stream);
-			leer_contenido_espacio_usuario(pid_lectura, direccion_fisica_lectura, tamanio_lectura, REALIZAR_LECTURA, cliente);
+		case LEER_CONTENIDO_EN_MEMORIA_DESDE_STDOUT:
+			int pid_stdout = sacar_entero_de_paquete(&stream);
+			uint32_t bytes_a_leer_stdout = sacar_entero_sin_signo_de_paquete(&stream);
+			uint32_t direccion_fisica_stdout = sacar_entero_sin_signo_de_paquete(&stream);
+			leer_contenido_espacio_usuario(pid_stdout, direccion_fisica_stdout, bytes_a_leer_stdout, LEER_CONTENIDO_EN_MEMORIA_DESDE_CPU, cliente);
 			break;
 
 		case PEDIDO_RESIZE:
@@ -167,15 +167,6 @@ static void manejo_conexiones(void* conexion)
 			uint32_t direccion_fisica_a_leer_cpu = sacar_entero_sin_signo_de_paquete(&stream);
 			leer_contenido_espacio_usuario(pid_leer_en_memoria_cpu, direccion_fisica_a_leer_cpu, bytes_a_leer_cpu, LEER_CONTENIDO_EN_MEMORIA_DESDE_CPU, cliente);
 			break;
-		/*
-		case LEER_CONTENIDO_EN_MEMORIA_DESDE_STDOUT:
-			int pid_leer_en_memoria = sacar_entero_sin_signo_de_paquete(&stream);
-			uint32_t bytes_a_leer = sacar_entero_sin_signo_de_paquete(&stream);
-			uint32_t direccion_fisica_a_leer = sacar_entero_sin_signo_de_paquete(&stream);
-			leer_contenido_espacio_usuario(pid_leer_en_memoria, direccion_fisica_a_leer, tamanio_lectura, LEER_CONTENIDO_EN_MEMORIA_DESDE_CPU, cliente);
-			uint32_t lectura_cpu = 1; 
-			send(cliente, &lectura_cpu, sizeof(uint32_t), 0);
-			break;*/
 
 		default:
 			break;
@@ -183,21 +174,3 @@ static void manejo_conexiones(void* conexion)
 		eliminar_paquete(paquete);
 	}
 }
-
-/*
-//INSTRUCCIONES DE IO
-		
-		case REALIZAR_ESCRITURA:
-			uint32_t direccion_fisica_escritura = sacar_entero_sin_signo_de_paquete(&stream);
-			uint32_t tamanio_escritura = sacar_entero_sin_signo_de_paquete(&stream);
-			void* texto_a_guardar = sacar_bytes_de_paquete(&stream);
-			realizar_escritura(direccion_fisica_escritura, texto_a_guardar, tamanio_escritura, cliente);
-			break;
-
-		case ESCRIBIR_CONTENIDO_EN_MEMORIA:
-			uint32_t cantidad_bytes_a_escribir = sacar_entero_de_paquete(&stream);
-			uint32_t direccion_fisica_fs_read = sacar_entero_sin_signo_de_paquete(&stream);
-			void* contenido = sacar_bytes_de_paquete(&stream);
-			realizar_escritura(direccion_fisica_fs_read, contenido, cantidad_bytes_a_escribir, cliente);
-			break;
-*/

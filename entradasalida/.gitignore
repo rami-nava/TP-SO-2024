@@ -3,6 +3,8 @@ bin/
 obj/
 *.log
 !/home/utnso/tp-2024-1c-SegmenFault/entradasalida/dialfs
+logs/*
+!logs/
 
 # Eclipse files
 .settings/

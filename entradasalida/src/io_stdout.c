@@ -15,8 +15,9 @@ static pthread_mutex_t mutex_lista_peticiones;
 
 // Funciones Locales //
 static void recibir_peticion();
-static void pedir_lectura(t_list* direcciones_fisicas, uint32_t tamanio, int pid); 
-static char* recibir_lectura(uint32_t tamanio);
+static void* pedir_lectura_a_memoria(t_list* direcciones_fisicas, uint32_t tamanio, int pid); 
+static void peticion_de_lectura(uint32_t direccion_fisica, uint32_t tamanio, int pid);
+static void* recibir_lectura();
 static void leer_memoria(); 
 
 void main_stdout(t_interfaz* interfaz_hilo) 
@@ -95,8 +96,8 @@ static void leer_memoria(){
 
         log_info(stdout_logger, "PID: %d - Operacion: IO_STDOUT_WRITE\n", peticion->pid);
 
-        //Le pide la lectura de esa direccion a la memoria 
-        pedir_lectura(peticion->direcciones_fisicas, peticion->tamanio_registro, peticion->pid);
+        //Le pide la lectura de esa direccion/es a la memoria 
+        pedir_lectura_a_memoria(peticion->direcciones_fisicas, peticion->tamanio_registro, peticion->pid);
 
         //Recibe la lectura de la memoria
         char* lectura = recibir_lectura(peticion->tamanio_registro);
@@ -112,22 +113,58 @@ static void leer_memoria(){
    }
 }
 
-static void pedir_lectura(t_list* direcciones_fisicas, uint32_t tamanio, int pid) 
+static void* pedir_lectura_a_memoria(t_list* direcciones_fisicas, uint32_t tamanio_lectura, int pid) 
 {
-    t_paquete* paquete = crear_paquete(REALIZAR_LECTURA);
+    uint32_t tamanio_leido_actual = 0;
+
+    // Buffer donde se va a ir almacenando el contenido leído final
+    char* contenido_leido_total = malloc(tamanio_lectura); 
+
+    t_list_iterator* iterator = list_iterator_create(direcciones_fisicas);
+
+     // Mientras haya una df a escribir, sigo escribiendo
+    while (list_iterator_has_next(iterator)) {
+
+        // Obtengo el próximo acceso de la lista
+        t_acceso_memoria* acceso = (t_acceso_memoria*) list_iterator_next(iterator);
+        
+        // Leo en Memoria
+        peticion_de_lectura(acceso->direccion_fisica, acceso->tamanio, pid);
+
+        // Guardo en un buffer la lectura y lo copio en el contenido total
+        void* valor_leido = recibir_lectura(); 
+        memcpy(contenido_leido_total + tamanio_leido_actual, valor_leido, acceso->tamanio);
+
+        // Actualizo el tamanio leido
+        tamanio_leido_actual += acceso->tamanio;
+
+        // Libero la memoria del buffer
+        free(valor_leido); 
+    }
+
+    list_iterator_destroy(iterator);
+    
+    list_destroy_and_destroy_elements(direcciones_fisicas, free);
+
+    return contenido_leido_total;
+}
+
+static void peticion_de_lectura(uint32_t direccion_fisica, uint32_t tamanio, int pid)
+{
+    t_paquete* paquete = crear_paquete(LEER_CONTENIDO_EN_MEMORIA_DESDE_STDOUT);
     agregar_entero_a_paquete(paquete, pid);
-    //agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
     agregar_entero_sin_signo_a_paquete(paquete, tamanio);
+    agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
     enviar_paquete(paquete, socket_memoria);
 }
 
-static char* recibir_lectura(uint32_t tamanio) 
+static void* recibir_lectura() 
 {
     t_paquete* paquete = recibir_paquete(socket_memoria);
     void* stream = paquete->buffer->stream;
 
-    if(paquete->codigo_operacion == RESULTADO_LECTURA){
-        char* lectura = sacar_cadena_de_paquete(&stream);
+    if(paquete->codigo_operacion == RESULTADO_LECTURA_STDOUT){
+        void* lectura = sacar_bytes_de_paquete(&stream);
 
         eliminar_paquete(paquete);
         return lectura;
@@ -138,28 +175,6 @@ static char* recibir_lectura(uint32_t tamanio)
         abort();
     }
 }
-
-/*
-static char* recibir_lectura(uint32_t tamanio) 
-{
-    int cod_op = recibir_operacion(socket_memoria);
-
-    if (cod_op == RESULTADO_LECTURA){
-
-        void* buffer = recibir_buffer(socket_memoria);
-
-        char* lectura = malloc(tamanio);
-        memcpy(lectura, buffer, tamanio);
-
-        free(buffer);
-
-        return lectura;
-    }
-    else {
-        log_error(stdout_logger, "No me enviaste el contenido \n");
-        abort();
-    }
-}*/
 
 void desconectar_stdout(){
     desconectar_memoria_stdin();

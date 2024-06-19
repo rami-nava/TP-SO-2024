@@ -63,9 +63,9 @@ void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t
 		t_paquete* paquete_mov_in = crear_paquete(RESULTADO_MOV_IN);
 		agregar_bytes_a_paquete(paquete_mov_in, contenido_leido, tamanio_lectura);
 		enviar_paquete(paquete_mov_in, cliente);
-	} else if (operacion == REALIZAR_LECTURA){
-		t_paquete* paquete = crear_paquete(RESULTADO_LECTURA);
-		agregar_cadena_a_paquete(paquete, contenido_leido);
+	} else if (operacion == LEER_CONTENIDO_EN_MEMORIA_DESDE_STDOUT){
+		t_paquete* paquete = crear_paquete(RESULTADO_LECTURA_STDOUT);
+		agregar_bytes_a_paquete(paquete, contenido_leido, tamanio_lectura);
 		enviar_paquete(paquete, cliente);
 	} else {
 		t_paquete* paquete_fs_write = crear_paquete(VALOR_LECTURA);

@@ -90,7 +90,9 @@ void copy_string(char* registro_tamanio)
 
     uint32_t valor_a_copiar_para_log = casteo_de_void_a_uint32_t(string_a_copiar);
 
-    loggear_escritura_en_memoria(valor_a_copiar_para_log, direcciones_fisicas_donde_leer);
+    t_acceso_memoria* primera_df =  list_get(direcciones_fisicas_donde_escribir, 0); //REVISA MICA TODO
+
+    log_info(cpu_logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d \n", contexto_ejecucion->pid, primera_df->direccion_fisica , valor_a_copiar_para_log); 
 }
 
 // MOV_IN - Lee un valor de memoria, a partir de una direccion, y lo almacena en un registro

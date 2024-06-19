@@ -401,7 +401,7 @@ static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uin
 
 static void solicitar_contenido_a_memoria(int pid, uint32_t cantidad_bytes, uint32_t direccion_fisica)
 {
-	t_paquete* paquete = crear_paquete(LEER_CONTENIDO_EN_MEMORIA);
+	t_paquete* paquete = crear_paquete(LEER_CONTENIDO_EN_MEMORIA_DIALFS);
     agregar_entero_a_paquete(paquete, pid);
 	agregar_entero_sin_signo_a_paquete(paquete, cantidad_bytes);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
