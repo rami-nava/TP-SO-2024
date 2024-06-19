@@ -150,7 +150,24 @@ void agregar_lista_de_cadenas_a_paquete(t_paquete* paquete, t_list* palabras)
 
 void agregar_lista_de_accesos_a_paquete(t_paquete* paquete, t_list* accesos)
 {
-	int tam_lista = list_size(accesos);
+    if(accesos != NULL) {
+        int tam_lista = list_size(accesos);
+	agregar_entero_a_paquete(paquete,tam_lista);
+
+	for(int i = 0; i < tam_lista; i++)
+	{
+        t_acceso_memoria* acceso = list_get(accesos, i);
+        agregar_entero_sin_signo_a_paquete(paquete, acceso->direccion_fisica);
+        agregar_entero_sin_signo_a_paquete(paquete, acceso->tamanio);
+    }
+    } else {
+        return;
+    }
+}
+
+void agregar_lista_de_accesos_a_paquete_para_contexto(t_paquete* paquete, t_list* accesos)
+{
+    int tam_lista = list_size(accesos);
 	agregar_entero_a_paquete(paquete,tam_lista);
 
 	for(int i = 0; i < tam_lista; i++)
@@ -357,6 +374,19 @@ t_list* sacar_lista_de_accesos_de_paquete(void** stream)
 	return accesos;
 }
 
+
+void sacar_lista_de_accesos_de_paquete_para_contexto(void** stream, t_list* accesos) 
+{
+	int cant_elementos = sacar_entero_de_paquete(stream);
+
+	for(int i = 0; i< cant_elementos; i++)
+    {
+        t_acceso_memoria* acceso_memoria = malloc(sizeof(t_acceso_memoria));
+        acceso_memoria->direccion_fisica = sacar_entero_sin_signo_de_paquete(stream);
+        acceso_memoria->tamanio = sacar_entero_sin_signo_de_paquete(stream);
+        list_add(accesos, acceso_memoria);
+    }
+}
 
 void* sacar_puntero_de_paquete(void** stream)
 {

@@ -197,6 +197,11 @@ void enviar_peticion_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticio
     logear_cola_io_bloqueados(interfaz); //NO es obligatorio
 
     enviar_paquete(peticion, interfaz->socket_conectado);
+
+    if(proceso->direcciones_fisicas != NULL) {
+    list_destroy_and_destroy_elements(proceso->direcciones_fisicas, free);
+    proceso->direcciones_fisicas = NULL;
+    }
 }
 
 static void esperar_io(t_interfaz* interfaz)

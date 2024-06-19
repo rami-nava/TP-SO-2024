@@ -154,7 +154,7 @@ void agregar_puntero_a_paquete(t_paquete* , void* , uint32_t);
 void agregar_a_paquete(t_paquete* , void* , int );
 void agregar_bytes_a_paquete(t_paquete* , void* , uint32_t);
 void agregar_lista_de_accesos_a_paquete(t_paquete* paquete, t_list* accesos);
-
+void agregar_lista_de_accesos_a_paquete_para_contexto(t_paquete* paquete, t_list* accesos);
 //======================================================= SACAR_DE_PAQUETE =========================================================================================================
 char* sacar_cadena_de_paquete(void** );
 int sacar_entero_de_paquete(void** );
@@ -164,7 +164,8 @@ char** sacar_array_cadenas_de_paquete(void** );
 t_list* sacar_lista_de_cadenas_de_paquete(void**);
 void* sacar_puntero_de_paquete(void** );
 void* sacar_bytes_de_paquete(void**);
-t_list* sacar_lista_de_accesos_de_paquete(void** stream) ;
+t_list* sacar_lista_de_accesos_de_paquete(void** stream); 
+void sacar_lista_de_accesos_de_paquete_para_contexto(void** stream, t_list* direcciones_fisicas); 
 //======================================================= LIBERAR_MEMORIA ==============================================================================================================
 void eliminar_paquete(t_paquete* );
 void free_array (char ** );

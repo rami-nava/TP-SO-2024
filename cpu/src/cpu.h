@@ -74,6 +74,7 @@ uint32_t tamanio_registro(char* registro);
 // MMU
 uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica);
 t_list* obtener_direcciones_fisicas_mmu(uint32_t tamanio_total, uint32_t direccion_logica_inicial);
+void cargar_direcciones_fisicas_en_contexto(uint32_t tamanio_total, uint32_t direccion_logica_inicial);
 uint32_t buscar_marco_tlb_o_memoria (uint32_t numero_pagina);
 
 //TLB
