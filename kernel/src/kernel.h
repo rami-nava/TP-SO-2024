@@ -96,6 +96,7 @@ typedef struct
 typedef struct
 {
     int socket_conectado;
+    int* socket_leak;
     char* nombre;
     char* tipo_interfaz;
     sem_t sem_comunicacion_interfaz;

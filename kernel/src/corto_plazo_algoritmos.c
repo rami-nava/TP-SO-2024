@@ -103,10 +103,6 @@ void* comenzar_reloj_RR(){
                     temporal_destroy(reloj);
                     reloj = NULL;
 
-                    if(contexto_ejecucion->motivo_desalojo->comando == EXIT){
-                        sem_post(&exit_sem); //Para evitar condiciones de carrera y se pueda reiniciar el quantum
-                    }
-
                     //Avisar que ya rompi el reloj antes de iniciar un nuevo proceso
                     sem_post(&rompiendo_reloj);
 

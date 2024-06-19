@@ -34,6 +34,7 @@ void atender_io(int* socket_io)
         void* stream = paquete->buffer->stream;
 
         t_interfaz* interfaz_nueva = malloc(sizeof(t_interfaz));
+        interfaz_nueva->socket_leak = socket_io;
         interfaz_nueva->nombre = sacar_cadena_de_paquete(&stream);
         interfaz_nueva->tipo_interfaz = sacar_cadena_de_paquete(&stream);
         interfaz_nueva->socket_conectado = socket_cliente_io;
@@ -197,11 +198,6 @@ void enviar_peticion_io(t_pcb* proceso, t_interfaz* interfaz, t_paquete* peticio
     logear_cola_io_bloqueados(interfaz); //NO es obligatorio
 
     enviar_paquete(peticion, interfaz->socket_conectado);
-
-    if(proceso->direcciones_fisicas != NULL) {
-    list_destroy_and_destroy_elements(proceso->direcciones_fisicas, free);
-    proceso->direcciones_fisicas = NULL;
-    }
 }
 
 static void esperar_io(t_interfaz* interfaz)
@@ -216,6 +212,7 @@ static void esperar_io(t_interfaz* interfaz)
             int desconectado = 1;
             send(interfaz->socket_conectado, &desconectado, sizeof(int), 0);
             close(interfaz->socket_conectado);
+            free(interfaz->socket_leak);
             free(interfaz);
             break; //para salir del while => Esta IO no va a mandar mas mensajes
         }else{

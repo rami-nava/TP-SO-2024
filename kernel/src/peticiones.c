@@ -25,7 +25,6 @@ bool instruccion_bloqueante;
 void recibir_contexto_actualizado(t_pcb *proceso, t_contexto *contexto_ejecucion)
 {
     instruccion_bloqueante = false;
-
     // Ejecutamos la peticion recibida
     recibir_peticion(proceso, contexto_ejecucion);
 
@@ -79,17 +78,12 @@ static void recibir_peticion(t_pcb *proceso, t_contexto *contexto_ejecucion){
             break;        
         case EXIT:
             romper_el_reloj();
-            if(!strcmp(config_valores_kernel.algoritmo, "RR") || !strcmp(config_valores_kernel.algoritmo, "VRR"))
-            {
-                sem_wait(&exit_sem);
-            }
             exit_c(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
         case OUT_OF_MEMORY:
             exit_c(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
       default:
-        //log_info(kernel_logger, "Operacion no bloqueante\n");
         break;
     }
 }
@@ -128,7 +122,7 @@ static void io_stdin_read(t_pcb *proceso, char **parametros){
     bool peticion_valida = peticiones_de_io(proceso, interfaz);
 
     if (peticion_valida) {
-        a_leer_o_escribir_interfaz(STDIN_READ, proceso, proceso->direcciones_fisicas, tamanio, interfaz);
+        a_leer_o_escribir_interfaz(STDIN_READ, proceso, contexto_ejecucion->direcciones_fisicas, tamanio, interfaz);
     }
 }
 
@@ -141,7 +135,7 @@ static void io_stdout_write(t_pcb *proceso, char **parametros){
     bool peticion_valida = peticiones_de_io(proceso, interfaz);
 
     if (peticion_valida) {
-        a_leer_o_escribir_interfaz(STDOUT_WRITE, proceso, proceso->direcciones_fisicas, tamanio, interfaz);
+        a_leer_o_escribir_interfaz(STDOUT_WRITE, proceso, contexto_ejecucion->direcciones_fisicas, tamanio, interfaz);
     }
 }
 

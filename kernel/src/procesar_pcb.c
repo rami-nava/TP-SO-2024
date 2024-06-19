@@ -102,7 +102,7 @@ void actualizar_PCB(t_pcb* proceso){
     proceso->DI = contexto_ejecucion->DI;
     proceso->quantum = contexto_ejecucion->quantum;
     proceso->eliminado = contexto_ejecucion->eliminado;
-    proceso->direcciones_fisicas = list_duplicate(contexto_ejecucion->direcciones_fisicas);
+
 }
 
 void asignar_PBC_a_contexto(t_pcb* proceso){
@@ -131,8 +131,6 @@ void agregar_proceso_a_lista_procesos_del_sistema(t_pcb *proceso){
 
 //==================================================== ELIMINAR_PCB ====================================================================================
 void liberar_PCB(t_pcb* proceso) {
-    if(proceso->direcciones_fisicas != NULL)
-    list_destroy_and_destroy_elements(proceso->direcciones_fisicas, free);
     list_destroy_and_destroy_elements(proceso->recursos_asignados, free);
     free(proceso);
 }

@@ -278,11 +278,7 @@ static void io_stdin_read(char* interfaz, char* registro_direccion, char* regist
 
     uint32_t cantidad_bytes_a_escribir = buscar_registro(registro_tamanio);
 
-    t_list* direcciones_fisicas = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_escribir, direccion_logica);
-
-    contexto_ejecucion->direcciones_fisicas = list_duplicate(direcciones_fisicas); 
-
-    list_destroy_and_destroy_elements(direcciones_fisicas, free);
+    contexto_ejecucion->direcciones_fisicas = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_escribir, direccion_logica);
 
     sprintf(tamanio_escritura, "%" PRIu32, buscar_registro(registro_tamanio));
 
@@ -297,11 +293,7 @@ static void io_stdout_write(char* interfaz, char* registro_direccion, char* regi
 
     uint32_t cantidad_bytes_a_leer = buscar_registro(registro_direccion);
 
-    t_list* direcciones_fisicas = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_leer, direccion_logica);
-
-    contexto_ejecucion->direcciones_fisicas = list_duplicate(direcciones_fisicas); 
-
-    list_destroy_and_destroy_elements(direcciones_fisicas, free);
+    contexto_ejecucion->direcciones_fisicas = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_leer, direccion_logica);
     
     sprintf(tamanio_lectura, "%" PRIu32, buscar_registro(registro_tamanio));
 

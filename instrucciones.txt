@@ -18,6 +18,8 @@ make memcheck ARGS="impresora1 /home/utnso/tp-2024-1c-SegmenFault/IO_configs/imp
 
 make memcheck ARGS="teclado1 /home/utnso/tp-2024-1c-SegmenFault/IO_configs/teclado1.config" 
 
+./entradasalida teclado1 "/home/utnso/tp-2024-1c-SegmenFault/IO_configs/teclado1.config" 
+
 ./entradasalida TECLADO "/home/utnso/tp-2024-1c-SegmenFault/IO_configs/TECLADO.config" 
 
 ======== STDOUT =========

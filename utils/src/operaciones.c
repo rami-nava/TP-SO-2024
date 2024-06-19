@@ -152,16 +152,17 @@ void agregar_lista_de_accesos_a_paquete(t_paquete* paquete, t_list* accesos)
 {
     if(accesos != NULL) {
         int tam_lista = list_size(accesos);
-	agregar_entero_a_paquete(paquete,tam_lista);
+	    agregar_entero_a_paquete(paquete,tam_lista);
 
-	for(int i = 0; i < tam_lista; i++)
-	{
-        t_acceso_memoria* acceso = list_get(accesos, i);
-        agregar_entero_sin_signo_a_paquete(paquete, acceso->direccion_fisica);
-        agregar_entero_sin_signo_a_paquete(paquete, acceso->tamanio);
-    }
+        for(int i = 0; i < tam_lista; i++)
+        {
+            t_acceso_memoria* acceso = list_get(accesos, i);
+            agregar_entero_sin_signo_a_paquete(paquete, acceso->direccion_fisica);
+            agregar_entero_sin_signo_a_paquete(paquete, acceso->tamanio);
+        }
     } else {
-        return;
+        //Enviamos un 0 para que sepa que no hay direcciones en este contexto
+        agregar_entero_a_paquete(paquete,0); 
     }
 }
 
@@ -359,32 +360,41 @@ t_list* sacar_lista_de_cadenas_de_paquete(void** stream)
 
 t_list* sacar_lista_de_accesos_de_paquete(void** stream) 
 {
-	t_list* accesos =  list_create();
-
 	int cant_elementos = sacar_entero_de_paquete(stream);
 
-	for(int i = 0; i < cant_elementos; i++)
-    {
-        t_acceso_memoria* acceso_memoria = malloc(sizeof(t_acceso_memoria));
-        acceso_memoria->direccion_fisica = sacar_entero_sin_signo_de_paquete(stream);
-        acceso_memoria->tamanio = sacar_entero_sin_signo_de_paquete(stream);
-        list_add(accesos, acceso_memoria);
-    }
+    if(cant_elementos != 0){
+    
+        t_list* accesos =  list_create();
 
-	return accesos;
+        for(int i = 0; i < cant_elementos; i++)
+        {
+            t_acceso_memoria* acceso_memoria = malloc(sizeof(t_acceso_memoria));
+            acceso_memoria->direccion_fisica = sacar_entero_sin_signo_de_paquete(stream);
+            acceso_memoria->tamanio = sacar_entero_sin_signo_de_paquete(stream);
+            list_add(accesos, acceso_memoria);
+        }
+
+        return accesos;
+    }else{
+        return NULL;
+    }
 }
 
 
 void sacar_lista_de_accesos_de_paquete_para_contexto(void** stream, t_list* accesos) 
 {
-	int cant_elementos = sacar_entero_de_paquete(stream);
+    if(accesos != NULL){
+        int cant_elementos = sacar_entero_de_paquete(stream);
 
-	for(int i = 0; i < cant_elementos; i++)
-    {
-        t_acceso_memoria* acceso_memoria = malloc(sizeof(t_acceso_memoria));
-        acceso_memoria->direccion_fisica = sacar_entero_sin_signo_de_paquete(stream);
-        acceso_memoria->tamanio = sacar_entero_sin_signo_de_paquete(stream);
-        list_add(accesos, acceso_memoria);
+        for(int i = 0; i < cant_elementos; i++)
+        {
+            t_acceso_memoria* acceso_memoria = malloc(sizeof(t_acceso_memoria));
+            acceso_memoria->direccion_fisica = sacar_entero_sin_signo_de_paquete(stream);
+            acceso_memoria->tamanio = sacar_entero_sin_signo_de_paquete(stream);
+            list_add(accesos, acceso_memoria);
+        }
+    }else{
+        return;
     }
 }
 
