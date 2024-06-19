@@ -25,7 +25,7 @@ void iniciar_contexto()
     contexto_ejecucion->motivo_desalojo->comando = 0;
     contexto_ejecucion->hay_fin_de_quantum = 0;
     contexto_ejecucion->eliminado = 0;
-    contexto_ejecucion->direcciones_fisicas = list_create();
+    contexto_ejecucion->direcciones_fisicas = NULL;
 }
 
 //================================== ENVIAR/RECIBIR CONTEXTO ================================================================
@@ -53,7 +53,7 @@ void enviar_contexto(int socket_cliente)
     agregar_entero_a_paquete(paquete, contexto_ejecucion->quantum);
     agregar_entero_a_paquete(paquete, contexto_ejecucion->hay_fin_de_quantum);
     agregar_entero_a_paquete(paquete, contexto_ejecucion->eliminado);
-    agregar_lista_de_accesos_a_paquete_para_contexto(paquete, contexto_ejecucion->direcciones_fisicas);
+    agregar_lista_de_accesos_a_paquete(paquete, contexto_ejecucion->direcciones_fisicas);
 
     enviar_paquete(paquete, socket_cliente);
 }
@@ -127,7 +127,10 @@ void liberar_memoria_contexto()
         if (strcmp(contexto_ejecucion->motivo_desalojo->parametros[i], ""))
             free(contexto_ejecucion->motivo_desalojo->parametros[i]);
     free(contexto_ejecucion->motivo_desalojo);
-    list_destroy_and_destroy_elements(contexto_ejecucion->direcciones_fisicas, (void*)free);
+    if(contexto_ejecucion->direcciones_fisicas != NULL) {
+    list_destroy_and_destroy_elements(contexto_ejecucion->direcciones_fisicas, free);
+    contexto_ejecucion->direcciones_fisicas = NULL;
+    }
     free(contexto_ejecucion);
     contexto_ejecucion = NULL;
 }

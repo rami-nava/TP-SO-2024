@@ -278,7 +278,11 @@ static void io_stdin_read(char* interfaz, char* registro_direccion, char* regist
 
     uint32_t cantidad_bytes_a_escribir = buscar_registro(registro_tamanio);
 
-    cargar_direcciones_fisicas_en_contexto(cantidad_bytes_a_escribir, direccion_logica);
+    t_list* direcciones_fisicas = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_escribir, direccion_logica);
+
+    contexto_ejecucion->direcciones_fisicas = list_duplicate(direcciones_fisicas); 
+
+    list_destroy_and_destroy_elements(direcciones_fisicas, free);
 
     sprintf(tamanio_escritura, "%" PRIu32, buscar_registro(registro_tamanio));
 
@@ -293,8 +297,12 @@ static void io_stdout_write(char* interfaz, char* registro_direccion, char* regi
 
     uint32_t cantidad_bytes_a_leer = buscar_registro(registro_direccion);
 
-    cargar_direcciones_fisicas_en_contexto(cantidad_bytes_a_leer, direccion_logica);
+    t_list* direcciones_fisicas = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_leer, direccion_logica);
 
+    contexto_ejecucion->direcciones_fisicas = list_duplicate(direcciones_fisicas); 
+
+    list_destroy_and_destroy_elements(direcciones_fisicas, free);
+    
     sprintf(tamanio_lectura, "%" PRIu32, buscar_registro(registro_tamanio));
 
     modificar_motivo(IO_STDOUT_WRITE, 2, interfaz, tamanio_lectura, "", "", "");

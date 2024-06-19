@@ -363,7 +363,7 @@ t_list* sacar_lista_de_accesos_de_paquete(void** stream)
 
 	int cant_elementos = sacar_entero_de_paquete(stream);
 
-	for(int i = 0; i< cant_elementos; i++)
+	for(int i = 0; i < cant_elementos; i++)
     {
         t_acceso_memoria* acceso_memoria = malloc(sizeof(t_acceso_memoria));
         acceso_memoria->direccion_fisica = sacar_entero_sin_signo_de_paquete(stream);
@@ -379,7 +379,7 @@ void sacar_lista_de_accesos_de_paquete_para_contexto(void** stream, t_list* acce
 {
 	int cant_elementos = sacar_entero_de_paquete(stream);
 
-	for(int i = 0; i< cant_elementos; i++)
+	for(int i = 0; i < cant_elementos; i++)
     {
         t_acceso_memoria* acceso_memoria = malloc(sizeof(t_acceso_memoria));
         acceso_memoria->direccion_fisica = sacar_entero_sin_signo_de_paquete(stream);

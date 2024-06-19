@@ -2,6 +2,8 @@ INICIAR_PROCESO "/home/utnso/Desktop/pruebas.txt"
 
 INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/MEMORIA_1.txt"
 
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/TEST.txt"
+
 ======== GENERICA =========
 
 make memcheck ARGS="SLP1 /home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/SLP1.config" 
