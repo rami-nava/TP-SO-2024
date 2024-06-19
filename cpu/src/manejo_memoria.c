@@ -87,12 +87,6 @@ void copy_string(char* registro_tamanio)
 
     // Lo escribo en memoria a la posicion donde queremos copiarlo
     escritura_en_memoria(string_a_copiar, direcciones_fisicas_donde_escribir);
-
-    uint32_t valor_a_copiar_para_log = casteo_de_void_a_uint32_t(string_a_copiar);
-
-    t_acceso_memoria* primera_df =  list_get(direcciones_fisicas_donde_escribir, 0); //REVISA MICA TODO
-
-    log_info(cpu_logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d \n", contexto_ejecucion->pid, primera_df->direccion_fisica , valor_a_copiar_para_log); 
 }
 
 // MOV_IN - Lee un valor de memoria, a partir de una direccion, y lo almacena en un registro
@@ -164,6 +158,15 @@ void escritura_en_memoria(void* contenido, t_list* lista_accesos_memoria){
 
     list_iterator_destroy(iterator);
     
+    //si ejecuta copystring la funcion de loggear escritura en memoria no sirve y el list_destroy al final
+    //hace que no pueda hacer este log en la funcion de copystring
+    if(instruccion_actual == COPY_STRING){
+        uint32_t valor_a_escribir_para_log = casteo_de_void_a_uint32_t(contenido);
+        t_acceso_memoria* primera_df =  list_get(lista_accesos_memoria, 0); 
+
+        log_info(cpu_logger, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d \n", contexto_ejecucion->pid, primera_df->direccion_fisica , valor_a_escribir_para_log); 
+    }
+
     list_destroy_and_destroy_elements(lista_accesos_memoria, free);
 }
 
