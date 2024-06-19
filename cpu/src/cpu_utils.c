@@ -46,9 +46,9 @@ void atender_dispatch()
 				recibir_contexto_cpu(paquete,stream);
                 pthread_mutex_lock(&seguir_ejecutando_mutex);
                 while(no_es_bloqueante(instruccion_actual) && seguir_ejecutando) {
-                    pthread_mutex_unlock(&seguir_ejecutando_mutex); // Revisar si va aca o luego del while
+                    pthread_mutex_unlock(&seguir_ejecutando_mutex); 
                     ciclo_de_instruccion();
-                    pthread_mutex_lock(&seguir_ejecutando_mutex); // Revisar
+                    pthread_mutex_lock(&seguir_ejecutando_mutex); 
                 }
                 pthread_mutex_unlock(&seguir_ejecutando_mutex);	
         }  else {
