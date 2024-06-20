@@ -66,7 +66,7 @@ void resize(char *tamanio)
         seguir_ejecutando = false;
         pthread_mutex_unlock(&seguir_ejecutando_mutex);
 
-        modificar_motivo(OUT_OF_MEMORY, 1, "OUT_OF_MEMORY", "", "", "", "");
+        modificar_motivo(OUT_OF_MEMORY, 1, "OUT_OF_MEMORY", "", "", "");
         enviar_contexto(socket_cliente_dispatch);
     }
 }

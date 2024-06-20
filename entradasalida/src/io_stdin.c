@@ -68,12 +68,6 @@ static void recibir_peticion()
             peticion->direcciones_fisicas = sacar_lista_de_accesos_de_paquete(&stream);
             peticion->tamanio_registro = sacar_entero_sin_signo_de_paquete(&stream);
 
-            /*for(int i = 0; i < list_size(peticion->direcciones_fisicas); i++){
-                t_acceso_memoria* acceso = list_get(peticion->direcciones_fisicas, i);
-                log_info(stdin_logger, "Me llego como direcciones fisicas: %d\n", acceso->direccion_fisica);
-                log_info(stdin_logger, "Me llego como tamanio: %d\n", acceso->tamanio);
-            }*/
-
             pthread_mutex_lock(&mutex_lista_peticiones);
             list_add(peticiones, peticion);
             pthread_mutex_unlock(&mutex_lista_peticiones);

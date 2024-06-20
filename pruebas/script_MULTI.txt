@@ -1,8 +1,0 @@
-DETENER_PLANIFICACION
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/MULTI_1.txt" 
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/MULTI_1.txt" 
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/MULTI_1.txt" 
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/MULTI_1.txt" 
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/MULTI_1.txt" 
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/MULTI_1.txt" 
-INICIAR_PLANIFICACION

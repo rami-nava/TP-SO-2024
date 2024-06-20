@@ -1,5 +1,5 @@
 DETENER_PLANIFICACION
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/IO_A.txt"
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/IO_B.txt"
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/IO_C.txt"
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/IO/IO_A.txt"
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/IO/IO_B.txt"
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/IO/IO_C.txt"
 INICIAR_PLANIFICACION

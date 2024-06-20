@@ -25,14 +25,16 @@ static void recibir_peticion();
 static void consumir_una_unidad_de_tiempo_de_trabajo();
 static void crear_archivo(char *nombre_archivo);
 static void eliminar_archivo(char *nombre_archivo);
-static void truncar_archivo(char *nombre_archivo, uint32_t tamanio_nuevo);
-static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uint32_t bloque_inicial);
+static void truncar_archivo(char *nombre_archivo, uint32_t tamanio_nuevo, int pid);
+static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uint32_t bloque_inicial, int pid);
 static void reducir_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uint32_t bloque_inicial);
-static void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t bytes_a_leer, uint32_t direccion_fisica);
-static void escribir_en_memoria(void* contenido, uint32_t direccion_fisica, uint32_t bytes_a_escribir);
-static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t bytes_a_escribir, uint32_t direccion_fisica, int pid);
-static void solicitar_contenido_a_memoria(int pid, uint32_t cantidad_bytes, uint32_t direccion_fisica);
-static void* obtener_contenido_a_escribir();
+static void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t bytes_a_leer, t_list* lista_accesos_memoria, int pid);
+static void pedido_escritura(void* contenido_a_escribir, uint32_t direccion_fisica, uint32_t tamanio, int pid);
+static void escribir_en_memoria(void* contenido, t_list* direcciones_fisicas, uint32_t bytes_a_escribir, int pid);
+static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t bytes_a_escribir, t_list* lista_accesos_memoria, int pid);
+static void peticion_de_lectura(uint32_t direccion_fisica, uint32_t cantidad_bytes, int pid);
+static void* pedir_lectura_a_memoria(t_list* direcciones_fisicas, uint32_t tamanio_lectura, int pid);
+static void* recibir_lectura();
 static void reposicionamiento_del_puntero_de_archivo(uint32_t puntero_archivo, char *nombre_archivo);
 static void atender_peticion();
 
@@ -132,7 +134,7 @@ static void recibir_peticion()
             peticion->puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream);
             peticion->tamanio = sacar_entero_sin_signo_de_paquete(&stream);
             peticion->pid = sacar_entero_de_paquete(&stream);
-            peticion->direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+            peticion->direcciones_fisicas = sacar_lista_de_accesos_de_paquete(&stream);
             log_info(dialfs_logger, "PID: %d - Leer Archivo: %s - Tamaño a leer : %d - Puntero archivo: %d \n", peticion->pid, peticion->nombre, peticion->puntero_archivo, peticion->tamanio);
             pthread_mutex_lock(&mutex_lista_peticiones);
             list_add(peticiones, peticion);
@@ -141,16 +143,10 @@ static void recibir_peticion()
             break;
         case ESCRIBIR_ARCHIVO:
             peticion->nombre = sacar_cadena_de_paquete(&stream);
-            
-            //escribir lo leido de memoria en el archivo apartir de aca
             peticion->puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream);
-
-            //cantidad bytes a leer de memoria
             peticion->tamanio = sacar_entero_sin_signo_de_paquete(&stream);
             peticion->pid = sacar_entero_de_paquete(&stream);
-
-            //direccion desde la que empiezo a leer de memoria
-            peticion->direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+            peticion->direcciones_fisicas = sacar_lista_de_accesos_de_paquete(&stream);
 
             log_info(dialfs_logger, "PID: %d - Escribir Archivo: %s - Tamaño a escribir : %d - Puntero archivo: %d \n", peticion->pid, peticion->nombre, peticion->tamanio, peticion->puntero_archivo);
             pthread_mutex_lock(&mutex_lista_peticiones);
@@ -189,13 +185,13 @@ static void atender_peticion(){
                 eliminar_archivo(peticion->nombre);
                 break;
             case TRUNCAR_ARCHIVO:
-                truncar_archivo(peticion->nombre, peticion->tamanio_archivo);
+                truncar_archivo(peticion->nombre, peticion->tamanio_archivo, peticion->pid);
                 break;
             case LEER_ARCHIVO:
-                leer_archivo(peticion->nombre, peticion->puntero_archivo, peticion->tamanio, peticion->direccion_fisica);
+                leer_archivo(peticion->nombre, peticion->puntero_archivo, peticion->tamanio, peticion->direcciones_fisicas, peticion->pid);
                 break;
             case ESCRIBIR_ARCHIVO:
-                escribir_archivo(peticion->nombre, peticion->puntero_archivo, peticion->tamanio, peticion->direccion_fisica, peticion->pid);
+                escribir_archivo(peticion->nombre, peticion->puntero_archivo, peticion->tamanio, peticion->direcciones_fisicas, peticion->pid);
                 break;
             case LEER_BITMAP:
                 leer_bitmap(peticion->desde, peticion->hasta);
@@ -283,7 +279,7 @@ static void eliminar_archivo(char *nombre_archivo)
     free(nombre_archivo);
 }
 
-static void truncar_archivo(char *nombre_archivo, uint32_t tamanio_nuevo)
+static void truncar_archivo(char *nombre_archivo, uint32_t tamanio_nuevo, int pid)
 {
     // Obtenemos de la metadata los valores inciales
     metadata_archivo* metadata = levantar_metadata(nombre_archivo);
@@ -293,7 +289,7 @@ static void truncar_archivo(char *nombre_archivo, uint32_t tamanio_nuevo)
 
     if (tamanio_nuevo > tamanio_actual)
     {
-       ampliar_archivo(tamanio_nuevo, tamanio_actual, bloque_inicial);
+       ampliar_archivo(tamanio_nuevo, tamanio_actual, bloque_inicial, pid);
 
        cargamos_cambios_a_metadata_ampliar(tamanio_nuevo, nombre_archivo);
 
@@ -311,7 +307,7 @@ static void truncar_archivo(char *nombre_archivo, uint32_t tamanio_nuevo)
     
 }
 
-static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uint32_t bloque_inicial)
+static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uint32_t bloque_inicial, int pid)
 {
     compactar_desde_comienzo = false;
     
@@ -322,6 +318,8 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
 
     //Comprobamos si hay suficientes bloques contiguos
    if(!bloques_contiguos(bloques_a_agregar, bloque_final_archivo)) {
+
+        log_info(dialfs_logger, "PID: %d - Inicio Compactación \n", pid);
 
         compactar(bloques_a_agregar, bloque_final_archivo);
 
@@ -337,7 +335,7 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
 
         usleep(1000 * retraso_compactacion);
 
-        log_info(dialfs_logger, "Se compacto el archivo \n");
+        log_info(dialfs_logger, "PID: %d - Fin Compactación \n", pid);
         
    } else printf ("Se encontraron bloques contiguos suficientes \n");
 
@@ -357,38 +355,72 @@ static void reducir_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
     eliminar_bloques(bloques_a_eliminar, primer_bloque_a_borrar);
 }
 
-static void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t bytes_a_leer, uint32_t direccion_fisica)
+static void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t bytes_a_escribir, t_list* direcciones_fisicas, int pid)
 {
     //Inicializamos el buffer
-    void *contenido = malloc(bytes_a_leer);
+    void *contenido = malloc(bytes_a_escribir);
     
     reposicionamiento_del_puntero_de_archivo(puntero_archivo, nombre_archivo);
 
     //Leemos el bloque
-    fread(contenido, bytes_a_leer, 1, archivo_de_bloques); 
+    fread(contenido, bytes_a_escribir, 1, archivo_de_bloques); 
     fclose(archivo_de_bloques);
 
     //Escribimos el contenido en la memoria
-    escribir_en_memoria(contenido, direccion_fisica, bytes_a_leer);
+    escribir_en_memoria(contenido, direcciones_fisicas, bytes_a_escribir, pid);
 }
 
-static void escribir_en_memoria(void* contenido, uint32_t direccion_fisica, uint32_t bytes_a_escribir)
+static void escribir_en_memoria(void* contenido, t_list* direcciones_fisicas, uint32_t bytes_a_escribir, int pid)
+{
+    uint32_t escritura_guardada_dialfs;
+    uint32_t tamanio_copiado_actual = 0;
+
+    t_list_iterator* iterator = list_iterator_create(direcciones_fisicas);
+
+    // Mientras haya una df a escribir, sigo escribiendo
+    while (list_iterator_has_next(iterator)) {
+
+        // Obtengo el próximo acceso de la lista
+        t_acceso_memoria* acceso = (t_acceso_memoria*) list_iterator_next(iterator);
+        
+        // Buffer donde se va a copiar el contenido de a poco
+        void* contenido_a_escribir_actual = malloc(acceso->tamanio);
+
+        // Copio el contenido en el buffer
+        memcpy(contenido_a_escribir_actual, contenido + tamanio_copiado_actual, acceso->tamanio);
+
+        // Lo escribo en memoria
+        pedido_escritura(contenido_a_escribir_actual, acceso->direccion_fisica, acceso->tamanio, pid);
+        recv(socket_memoria, &escritura_guardada_dialfs, sizeof(uint32_t), MSG_WAITALL);
+
+        if (escritura_guardada_dialfs == 1){
+            tamanio_copiado_actual += acceso->tamanio; 
+        }else{
+            log_error(dialfs_logger, "Escritura fallida\n");
+            abort();
+        }        
+    }
+    list_iterator_destroy(iterator);
+    
+    list_destroy_and_destroy_elements(direcciones_fisicas, free);
+}
+
+static void pedido_escritura(void* contenido_a_escribir, uint32_t direccion_fisica, uint32_t bytes_a_escribir, int pid)
 {
     t_paquete* paquete = crear_paquete(ESCRIBIR_CONTENIDO_EN_MEMORIA_DESDE_DIALFS);
+    agregar_entero_a_paquete(paquete, pid);
     agregar_entero_sin_signo_a_paquete(paquete, bytes_a_escribir);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
-    agregar_bytes_a_paquete(paquete, contenido, bytes_a_escribir);
+    agregar_bytes_a_paquete(paquete, contenido_a_escribir, bytes_a_escribir);
     enviar_paquete(paquete, socket_memoria);
-    free(contenido);
+    free(contenido_a_escribir);
 }
 
-static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t cantidad_bytes, uint32_t direccion_fisica, int pid)
+static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t cantidad_bytes, t_list* direcciones_fisicas, int pid)
 {
     //uint32_t cantidad_bloques = puntero_archivo + ceil(cantidad_bytes / tamanio_bloque);
     
-    solicitar_contenido_a_memoria(pid, cantidad_bytes, direccion_fisica);
-
-    void* contenido = obtener_contenido_a_escribir();
+    void* contenido = pedir_lectura_a_memoria(direcciones_fisicas, cantidad_bytes, pid);
 
     reposicionamiento_del_puntero_de_archivo(puntero_archivo, nombre_archivo);
     
@@ -399,7 +431,61 @@ static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uin
 	free(contenido);
 }
 
-static void solicitar_contenido_a_memoria(int pid, uint32_t cantidad_bytes, uint32_t direccion_fisica)
+static void* pedir_lectura_a_memoria(t_list* direcciones_fisicas, uint32_t tamanio_lectura, int pid) 
+{
+    uint32_t tamanio_leido_actual = 0;
+
+    // Buffer donde se va a ir almacenando el contenido leído final
+    void* lectura = malloc(tamanio_lectura); 
+
+    t_list_iterator* iterator = list_iterator_create(direcciones_fisicas);
+
+     // Mientras haya una df a escribir, sigo escribiendo
+    while (list_iterator_has_next(iterator)) {
+
+        // Obtengo el próximo acceso de la lista
+        t_acceso_memoria* acceso = (t_acceso_memoria*) list_iterator_next(iterator);
+        
+        // Leo en Memoria
+        peticion_de_lectura(acceso->direccion_fisica, acceso->tamanio, pid);
+
+        // Guardo en un buffer la lectura y lo copio en el contenido total
+        void* buffer_lectura = recibir_lectura(); 
+        memcpy(lectura + tamanio_leido_actual, buffer_lectura, acceso->tamanio);
+
+        // Actualizo el tamanio leido
+        tamanio_leido_actual += acceso->tamanio;
+
+        // Libero la memoria del buffer
+        free(buffer_lectura); 
+    }
+
+    list_iterator_destroy(iterator);
+    
+    list_destroy_and_destroy_elements(direcciones_fisicas, free);
+
+    return lectura;
+}
+
+static void* recibir_lectura() 
+{
+    t_paquete* paquete = recibir_paquete(socket_memoria);
+    void* stream = paquete->buffer->stream;
+
+    if(paquete->codigo_operacion == VALOR_LECTURA){
+        void* lectura = sacar_bytes_de_paquete(&stream);
+
+        eliminar_paquete(paquete);
+        return lectura;
+    }
+    else {
+        log_error(dialfs_logger, "No me enviaste el contenido \n");
+        eliminar_paquete(paquete);
+        abort();
+    }
+}
+
+static void peticion_de_lectura(uint32_t direccion_fisica, uint32_t cantidad_bytes, int pid)
 {
 	t_paquete* paquete = crear_paquete(LEER_CONTENIDO_EN_MEMORIA_DIALFS);
     agregar_entero_a_paquete(paquete, pid);
@@ -408,22 +494,6 @@ static void solicitar_contenido_a_memoria(int pid, uint32_t cantidad_bytes, uint
 	enviar_paquete(paquete, socket_memoria);
 }
 
-static void* obtener_contenido_a_escribir()
-{
-     int cod_op = recibir_operacion(socket_memoria);
-
-    if (cod_op == VALOR_LECTURA){
-
-        void* contenido = recibir_buffer(socket_memoria);
-
-        return contenido;
-    }
-    else{
-        log_error(dialfs_logger, "No me enviaste el contenido \n");
-        abort();
-    }
-}
-   
 static void reposicionamiento_del_puntero_de_archivo(uint32_t puntero_archivo, char *nombre_archivo)
 {
     // Obtenemos de la metadata los valores inciales

@@ -67,7 +67,7 @@ bool no_es_bloqueante(codigo_instrucciones instruccion_actual);
 void ciclo_de_instruccion();
 uint32_t buscar_registro(char*registro);
 void inicializar_semaforos();
-void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char* parm1, char* parm2, char* parm3, char* parm4, char* parm5);
+void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char* parm1, char* parm2, char* parm3, char* parm4);
 void* buscar_valor_registro_generico(char* registro);
 uint32_t tamanio_registro(char* registro);
 

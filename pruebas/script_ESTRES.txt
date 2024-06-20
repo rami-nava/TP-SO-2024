@@ -1,8 +1,8 @@
 DETENER_PLANIFICACION
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/ESTRES_1.txt" 
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/ESTRES_2.txt"  
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/ESTRES_3.txt"  
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/ESTRES_3.txt"  
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/ESTRES_3.txt"  
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/ESTRES_3.txt" 
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/CUATRI_PASADO/ESTRES_1.txt" 
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/CUATRI_PASADO/ESTRES_2.txt" 
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/CUATRI_PASADO/ESTRES_3.txt" 
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/CUATRI_PASADO/ESTRES_3.txt" 
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/CUATRI_PASADO/ESTRES_3.txt" 
+INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/CUATRI_PASADO/ESTRES_3.txt" 
 INICIAR_PLANIFICACION

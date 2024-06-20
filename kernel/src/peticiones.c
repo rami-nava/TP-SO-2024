@@ -16,7 +16,7 @@ static void a_mimir(t_pcb * proceso, int tiempo_sleep, t_interfaz* interfaz);
 static void a_leer_o_escribir_interfaz(op_code codigo, t_pcb * proceso, t_list* direccion, uint32_t tamanio, t_interfaz* interfaz);
 static void a_crear_o_eliminar_archivo(op_code codigo, t_pcb * proceso, char* nombre_archivo, t_interfaz* interfaz);
 static void a_truncar_archivo(t_pcb * proceso, uint32_t tamanio, char* nombre_archivo, t_interfaz* interfaz);
-static void a_leer_o_escribir_archivo(op_code codigo, t_pcb * proceso, uint32_t puntero, uint32_t tamanio, uint32_t direccion, char* nombre_archivo, t_interfaz* interfaz);
+static void a_leer_o_escribir_archivo(op_code codigo, t_pcb * proceso, uint32_t puntero, uint32_t tamanio, t_list* direcciones, char* nombre_archivo, t_interfaz* interfaz);
 static void recibir_peticion(t_pcb *proceso, t_contexto *contexto_ejecucion);
 
 bool instruccion_bloqueante;
@@ -179,30 +179,28 @@ static void io_fs_truncate(t_pcb *proceso, char **parametros){
 static void io_fs_read(t_pcb *proceso, char **parametros){
     char* nombre_interfaz = parametros[0];
     char* nombre_archivo = parametros[1];
-    uint32_t direccion = atoi(parametros[2]);
-    uint32_t tamanio = atoi(parametros[3]);
-    uint32_t puntero = atoi(parametros[4]);
+    uint32_t tamanio = atoi(parametros[2]);
+    uint32_t puntero = atoi(parametros[3]);
     t_interfaz* interfaz = obtener_interfaz_por_nombre(nombre_interfaz);
 
     bool peticion_valida = peticiones_de_io(proceso, interfaz);
 
     if (peticion_valida) {
-        a_leer_o_escribir_archivo(LEER_ARCHIVO, proceso, puntero, tamanio, direccion, nombre_archivo, interfaz);
+        a_leer_o_escribir_archivo(LEER_ARCHIVO, proceso, puntero, tamanio, contexto_ejecucion->direcciones_fisicas, nombre_archivo, interfaz);
     }
 }
 
 static void io_fs_write(t_pcb *proceso, char **parametros){
     char* nombre_interfaz = parametros[0];
     char* nombre_archivo = parametros[1];
-    uint32_t direccion = atoi(parametros[2]);
-    uint32_t tamanio = atoi(parametros[3]);
-    uint32_t puntero = atoi(parametros[4]);
+    uint32_t tamanio = atoi(parametros[2]);
+    uint32_t puntero = atoi(parametros[3]);
     t_interfaz* interfaz = obtener_interfaz_por_nombre(nombre_interfaz);
 
     bool peticion_valida = peticiones_de_io(proceso, interfaz);
 
     if (peticion_valida) {
-        a_leer_o_escribir_archivo(ESCRIBIR_ARCHIVO, proceso, puntero, tamanio, direccion, nombre_archivo, interfaz);
+        a_leer_o_escribir_archivo(ESCRIBIR_ARCHIVO, proceso, puntero, tamanio, contexto_ejecucion->direcciones_fisicas, nombre_archivo, interfaz);
     }
 }
 
@@ -244,14 +242,14 @@ static void a_truncar_archivo(t_pcb * proceso, uint32_t tamanio, char* nombre_ar
     enviar_peticion_io(proceso,interfaz,paquete);
 }
 
-static void a_leer_o_escribir_archivo(op_code codigo, t_pcb * proceso, uint32_t puntero, uint32_t tamanio, uint32_t direccion, char* nombre_archivo, t_interfaz* interfaz)
+static void a_leer_o_escribir_archivo(op_code codigo, t_pcb * proceso, uint32_t puntero, uint32_t tamanio, t_list* direcciones, char* nombre_archivo, t_interfaz* interfaz)
 {
     t_paquete* paquete = crear_paquete(codigo);
     agregar_cadena_a_paquete(paquete, nombre_archivo);
     agregar_entero_sin_signo_a_paquete(paquete, puntero);
     agregar_entero_sin_signo_a_paquete(paquete, tamanio);
     agregar_entero_a_paquete(paquete, proceso->pid);
-    agregar_entero_sin_signo_a_paquete(paquete, direccion);
+    agregar_lista_de_accesos_a_paquete(paquete, direcciones);
 
     enviar_peticion_io(proceso,interfaz,paquete);
 }

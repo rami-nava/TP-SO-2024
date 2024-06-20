@@ -73,7 +73,7 @@ typedef struct
     int hasta;
     uint32_t puntero_archivo;
     uint32_t tamanio;
-    uint32_t direccion_fisica;
+    t_list* direcciones_fisicas;
     uint32_t tamanio_archivo;
 } t_peticion_dialfs;
 
@@ -113,5 +113,8 @@ uint32_t buscar_bloque_inicial_libre();
 void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_archivo);
 int compactar_desde_el_comienzo(uint32_t bloque_final_archivo);
 bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar, uint32_t bloque_final_archivo);
+
+//.................................. MEMORIA .......................................................................
+
 
 #endif

@@ -97,7 +97,7 @@ static void manejo_conexiones(void* conexion)
 			int pid_stdout = sacar_entero_de_paquete(&stream);
 			uint32_t bytes_a_leer_stdout = sacar_entero_sin_signo_de_paquete(&stream);
 			uint32_t direccion_fisica_stdout = sacar_entero_sin_signo_de_paquete(&stream);
-			leer_contenido_espacio_usuario(pid_stdout, direccion_fisica_stdout, bytes_a_leer_stdout, LEER_CONTENIDO_EN_MEMORIA_DESDE_CPU, cliente);
+			leer_contenido_espacio_usuario(pid_stdout, direccion_fisica_stdout, bytes_a_leer_stdout, LEER_CONTENIDO_EN_MEMORIA_DESDE_STDOUT, cliente);
 			break;
 
 		case PEDIDO_RESIZE:

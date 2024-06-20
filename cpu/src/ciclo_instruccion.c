@@ -194,7 +194,7 @@ static void check_interrupt(){
             contexto_ejecucion->hay_fin_de_quantum = 1;
         }else if(tipo_interrupcion == 3){
             log_info(cpu_logger,"Recibi una interrupcion de finalizacion del proceso PID: %d\n", contexto_ejecucion->pid);
-            modificar_motivo (EXIT, 1, "Pedido de finalizacion", "", "", "", "");
+            modificar_motivo (EXIT, 1, "Pedido de finalizacion", "", "", "");
         }else{
             perror("Recibi un codigo de interrupcion desconocido");
         }
@@ -267,7 +267,7 @@ static void jnz(char* registro, char* numero_instruccion){
 
 static void io_gen_sleep(char* interfaz, char* unidades_trabajo)
 {
-    modificar_motivo(IO_GEN_SLEEP, 2, interfaz, unidades_trabajo, "", "", "");
+    modificar_motivo(IO_GEN_SLEEP, 2, interfaz, unidades_trabajo, "", "");
 }
 
 static void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio)
@@ -280,9 +280,9 @@ static void io_stdin_read(char* interfaz, char* registro_direccion, char* regist
 
     contexto_ejecucion->direcciones_fisicas = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_escribir, direccion_logica);
 
-    sprintf(tamanio_escritura, "%" PRIu32, buscar_registro(registro_tamanio));
+    sprintf(tamanio_escritura, "%" PRIu32, cantidad_bytes_a_escribir);
 
-    modificar_motivo(IO_STDIN_READ, 2, interfaz, tamanio_escritura, "", "", "");
+    modificar_motivo(IO_STDIN_READ, 2, interfaz, tamanio_escritura, "", "");
 }
 
 static void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio)
@@ -291,23 +291,23 @@ static void io_stdout_write(char* interfaz, char* registro_direccion, char* regi
 
     uint32_t direccion_logica = buscar_registro(registro_direccion);
 
-    uint32_t cantidad_bytes_a_leer = buscar_registro(registro_direccion);
+    uint32_t cantidad_bytes_a_leer = buscar_registro(registro_tamanio);
 
     contexto_ejecucion->direcciones_fisicas = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_leer, direccion_logica);
     
-    sprintf(tamanio_lectura, "%" PRIu32, buscar_registro(registro_tamanio));
+    sprintf(tamanio_lectura, "%" PRIu32, cantidad_bytes_a_leer);
 
-    modificar_motivo(IO_STDOUT_WRITE, 2, interfaz, tamanio_lectura, "", "", "");
+    modificar_motivo(IO_STDOUT_WRITE, 2, interfaz, tamanio_lectura, "", "");
 }
 
 static void io_fs_create(char* interfaz, char* nombre_archivo)
 {
-    modificar_motivo(IO_FS_CREATE, 2, interfaz, nombre_archivo, "", "", "");
+    modificar_motivo(IO_FS_CREATE, 2, interfaz, nombre_archivo, "", "");
 }
 
 static void io_fs_delete(char* interfaz, char* nombre_archivo)
 {
-    modificar_motivo(IO_FS_DELETE, 2, interfaz, nombre_archivo, "", "", "");
+    modificar_motivo(IO_FS_DELETE, 2, interfaz, nombre_archivo, "", "");
 }
 
 static void io_fs_truncate(char* interfaz, char* nombre_archivo, char* tamanio_registro)
@@ -315,50 +315,55 @@ static void io_fs_truncate(char* interfaz, char* nombre_archivo, char* tamanio_r
     char tamanio[12];
     sprintf(tamanio, "%" PRIu32, buscar_registro(tamanio_registro));
 
-    modificar_motivo(IO_FS_TRUNCATE, 3, interfaz, nombre_archivo, tamanio, "", "");
+    modificar_motivo(IO_FS_TRUNCATE, 3, interfaz, nombre_archivo, tamanio, "");
 }
 
-static void io_fs_read(char* interfaz, char* nombre_archivo, char* registro_direccion, char* tamanio_registro, char* registro_puntero_archivo)
+static void io_fs_read(char* interfaz, char* nombre_archivo, char* registro_direccion, char* registro_tamanio, char* registro_puntero_archivo)
 {
-    char tamanio[12];
-    char direccion_fisica[12];
+    char tamanio_lectura[12];
     char puntero_archivo[12];
 
-    sprintf(puntero_archivo, "%" PRIu32, buscar_registro(registro_puntero_archivo));
-    sprintf(direccion_fisica, "%" PRIu32, traducir_de_logica_a_fisica(buscar_registro(registro_direccion)));
-    sprintf(tamanio, "%" PRIu32, buscar_registro(tamanio_registro));
+    uint32_t direccion_logica = buscar_registro(registro_direccion);
 
-    modificar_motivo(IO_FS_READ, 5, interfaz, nombre_archivo, direccion_fisica, tamanio, puntero_archivo);
+    uint32_t cantidad_bytes_a_leer = buscar_registro(registro_tamanio);
+
+    contexto_ejecucion->direcciones_fisicas = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_leer, direccion_logica);
+    
+    sprintf(tamanio_lectura, "%" PRIu32, cantidad_bytes_a_leer);
+    sprintf(puntero_archivo, "%" PRIu32, buscar_registro(registro_puntero_archivo));
+
+    modificar_motivo(IO_FS_READ, 4, interfaz, nombre_archivo, tamanio_lectura, puntero_archivo);
 }
 
-static void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_direccion, char* tamanio_registro, char* registro_puntero_archivo)
+static void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_direccion, char* registro_tamanio, char* registro_puntero_archivo)
 {
-    char tamanio[12];
-    char direccion_fisica[12];
+    char tamanio_escritura[12];
     char puntero_archivo[12];
 
-    //especifica que el valor debe ser formateado como un entero sin signo de 32 bits
+    uint32_t direccion_logica = buscar_registro(registro_direccion);
+
+    uint32_t cantidad_bytes_a_escribir = buscar_registro(registro_tamanio);
+
+    contexto_ejecucion->direcciones_fisicas = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_escribir, direccion_logica);
+    
+    sprintf(tamanio_escritura, "%" PRIu32, cantidad_bytes_a_escribir);
     sprintf(puntero_archivo, "%" PRIu32, buscar_registro(registro_puntero_archivo));
 
-    //el registro guarda la direccion logica
-    sprintf(direccion_fisica, "%" PRIu32, traducir_de_logica_a_fisica(buscar_registro(registro_direccion)));
-    sprintf(tamanio, "%" PRIu32, buscar_registro(tamanio_registro));
-
-    modificar_motivo(IO_FS_WRITE, 5, interfaz, nombre_archivo, direccion_fisica, tamanio, puntero_archivo);
+    modificar_motivo(IO_FS_WRITE, 4, interfaz, nombre_archivo, tamanio_escritura, puntero_archivo);
 }
 
 static void wait_c(char* recurso)
 {
-    modificar_motivo (WAIT, 1, recurso, "", "", "", "");
+    modificar_motivo (WAIT, 1, recurso, "", "", "");
 }
 
 static void signal_c(char* recurso)
 {
-    modificar_motivo (SIGNAL, 1, recurso, "", "", "", "");
+    modificar_motivo (SIGNAL, 1, recurso, "", "", "");
 }
 
 static void exit_c() {
-    modificar_motivo (EXIT, 1, "SUCCESS", "", "", "", "");
+    modificar_motivo (EXIT, 1, "SUCCESS", "", "", "");
 }
 
 
@@ -502,8 +507,8 @@ uint32_t tamanio_registro(char* registro) {
     }
 }
 
-void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char* parm1, char* parm2, char* parm3, char* parm4, char* parm5) { 
-    char* (parametros[5]) = { parm1, parm2, parm3, parm4, parm5 };
+void modificar_motivo (codigo_instrucciones comando, int cantidad_parametros, char* parm1, char* parm2, char* parm3, char* parm4) { 
+    char* (parametros[4]) = { parm1, parm2, parm3, parm4 };
     contexto_ejecucion->motivo_desalojo->comando = comando;
     
     for (int i = 0; i < cantidad_parametros; i++)
