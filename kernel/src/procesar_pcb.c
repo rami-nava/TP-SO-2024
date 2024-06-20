@@ -36,7 +36,6 @@ t_pcb* crear_pcb(char* path)
     nuevo_pcb->DI = 0;
     nuevo_pcb->quantum = 0;
     nuevo_pcb->eliminado = 0;
-    nuevo_pcb->direcciones_fisicas = NULL;
 
     ingresar_a_NEW(nuevo_pcb);
     enviar_creacion_estructuras_memoria(nuevo_pcb->pid, path);
