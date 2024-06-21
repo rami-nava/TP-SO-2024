@@ -72,18 +72,19 @@ void resize(char *tamanio)
 }
 
 // COPY STRING - REVISAR
-void copy_string(char* registro_tamanio)
+void copy_string(char* tamanio)
 {
-    uint32_t cantidad_bytes_a_copiar = buscar_registro(registro_tamanio);
+    int tamanio_a_copiar = atoi(tamanio);
+
     uint32_t posicion_de_string_a_copiar = buscar_registro("SI");
     uint32_t posicion_de_memoria_donde_copiar = buscar_registro("DI");
 
     // Puede ser que lo tengo para leer este en paginas distintas
-    t_list* direcciones_fisicas_donde_leer = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_copiar, posicion_de_string_a_copiar);
-    t_list* direcciones_fisicas_donde_escribir = obtener_direcciones_fisicas_mmu(cantidad_bytes_a_copiar, posicion_de_memoria_donde_copiar);
+    t_list* direcciones_fisicas_donde_leer = obtener_direcciones_fisicas_mmu(tamanio_a_copiar, posicion_de_string_a_copiar);
+    t_list* direcciones_fisicas_donde_escribir = obtener_direcciones_fisicas_mmu(tamanio_a_copiar, posicion_de_memoria_donde_copiar);
 
     // Leo de memoria a apartir de esta direccion fisica la cantidad_bytes_a_copiar
-    void* string_a_copiar = lectura_en_memoria(cantidad_bytes_a_copiar, direcciones_fisicas_donde_leer);
+    void* string_a_copiar = lectura_en_memoria(tamanio_a_copiar, direcciones_fisicas_donde_leer);
 
     // Lo escribo en memoria a la posicion donde queremos copiarlo
     escritura_en_memoria(string_a_copiar, direcciones_fisicas_donde_escribir);

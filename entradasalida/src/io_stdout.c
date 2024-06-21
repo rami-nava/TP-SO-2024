@@ -98,6 +98,7 @@ static void leer_memoria(){
 
         //Le pide la lectura de esa direccion/es a la memoria 
         char* lectura = pedir_lectura_a_memoria(peticion->direcciones_fisicas, peticion->tamanio_registro, peticion->pid);
+        lectura[peticion->tamanio_registro] = '\0';
 
         //Mostramos por pantalla la lectura
         printf("Lectura realizada: %s\n", lectura);
@@ -115,7 +116,8 @@ static char* pedir_lectura_a_memoria(t_list* direcciones_fisicas, uint32_t taman
     uint32_t tamanio_leido_actual = 0;
 
     // Buffer donde se va a ir almacenando el contenido leído final
-    char* lectura = malloc(tamanio_lectura); 
+    char* lectura = malloc(tamanio_lectura + 1); // Aseguro el \0 al final
+    memset(lectura, 0, tamanio_lectura);
 
     t_list_iterator* iterator = list_iterator_create(direcciones_fisicas);
 

@@ -127,7 +127,7 @@ t_list* obtener_direcciones_fisicas_mmu(uint32_t tamanio_total, uint32_t direcci
     //SI EL TAMAÑO ES MAYOR A LA PAGINA, SE PARTE EL DATO ENTRE MARCOS
     if (bytes_cargados < tamanio_total){
 
-        for (int i = 1; i < cantidad_de_marcos_total; i++){
+        for (int i = 1; i < cantidad_de_marcos_total || bytes_cargados < tamanio_total; i++){
             
             //SIGUENTE PAGINA/MARCO
             pagina_actual ++;

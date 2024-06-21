@@ -2,8 +2,6 @@ INICIAR_PROCESO "/home/utnso/Desktop/pruebas.txt"
 
 INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/MEMORIA_1.txt"
 
-INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/TEST.txt"
-
 INICIAR_PROCESO "/home/utnso/tp-2024-1c-SegmenFault/pruebas/EDITABLE.txt"
 
 ======== GENERICA =========
