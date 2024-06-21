@@ -57,16 +57,11 @@ void traducir_pagina_a_marcos(uint32_t numero_pagina, int pid, int cliente)
 }
 
 t_marco *marco_desde_df(uint32_t dir_fisica){
-	/*
 	int num_marco = numero_marco(dir_fisica);
-	pthread_mutex_lock(&mutex_marcos);
-	t_marco *marco_elegido = list_get(marcos, num_marco);
-	pthread_mutex_unlock(&mutex_marcos);*/
+	t_marco *marco = buscar_marco_por_numero(num_marco);
 
-	return buscar_marco_por_numero(numero_marco(dir_fisica));
+	return marco;
 }
-
-
 
 //============================================== Resize ================================================================
 
@@ -121,18 +116,16 @@ void copy_string(int pid, uint32_t cantidad_bytes_a_copiar, uint32_t direccion_f
 {
 	char* puntero_a_direccion_fisica_a_copiar = direccion_fisica_a_copiar + espacio_usuario;
 	char* puntero_a_direccion_fisica_destino = direccion_fisica_destino + espacio_usuario;
-	char* buffer = malloc(sizeof(char)*cantidad_bytes_a_copiar); 
+	void* buffer = malloc(cantidad_bytes_a_copiar);
 
-	acceso_a_espacio_usuario(pid, "LEER", direccion_fisica_a_copiar, cantidad_bytes_a_copiar);
+	acceso_a_espacio_usuario(pid, "LECTURA EN MEMORIA", direccion_fisica_a_copiar, cantidad_bytes_a_copiar);
 
 	memcpy(buffer, puntero_a_direccion_fisica_a_copiar, cantidad_bytes_a_copiar);
 
-	acceso_a_espacio_usuario(pid, "ESCRIBIR", direccion_fisica_destino, cantidad_bytes_a_copiar);
+	acceso_a_espacio_usuario(pid, "ESCRITURA EN MEMORIA", direccion_fisica_destino, cantidad_bytes_a_copiar);
 
 	memcpy(puntero_a_direccion_fisica_destino, buffer, cantidad_bytes_a_copiar);
 
 	free(buffer);
-
-	//TODO: Que hacer con páginas? Se copia correctamente el string?
 }
 

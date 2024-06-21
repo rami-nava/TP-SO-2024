@@ -90,9 +90,7 @@ void realizar_escritura(uint32_t direccion_fisica, void* texto_a_guardar, uint32
 
 /// @brief ESPACIO USUARIO ///
 void creacion_espacio_usuario();
-void escribir_memoria(uint32_t dir_fisica, uint32_t valor, int pid);
 t_marco *marco_desde_df(uint32_t dir_fisica);
-uint32_t leer_memoria(uint32_t dir_fisica, int pid);
 void acceso_a_espacio_usuario(int pid, char* accion, uint32_t dir_fisica, uint32_t tamanio);
 
 /// @brief  PROCESOS EN MEMORIA - MARCOS ///

@@ -87,6 +87,19 @@ void parse_leer_bitmap (char* linea) {
    free(linea_espaciada);  
 }
 
+void parse_leer_memoria (char* linea) {
+  char **linea_espaciada = string_split(linea, " ");
+
+  if (linea_espaciada && linea_espaciada[1]) {
+    int hasta;
+    if (sscanf(linea_espaciada[1], "%d", &hasta) == 1) {
+      consola_leer_memoria(hasta);
+    }
+  }
+   string_iterate_lines(linea_espaciada, (void*)free); 
+   free(linea_espaciada);  
+}
+
 void parse_proceso_estado (char* linea) {
   char **linea_espaciada = string_split(linea, " ");  // Divide la línea en tokens
 
@@ -130,6 +143,8 @@ void consola_parsear_instruccion(char *leer_linea) {
     comando = 6;
   } else if (string_contains(leer_linea, "LEER_BITMAP")) {
     comando = 7;
+  } else if (string_contains(leer_linea, "LEER_MEMORIA")) {
+    comando = 8;
   }
 
   switch (comando) {
@@ -156,6 +171,9 @@ void consola_parsear_instruccion(char *leer_linea) {
       break;
     case 7:
       parse_leer_bitmap(leer_linea);
+      break;
+    case 8:
+      parse_leer_memoria(leer_linea);
       break;
     default:
       printf("Comando desconocido: %s\n", leer_linea);

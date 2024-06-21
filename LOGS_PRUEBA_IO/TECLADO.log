@@ -1,0 +1,10 @@
+[INFO] 03:40:06:528 TECLADO/(31901:31901): Iniciando interfaz STDIN: TECLADO
+
+[INFO] 03:45:41:831 TECLADO/(31901:31902): PID: 1 - Operacion: IO_STDIN_READ
+
+[INFO] 03:48:39:691 TECLADO/(31901:31902): Guardando texto en memoria: WAR NEVER CHANGES...
+
+[INFO] 03:48:39:693 TECLADO/(31901:31902): PID: 3 - Operacion: IO_STDIN_READ
+
+[INFO] 03:48:59:635 TECLADO/(31901:31902): Guardando texto en memoria: Sistemas Operativos 2c2023
+

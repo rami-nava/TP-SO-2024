@@ -79,6 +79,13 @@ void consola_leer_bitmap(int desde, int hasta)
   enviar_paquete(paquete, interfaz->socket_conectado);
 }
 
+void consola_leer_memoria(int hasta)
+{
+  t_paquete *paquete = crear_paquete(LEER_MEMORIA);
+  agregar_entero_a_paquete(paquete, hasta);
+  enviar_paquete(paquete, socket_memoria);
+}
+
 void consola_proceso_estado() {
   mostrar_lista_pids(cola_NEW, "NEW", mutex_NEW);
   mostrar_lista_pids(cola_READY, "READY", mutex_READY);

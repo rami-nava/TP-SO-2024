@@ -1,6 +1,7 @@
 #include "memoria.h"
 
 static void manejo_conexiones(void* conexion);
+static void leer_memoria(int hasta);
 
 // ATENDER CLIENTES CON HILOS//
 int atender_clientes_memoria(int socket_servidor){
@@ -168,9 +169,18 @@ static void manejo_conexiones(void* conexion)
 			leer_contenido_espacio_usuario(pid_leer_en_memoria_cpu, direccion_fisica_a_leer_cpu, bytes_a_leer_cpu, LEER_CONTENIDO_EN_MEMORIA_DESDE_CPU, cliente);
 			break;
 
+		case LEER_MEMORIA:
+			int hasta = sacar_entero_de_paquete(&stream);
+			leer_memoria(hasta);
+			break;
+
 		default:
 			break;
 		}
 		eliminar_paquete(paquete);
 	}
+}
+
+static void leer_memoria(int hasta){
+	mem_hexdump(espacio_usuario, hasta);
 }

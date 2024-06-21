@@ -198,6 +198,8 @@ void parse_multiprogramacion(char *linea);
 void consola_modificar_multiprogramacion(int nuevo_valor); 
 void consola_leer_bitmap(int desde, int hasta);
 void parse_leer_bitmap(char *linea);
+void consola_leer_memoria(int hasta);
+void parse_leer_memoria(char *linea);
 
 ////======================================== IO ===========================================================================================================
 void servidor_kernel_io();
