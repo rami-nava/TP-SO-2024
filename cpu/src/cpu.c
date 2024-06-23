@@ -11,14 +11,15 @@ t_log *cpu_logger;
 
 t_list* tlb;
 int cantidad_entradas_tlb;
-char* algoritmo_tlb;
-
+char* path_config;
 
 int main(void)
 {
     cpu_logger = log_create("/home/utnso/tp-2024-1c-SegmenFault/cpu/cfg/cpu.log", "cpu.log", 1, LOG_LEVEL_INFO);
 
-    cargar_configuracion("/home/utnso/tp-2024-1c-SegmenFault/cpu/cfg/cpu.config");
+    path_config = "/home/utnso/tp-2024-1c-SegmenFault/cpu/cfg/cpu.config";
+    
+    cargar_configuracion(path_config);
 
     inicializar_semaforos();
 
@@ -27,7 +28,6 @@ int main(void)
     realizar_handshake();
 
     cantidad_entradas_tlb =  config_valores_cpu.cantidad_entradas_tlb;
-    algoritmo_tlb = config_valores_cpu.algoritmo_tlb;  
     tlb = list_create();
 
     socket_servidor_dispatch = iniciar_servidor(config_valores_cpu.ip_cpu, config_valores_cpu.puerto_escucha_dispatch);

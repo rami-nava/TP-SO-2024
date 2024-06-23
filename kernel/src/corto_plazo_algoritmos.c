@@ -40,7 +40,7 @@ static t_pcb *proximo_a_ejecutar_FIFO_RR(){
         pthread_mutex_unlock(&mutex_READY);
         return pcb;
     }else{
-        printf("No hay procesos esperando en la cola ready\n");
+        //printf("No hay procesos esperando en la cola ready\n");
         return NULL;
     } 
 }
@@ -61,7 +61,7 @@ static t_pcb *proximo_a_ejecutar_VRR(){
 
  //  Funciones de algoritmo RR //
  void inicializar_reloj_RR(){
-    log_info(kernel_logger, "Se inicializo el hilo para control de quantum");
+    //log_info(kernel_logger, "Se inicializo el hilo para control de quantum");
 
     pthread_t thread_reloj_RR;
     pthread_create(&thread_reloj_RR,NULL, comenzar_reloj_RR(),NULL);

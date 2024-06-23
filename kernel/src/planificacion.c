@@ -35,7 +35,7 @@ void planificador_largo_plazo(){
         if(pcb != NULL){
             //el proceso pasa de new a ready
             ingresar_a_READY(pcb); 
-        }else printf("no hay procesos nuevos para ejecutar\n");
+        }//else printf("no hay procesos nuevos para ejecutar\n");
     }
 } 
 
@@ -66,7 +66,7 @@ void planificador_corto_plazo(t_pcb *(*proximo_a_ejecutar)()){
                     pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
                 }
             } else {
-                printf("nada para ejecutar");
+                //printf("nada para ejecutar");
                 continue; //Para que vuelva al principio del while
             }
         }

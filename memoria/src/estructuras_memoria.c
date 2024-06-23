@@ -91,13 +91,11 @@ void quitar_marcos_a_proceso(t_proceso_en_memoria* proceso, uint32_t cantidad_ma
 	
 	//TODO preguntar si borramos las paginas cuando se hace resize menor o en que cambia si las dejamos con un bit no cargadas
 
-	for(int i = 0; i<cantidad_marcos_a_liberar; i++){
-		t_pagina *pagina_removida = malloc(sizeof(t_pagina));
+	for(int i = 0; i < cantidad_marcos_a_liberar; i++){
 		int tamanio_tabla_paginas = list_size(proceso->paginas_en_memoria) - 1;
 		//Saca desde el final las paginas
-		pagina_removida = list_remove(proceso->paginas_en_memoria, tamanio_tabla_paginas); 
+		t_pagina* pagina_removida = list_remove(proceso->paginas_en_memoria, tamanio_tabla_paginas); 
 		liberar_marco(pagina_removida->nro_marco);
-
 		free(pagina_removida);
 	}
 }

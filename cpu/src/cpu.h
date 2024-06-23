@@ -12,7 +12,6 @@
 #include "socket.h"
 #include "operaciones.h"
 #include "contexto.h"
-#include <commons/collections/queue.h>
 
 // Estructuras //
 typedef struct  
@@ -23,7 +22,6 @@ typedef struct
    char* puerto_escucha_dispatch;
    char* puerto_escucha_interrupt;
    int cantidad_entradas_tlb;
-   char* algoritmo_tlb;
 } arch_config;
 
 typedef struct {
@@ -36,10 +34,10 @@ typedef struct {
 
 extern arch_config config_valores_cpu; 
 
-
 //Variables
 extern t_config* config;
-extern t_log* cpu_logger ;
+extern t_log* cpu_logger;
+extern char* path_config;
 extern int socket_cliente_memoria;
 extern int socket_servidor_dispatch;
 extern int socket_servidor_interrupt;
@@ -53,7 +51,6 @@ extern pthread_mutex_t seguir_ejecutando_mutex;
 
 extern t_list* tlb;
 extern int cantidad_entradas_tlb;
-extern char* algoritmo_tlb;
 extern uint32_t tam_pagina;
 
 

@@ -25,7 +25,6 @@ void cargar_configuracion(char *path)
     config_valores_cpu.puerto_escucha_dispatch = config_get_string_value(config, "PUERTO_ESCUCHA_DISPATCH");
     config_valores_cpu.puerto_escucha_interrupt = config_get_string_value(config, "PUERTO_ESCUCHA_INTERRUPT");
     config_valores_cpu.cantidad_entradas_tlb = config_get_int_value(config, "CANTIDAD_ENTRADAS_TLB");
-    config_valores_cpu.algoritmo_tlb = config_get_string_value(config, "ALGORITMO_TLB");
 }
 
 //================================================== Servidor KERNEL =====================================================================
