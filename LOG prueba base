@@ -1,0 +1,38 @@
+Finalizamos el proceso: 4 
+==8363== Thread 4:
+==8363== Invalid read of size 4
+==8363==    at 0x10E077: buscar_pcb_en_lista (planificacion_utils.c:55)
+==8363==    by 0x10DFFE: buscar_pcb_de_lista_y_eliminar (planificacion_utils.c:42)
+==8363==    by 0x10B832: consola_finalizar_proceso (funciones_consola.c:145)
+==8363==    by 0x10CD15: parse_finalizar_proceso (consola.c:47)
+==8363==    by 0x10D2A5: consola_parsear_instruccion (consola.c:155)
+==8363==    by 0x10CAC0: inicializar_consola_interactiva (consola.c:9)
+==8363==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==8363==    by 0x49EEA03: clone (clone.S:100)
+==8363==  Address 0x4b730a0 is 0 bytes inside a block of size 56 free'd
+==8363==    at 0x484B27F: free (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==8363==    by 0x10D852: liberar_PCB (procesar_pcb.c:134)
+==8363==    by 0x10FBB0: mandar_a_EXIT (planificacion.c:213)
+==8363==    by 0x10F3B6: exit_c (peticiones.c:259)
+==8363==    by 0x10EBF8: recibir_peticion (peticiones.c:81)
+==8363==    by 0x10E9D0: recibir_contexto_actualizado (peticiones.c:29)
+==8363==    by 0x10F721: planificador_corto_plazo (planificacion.c:80)
+==8363==    by 0x10B90B: planificador_corto_plazo_segun_algoritmo (corto_plazo_algoritmos.c:23)
+==8363==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==8363==    by 0x49EEA03: clone (clone.S:100)
+==8363==  Block was alloc'd at
+==8363==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==8363==    by 0x10D342: crear_pcb (procesar_pcb.c:16)
+==8363==    by 0x10B0B5: consola_iniciar_proceso (funciones_consola.c:35)
+==8363==    by 0x10CC51: parse_iniciar_proceso (consola.c:34)
+==8363==    by 0x10D294: consola_parsear_instruccion (consola.c:152)
+==8363==    by 0x10B045: consola_ejecutar_script (funciones_consola.c:25)
+==8363==    by 0x10CB70: parse_ejecutar_script (consola.c:21)
+==8363==    by 0x10D2CF: consola_parsear_instruccion (consola.c:164)
+==8363==    by 0x10CAC0: inicializar_consola_interactiva (consola.c:9)
+==8363==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==8363==    by 0x49EEA03: clone (clone.S:100)
+==8363== 
+[INFO] 15:16:07:143 kernel.log/(8363:8363): Salida por I/O o Exit
+>[INFO] 15:16:07:953 kernel.log/(8363:8368): PID: 4 - Estado Anterior: EXEC - Estado Actual: SALIDA
+[INFO] 15:16:08:100 kernel.log/(8363:8368): Finaliza el proceso 4 - Motivo: Pedido de finalizacion

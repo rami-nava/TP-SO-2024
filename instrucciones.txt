@@ -12,6 +12,8 @@ make memcheck ARGS="ESPERA /home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/
 
 make memcheck ARGS="impresora1 /home/utnso/tp-2024-1c-SegmenFault/IO_configs/impresora1.config" 
 
+make memcheck ARGS="IO_GEN_SLEEP /home/utnso/tp-2024-1c-SegmenFault/IO_configs/IO_GEN_SLEEP.config"
+
 ./entradasalida impresora1 "/home/utnso/tp-2024-1c-SegmenFault/IO_configs/impresora1.config" 
 
 ./entradasalida GENERICA "/home/utnso/tp-2024-1c-SegmenFault/IO_configs/GENERICA.config" 
@@ -43,13 +45,18 @@ make memcheck ARGS="filesystem1 /home/utnso/tp-2024-1c-SegmenFault/IO_configs/fi
 
 ======================== 	PRELIMINARES	     ============================
 
-PRUEBA IO ========================================================================
+=================================================================================
+
+PRUEBA BASE ===========
+EJECUTAR_SCRIPT "/home/utnso/tp-2024-1c-SegmenFault/pruebas/script_PLANI.txt"
+
+PRUEBA IO ===========
 EJECUTAR_SCRIPT "/home/utnso/tp-2024-1c-SegmenFault/pruebas/script_IO.txt"
 
-DEADLOCK===========
+DEADLOCK ===========
 EJECUTAR_SCRIPT "/home/utnso/tp-2024-1c-SegmenFault/pruebas/script_DEADLOCK.txt"
 
-ESTRES=============
+ESTRES =============
 EJECUTAR_SCRIPT "/home/utnso/tp-2024-1c-SegmenFault/pruebas/script_ESTRES.txt"
 
 MEMORIA============
