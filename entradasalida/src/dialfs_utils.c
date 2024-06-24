@@ -123,7 +123,7 @@ void agregar_bloques(uint32_t cantidad_bloques_a_agregar, uint32_t bloque_inicia
 {
     //char* bloque_ocupado = calloc(tamanio_bloque, sizeof(char));
     char* bloque_ocupado = malloc(tamanio_bloque); 
-    memset(bloque_ocupado, 'a', tamanio_bloque);
+    memset(bloque_ocupado, '\0', tamanio_bloque);
 
     /*
     //creo un bloque con todos sus elementos en '\0'
