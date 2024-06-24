@@ -96,7 +96,6 @@ typedef struct
 typedef struct
 {
     int socket_conectado;
-    int* socket_leak;
     char* nombre;
     char* tipo_interfaz;
     sem_t sem_comunicacion_interfaz;
@@ -152,6 +151,7 @@ void logear_cola_io_bloqueados(t_interfaz* interfaz);
 void mandar_a_EXIT(t_pcb* proceso, char* motivo);
 void sacar_proceso_de_cola_estado_donde_esta(t_pcb* pcb);
 bool ocurrio_IO(t_contexto* contexto_ejecucion);
+void eliminar_de_cola(t_list *cola, t_pcb *pcb, pthread_mutex_t mutex_cola);
 
 //================================================== PCB =====================================================================================================================
 t_pcb *crear_pcb(char*); 
@@ -167,8 +167,7 @@ void loggear_finalizacion_proceso(t_pcb* proceso, char* motivo);
 void loggear_motivo_bloqueo(t_pcb* proceso, char* motivo);
 void volver_a_CPU(t_pcb* proceso);
 bool existe_proceso(int pid);
-t_pcb* buscar_pcb_en_lista (t_list* lista, int pid);
-t_pcb* buscar_pcb_de_lista_y_eliminar(t_list *lista, int pid_buscado, pthread_mutex_t mutex_cola);
+t_pcb* buscar_pcb_en_lista (t_list* lista, int pid, pthread_mutex_t mutex_cola);
 void mostrar_lista_pids(t_list *cola, char *nombre_cola, pthread_mutex_t mutex_cola);
 
 //================================================ Recursos =====================================================================================================================

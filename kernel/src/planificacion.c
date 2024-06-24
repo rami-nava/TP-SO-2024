@@ -194,6 +194,9 @@ void ingresar_a_BLOCKED_IO(t_list* cola, t_pcb *pcb, char* motivo, pthread_mutex
 
 void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo) 
 {
+    //Saco el proceso de los procesos del sistema
+    eliminar_de_cola(cola_PROCESOS_DEL_SISTEMA,pcb_asociado, mutex_PROCESOS_DEL_SISTEMA);
+
     estado_proceso anterior = pcb_asociado->estado;
    
     sacar_proceso_de_cola_estado_donde_esta(pcb_asociado);
@@ -204,10 +207,8 @@ void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo)
     //Avisas pq finalizo el proceso
     loggear_finalizacion_proceso(pcb_asociado, motivo); 
 
-    //si es un error de signal, no quiero mandarlo a liberar un recurso que no existe porque entra en un bucle
-   // if(strcmp(motivo, "INVALID_RESOURCE para el SIGNAL") != 0){
-        liberar_recursos_asignados(pcb_asociado);
-   // }
+    //Liberar recursos
+    liberar_recursos_asignados(pcb_asociado);
 
     //Liberamos memoria
     liberar_PCB(pcb_asociado);

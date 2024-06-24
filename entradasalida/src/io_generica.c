@@ -69,10 +69,7 @@ void recibir_peticion()
 
         sem_post(&hay_peticiones);
 
-        }else{
-            //TODO hacer un log?
         }
-        
         eliminar_paquete(paquete);
     }
 }

@@ -139,10 +139,7 @@ void consola_finalizar_proceso(int pid) {
 
   printf("Finalizamos el proceso: %d \n", pid);
 
-  t_pcb* pcb_asociado = NULL;  
-
-  //Saco el proceso de los procesos del sistema
-  pcb_asociado = buscar_pcb_de_lista_y_eliminar(cola_PROCESOS_DEL_SISTEMA,pid, mutex_PROCESOS_DEL_SISTEMA);
+  t_pcb* pcb_asociado = buscar_pcb_en_lista(cola_PROCESOS_DEL_SISTEMA, pid, mutex_PROCESOS_DEL_SISTEMA);
 
   //Veo si existe en el sistema
   if(pcb_asociado != NULL){

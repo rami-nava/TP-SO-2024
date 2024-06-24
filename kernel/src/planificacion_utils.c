@@ -34,29 +34,21 @@ bool existe_proceso(int pid){
     pthread_mutex_unlock(&mutex_PROCESOS_DEL_SISTEMA);
     return false;
 }
-  
 
-t_pcb* buscar_pcb_de_lista_y_eliminar(t_list *lista, int pid_buscado, pthread_mutex_t mutex_lista)
-{
-  pthread_mutex_lock(&mutex_lista);
-  t_pcb* pcb_buscado = buscar_pcb_en_lista(lista, pid_buscado);
-  if(pcb_buscado != NULL){
-    list_remove_element(lista, (void*)pcb_buscado);
-    pthread_mutex_unlock(&mutex_lista);
-    return pcb_buscado;
-  }else return NULL;
-}
-
-t_pcb* buscar_pcb_en_lista (t_list* lista, int pid){
+t_pcb* buscar_pcb_en_lista (t_list* lista, int pid, pthread_mutex_t mutex_lista){
+    
+    pthread_mutex_lock(&mutex_lista);
     int elementos = list_size(lista);
 	for (int i = 0; i < elementos; i++)
 	{
 		t_pcb *pcb = list_get(lista, i);
 		if (pid == pcb->pid)
 		{
+            pthread_mutex_unlock(&mutex_lista);
             return pcb;
 		}
 	}
+    pthread_mutex_unlock(&mutex_lista);
     return NULL;
 }
 

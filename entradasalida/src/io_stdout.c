@@ -77,10 +77,7 @@ static void recibir_peticion ()
 
             sem_post(&hay_peticiones);
         } 
-        else {
-            log_error(stdout_logger, "Se recibio un paquete erroneo: %d", paquete->codigo_operacion);
-            abort();
-        }
+
         eliminar_paquete(paquete);
     }
 }
@@ -176,7 +173,7 @@ static void* recibir_lectura()
 }
 
 void desconectar_stdout(){
-    desconectar_memoria_stdin();
+    desconectar_memoria_stdout();
 
     int desconexion = -1;
     send(socket_kernel, &desconexion, sizeof(int), 0);

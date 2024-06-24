@@ -138,7 +138,7 @@ static void eliminar_proceso_colas_bloqueo(t_pcb* proceso){
 
     //Busco en todas las colas de bloqueo de recursos si esta el proceso y si esta lo elimino
     for(int i = 0 ; i < list_size(lista_recursos); i++){
-        if(buscar_pcb_en_lista(obtener_lista_recurso_buscado(i), proceso->pid) != NULL){
+        if(buscar_pcb_en_lista(obtener_lista_recurso_buscado(i), proceso->pid, mutex_BLOQUEADOS_recursos) != NULL){
             pthread_mutex_lock(&mutex_BLOQUEADOS_recursos);
             list_remove_element(obtener_lista_recurso_buscado(i), (void*)proceso);
             pthread_mutex_unlock(&mutex_BLOQUEADOS_recursos);

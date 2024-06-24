@@ -517,7 +517,7 @@ static void reposicionamiento_del_puntero_de_archivo(uint32_t puntero_archivo, c
 }
 
 void desconectar_dialfs(){
-    desconectar_memoria_stdin();
+    desconectar_memoria_dialfs();
 
     int desconexion = -1;
     send(socket_kernel, &desconexion, sizeof(int), 0);

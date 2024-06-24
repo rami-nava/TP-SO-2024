@@ -14,6 +14,7 @@ void servidor_kernel_io(){
     servidor_kernel = iniciar_servidor(config_valores_kernel.ip_escucha, config_valores_kernel.puerto_escucha);
   
   while(1){
+          //Es necesario pasarle un puntero (int *) al hilo no un int
           int* socket_cliente_io = malloc(sizeof(int));
           *socket_cliente_io = esperar_cliente(servidor_kernel);
           
@@ -29,12 +30,12 @@ void servidor_kernel_io(){
 
 void atender_io(int* socket_io) 
 {
-    int socket_cliente_io = *(int*)socket_io;
+        int socket_cliente_io = *(int*)socket_io;
+        free(socket_io);
         t_paquete* paquete = recibir_paquete(socket_cliente_io);
         void* stream = paquete->buffer->stream;
 
         t_interfaz* interfaz_nueva = malloc(sizeof(t_interfaz));
-        interfaz_nueva->socket_leak = socket_io;
         interfaz_nueva->nombre = sacar_cadena_de_paquete(&stream);
         interfaz_nueva->tipo_interfaz = sacar_cadena_de_paquete(&stream);
         interfaz_nueva->socket_conectado = socket_cliente_io;
@@ -212,11 +213,10 @@ static void esperar_io(t_interfaz* interfaz)
             int desconectado = 1;
             send(interfaz->socket_conectado, &desconectado, sizeof(int), 0);
             close(interfaz->socket_conectado);
-            free(interfaz->socket_leak);
             free(interfaz);
             break; //para salir del while => Esta IO no va a mandar mas mensajes
         }else{
-            t_pcb* proceso_IO = buscar_pcb_en_lista(interfaz->cola_bloqueados, pid);
+            t_pcb* proceso_IO = buscar_pcb_en_lista(interfaz->cola_bloqueados, pid, interfaz->cola_bloqueado_mutex);
 
             if(proceso_IO->eliminado == 1){
                 mandar_a_EXIT(proceso_IO, "Pedido de finalizacion");

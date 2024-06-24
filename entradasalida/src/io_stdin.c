@@ -74,10 +74,6 @@ static void recibir_peticion()
 
             sem_post(&hay_peticiones);
         } 
-        else{
-            log_error(stdin_logger, "Se recibio una peticion invalida: %d\n", paquete->codigo_operacion);
-            abort();
-        }
         
         eliminar_paquete(paquete);
     }
