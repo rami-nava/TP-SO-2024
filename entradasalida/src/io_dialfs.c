@@ -135,7 +135,7 @@ static void recibir_peticion()
             peticion->tamanio = sacar_entero_sin_signo_de_paquete(&stream);
             peticion->pid = sacar_entero_de_paquete(&stream);
             peticion->direcciones_fisicas = sacar_lista_de_accesos_de_paquete(&stream);
-            log_info(dialfs_logger, "PID: %d - Leer Archivo: %s - Tamaño a leer : %d - Puntero archivo: %d \n", peticion->pid, peticion->nombre, peticion->puntero_archivo, peticion->tamanio);
+            log_info(dialfs_logger, "PID: %d - Leer Archivo: %s - Tamaño a leer : %d - Puntero archivo: %d \n", peticion->pid, peticion->nombre, peticion->tamanio, peticion->puntero_archivo);
             pthread_mutex_lock(&mutex_lista_peticiones);
             list_add(peticiones, peticion);
             pthread_mutex_unlock(&mutex_lista_peticiones);

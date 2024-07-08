@@ -5,8 +5,8 @@ echo "1)Base"
 echo "2)Recursos"
 echo "3)Memoria"
 echo "4)IO"
-echo "5)Integral"
-echo "6)Estres"
+echo "5)FS"
+echo "6)Salvation's Edge"
 
 read -p "Numero de prueba: " prueba
 
@@ -39,6 +39,7 @@ case $prueba in
         cp "../deploy/Recursos/memoria_recursos.config" "../memoria/cfg/memoria.config"
         cp "../deploy/Recursos/ESPERA.config" "../entradasalida/cfg/ESPERA.config"
         cp "../deploy/Recursos/kernel_recursos.config" "../kernel/cfg/kernel.config"
+        cp "../deploy/Recursos/cpu_recursos.config" "../cpu/cfg/cpu.config"
         echo "Configuraciones seteadas correctamente para Prueba Recursos"
         ;;
     3)
@@ -72,18 +73,26 @@ case $prueba in
         echo "Configuraciones seteadas correctamente para Prueba IO"
         ;;
     5)
-        echo "Prueba Integral"
-        cp "../deploy/Integral/memoria_integral.config" "../memoria/cfg/memoria.config"
-        cp "../deploy/Integral/filesystem_integral.config" "../filesystem/cfg/filesystem.config"
-        cp "../deploy/Integral/kernel_integral.config" "../kernel/cfg/kernel.config"
-        echo "Configuraciones seteadas correctamente para Prueba Integral"
+        echo "Prueba FS"
+        cp "../deploy/FS/kernel_fs.config" "../kernel/cfg/kernel.config"
+        cp "../deploy/FS/cpu_fs.config" "../cpu/cfg/cpu.config"
+        cp "../deploy/FS/memoria_fs.config" "../memoria/cfg/memoria.config"
+        cp "../deploy/FS/FILESYSTEM.config" "../entradasalida/cfg/FILESYSTEM.config"
+        cp "../deploy/FS/TECLADO.config" "../entradasalida/cfg/TECLADO.config"
+        cp "../deploy/FS/MONITOR.config" "../entradasalida/cfg/MONITOR.config"
+        echo "Configuraciones seteadas correctamente para Prueba FS"
         ;;
     6)
-        echo "Prueba Estres"
-        cp "../deploy/Estres/memoria_estres.config" "../memoria/cfg/memoria.config"
-        cp "../deploy/Estres/filesystem_estres.config" "../filesystem/cfg/filesystem.config"
-        cp "../deploy/Estres/kernel_estres.config" "../kernel/cfg/kernel.config"
-        echo "Configuraciones seteadas correctamente para Prueba Estres"
+        echo "Prueba Salvation's Edge"
+        cp "../deploy/SE/kernel_se.config" "../kernel/cfg/kernel.config"
+        cp "../deploy/SE/cpu_se.config" "../cpu/cfg/cpu.config"
+        cp "../deploy/SE/memoria_se.config" "../memoria/cfg/memoria.config"
+        cp "../deploy/SE/GENERICA.config" "../entradasalida/cfg/GENERICA.config"
+        cp "../deploy/SE/TECLADO.config" "../entradasalida/cfg/TECLADO.config"
+        cp "../deploy/SE/MONITOR.config" "../entradasalida/cfg/MONITOR.config"
+        cp "../deploy/SE/ESPERA.config" "../entradasalida/cfg/ESPERA.config"
+        cp "../deploy/SE/SLP1.config" "../entradasalida/cfg/SLP1.config"
+        echo "Configuraciones seteadas correctamente para Prueba Salvation's Edge"
         ;;
     *)
         echo "Comando no reconocido"
