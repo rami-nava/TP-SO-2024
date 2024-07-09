@@ -225,7 +225,7 @@ uint32_t buscar_marco(uint32_t numero_pagina, int pid){
 }
 
 int numero_marco(uint32_t direccion_fisica){
-	int num_marco = floor(direccion_fisica / tam_pagina);
+	int num_marco = floor((double)direccion_fisica / (double)tam_pagina);
 	return num_marco;
 }
 

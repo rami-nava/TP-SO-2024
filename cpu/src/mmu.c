@@ -87,7 +87,7 @@ uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica){
     uint32_t direccion_fisica = 0;
 
     // Calculamos numero_pagina y offset
-    numero_pagina = floor(direccion_logica / tam_pagina);
+    numero_pagina = floor((double)direccion_logica / (double)tam_pagina);
     offset = direccion_logica - (numero_pagina * tam_pagina);
 
     //Busco el marco de la pagina
@@ -110,7 +110,7 @@ t_list* obtener_direcciones_fisicas_mmu(uint32_t tamanio_total, uint32_t direcci
     t_list* lista_direcciones_fisicas = list_create();
 
     //PRIMERA PAGINA/MARCO
-    uint32_t pagina_actual = floor(direccion_logica_inicial / tam_pagina);
+    uint32_t pagina_actual = floor((double)direccion_logica_inicial / (double)tam_pagina);
     uint32_t direccion_fisica_actual = traducir_de_logica_a_fisica(direccion_logica_inicial);
     uint32_t bytes_marco_actual = bytes_en_marco(direccion_fisica_actual, bytes_cargados, tamanio_total);
 

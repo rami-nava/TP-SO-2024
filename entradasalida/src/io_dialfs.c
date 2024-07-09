@@ -267,12 +267,17 @@ static void eliminar_archivo(char *nombre_archivo)
     free(metadata);
 
     // Liberamos el bloque
-    uint32_t cantidad_bloques_ocupados = ceil(tamanio_archivo / tamanio_bloque); 
+    uint32_t cantidad_bloques_ocupados = ceil((double)tamanio_archivo / (double)tamanio_bloque); 
     eliminar_bloques(cantidad_bloques_ocupados, bloque_inicial);
 
     //eliminamos el archivo
     char *path_archivo = string_from_format("%s/%s", path_dial_fs, nombre_archivo);
     remove(path_archivo);
+
+    //eliminamos la entrada en el diccionario
+    char bloque_inicial_string[20]; //Alcanza para almacenar un uint32_t
+    snprintf(bloque_inicial_string, sizeof(bloque_inicial_string), "%u", bloque_inicial);
+    dictionary_remove_and_destroy(nombre_con_bloque_inicial, bloque_inicial_string, free);
 
     // Liberamos la memoria
     free(path_archivo);
@@ -311,8 +316,8 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
 {
     compactar_desde_comienzo = false;
     
-    uint32_t bloques_a_agregar = ceil((tamanio_nuevo - tamanio_actual) / tamanio_bloque);
-    uint32_t cantidad_bloques_del_archivo = ceil(tamanio_actual / tamanio_bloque);
+    uint32_t bloques_a_agregar = ceil(((double)tamanio_nuevo - (double)tamanio_actual) / (double)tamanio_bloque);
+    uint32_t cantidad_bloques_del_archivo = ceil((double)tamanio_actual / (double)tamanio_bloque);
 
     uint32_t bloque_final_archivo = bloque_inicial + cantidad_bloques_del_archivo - 1;
 
@@ -354,8 +359,8 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
 
 static void reducir_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uint32_t bloque_inicial)
 {
-    uint32_t bloques_a_eliminar = ceil((tamanio_actual - tamanio_nuevo) / tamanio_bloque);
-    uint32_t cantidad_bloques_del_archivo = ceil(tamanio_actual / tamanio_bloque);
+    uint32_t bloques_a_eliminar = floor(((double)tamanio_actual - (double)tamanio_nuevo) / (double)tamanio_bloque);
+    uint32_t cantidad_bloques_del_archivo = ceil((double)tamanio_actual / (double)tamanio_bloque);
 
     uint32_t primer_bloque_a_borrar = bloque_inicial + cantidad_bloques_del_archivo;
 
@@ -426,7 +431,7 @@ static void pedido_escritura(void* contenido_a_escribir, uint32_t direccion_fisi
 
 static void escribir_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t cantidad_bytes, t_list* direcciones_fisicas, int pid)
 {
-    //uint32_t cantidad_bloques = puntero_archivo + ceil(cantidad_bytes / tamanio_bloque);
+    //uint32_t cantidad_bloques = puntero_archivo + ceil((double)cantidad_bytes / (double)tamanio_bloque);
     
     void* contenido = pedir_lectura_a_memoria(direcciones_fisicas, cantidad_bytes, pid);
 
