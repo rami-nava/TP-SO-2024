@@ -170,6 +170,7 @@ void volver_a_CPU(t_pcb* proceso);
 bool existe_proceso(int pid);
 t_pcb* buscar_pcb_en_lista (t_list* lista, int pid, pthread_mutex_t mutex_cola);
 void mostrar_lista_pids(t_list *cola, char *nombre_cola, pthread_mutex_t mutex_cola);
+void enviar_finalizar_en_memoria(int pid);
 
 //================================================ Recursos =====================================================================================================================
 void liberacion_recursos(t_pcb* );

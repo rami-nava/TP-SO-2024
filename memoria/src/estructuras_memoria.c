@@ -3,6 +3,10 @@
 void* espacio_usuario;
 t_list* marcos;
 pthread_mutex_t mutex_PROCESOS_EN_MEMORIA;
+pthread_mutex_t mutex_paginas_proceso;
+pthread_mutex_t mutex_MARCOS;
+
+static bool esta_libre(t_marco* marco);
 
 //============================================ ESPACIO DE USUARIO ===========================================================
 void creacion_espacio_usuario(){
@@ -55,7 +59,9 @@ void crear_marcos_memoria() {
 		marco->pid_proceso = -1;
 		marco->libre = true;
         
+		pthread_mutex_lock(&mutex_MARCOS);
 		list_add(marcos, marco);
+		pthread_mutex_unlock(&mutex_MARCOS);
 	}
 }
 
@@ -91,6 +97,20 @@ int cantidad_de_marcos_necesarios(int tamanio_contenido_bytes){
 	return cantidad_marcos; 
 }
 
+static bool esta_libre(t_marco* marco) {
+	return marco->libre;
+}
+
+int cantidad_de_marcos_libres_en_memoria(){
+
+	//filtro solo los marcos libres
+	t_list* marcos_libres = list_filter(marcos, (void*)esta_libre);
+	int cantidad_marcos_libres = list_size(marcos_libres);
+	list_destroy(marcos_libres);
+
+	return cantidad_marcos_libres; 
+}
+
 void quitar_marcos_a_proceso(t_proceso_en_memoria* proceso, uint32_t cantidad_marcos_a_liberar){
 
 	log_info(memoria_logger, "Liberando paginas - PID: %d - Tamaño: %d", proceso->pid, cantidad_marcos_a_liberar); 
@@ -106,21 +126,28 @@ void quitar_marcos_a_proceso(t_proceso_en_memoria* proceso, uint32_t cantidad_ma
 	}
 }
 
-void liberar_marco(int marco_a_liberar){
+void liberar_marco(int marco){
 	
-	t_marco *marco = buscar_marco_por_numero(marco_a_liberar);  
+	t_marco *marco_a_liberar = buscar_marco_por_numero(marco);  
 
-	marco->nro_pagina = -1;
-	marco->pid_proceso = -1;
-	marco->nro_pagina = -1;
-	marco->libre = true;
+	t_marco* marco_liberado = malloc(sizeof(t_marco));
+	marco_liberado->nro_marco = marco; 
+	marco_liberado->pid_proceso = -1;
+	marco_liberado->nro_pagina = -1;
+	marco_liberado->libre = true;
+
+	pthread_mutex_lock(&mutex_MARCOS);
+	list_remove_and_destroy_element(marcos, marco_a_liberar->nro_marco, free);
+	list_add_in_index(marcos, marco, marco_liberado);
+	pthread_mutex_unlock(&mutex_MARCOS);
 }
 
 t_marco* buscar_marco_por_numero(int numero_de_marco) {
     
+	pthread_mutex_lock(&mutex_MARCOS);
     for (int i = 0; i < list_size(marcos); i++) {
         t_marco* marco_actual = (t_marco*) list_get(marcos, i);
-        
+        pthread_mutex_unlock(&mutex_MARCOS);
 		if (marco_actual->nro_marco == numero_de_marco) {
             
             return marco_actual;
@@ -138,13 +165,18 @@ void asignar_marcos_a_proceso(t_proceso_en_memoria* proceso, int cantidad_de_mar
 	
 	t_marco* marco_obtenido = NULL;
 	int contador = 0;
+
+	pthread_mutex_lock(&mutex_MARCOS);
 	int cantidad_marcos = list_size(marcos);
+	pthread_mutex_unlock(&mutex_MARCOS);
 
 	log_info(memoria_logger, "Agregando paginas - PID: %d - Tamaño: %d marcos", proceso->pid, cantidad_de_marcos_necesarios); 
 
 	for(int i = 0; i< cantidad_marcos; i++){
 		if(contador < cantidad_de_marcos_necesarios){
+			pthread_mutex_lock(&mutex_MARCOS);
 			marco_obtenido = (t_marco*) list_get(marcos,i);
+			pthread_mutex_unlock(&mutex_MARCOS);
 
 			if(marco_obtenido->libre) {
 				asignar_proceso_a_marco(proceso, marco_obtenido); //TAMBIEN AGREGA PAGINA A PROCESO
@@ -158,11 +190,18 @@ void asignar_marcos_a_proceso(t_proceso_en_memoria* proceso, int cantidad_de_mar
 
 void asignar_proceso_a_marco(t_proceso_en_memoria* proceso, t_marco* marco){
 	
-	agregar_pagina_a_proceso(proceso, marco);
-	
-	marco->pid_proceso = proceso->pid;
-	marco->nro_pagina = list_size(proceso->paginas_en_memoria)-1;
-	marco->libre = false;
+	t_marco* marco_modificado = malloc(sizeof(t_marco)); 
+	marco_modificado->nro_pagina = list_size(proceso->paginas_en_memoria)-1;
+	marco_modificado->nro_marco = marco->nro_marco;
+	marco_modificado->pid_proceso = proceso->pid;
+	marco_modificado->libre = false;
+
+	pthread_mutex_unlock(&mutex_MARCOS);
+	list_remove_and_destroy_element(marcos, marco->nro_marco,free);
+	list_add_in_index(marcos, marco_modificado->nro_marco, marco_modificado);
+	pthread_mutex_unlock(&mutex_MARCOS);
+
+	agregar_pagina_a_proceso(proceso, marco_modificado);
 }
 
 //Busca en los procesos cuyas instrucciones ya fueron cargadas
@@ -198,10 +237,14 @@ uint32_t buscar_marco(uint32_t numero_pagina, int pid){
     // Busco la página correspondiente al número de página
     t_pagina *pagina = NULL;
 
+	pthread_mutex_lock(&mutex_paginas_proceso);
 	int cant_paginas_en_memoria = list_size(proceso->paginas_en_memoria);
+	pthread_mutex_unlock(&mutex_paginas_proceso);
 
     for (int i = 0; i < cant_paginas_en_memoria; i++) {
+		pthread_mutex_lock(&mutex_paginas_proceso);
         t_pagina *pagina_actual = (t_pagina*) list_get(proceso->paginas_en_memoria, i);
+		pthread_mutex_unlock(&mutex_paginas_proceso);
        
 	    if (pagina_actual->nro_pagina == numero_pagina) {
             pagina = pagina_actual;
@@ -211,6 +254,8 @@ uint32_t buscar_marco(uint32_t numero_pagina, int pid){
 
     if (pagina == NULL) {
         log_error(memoria_logger, "No se encontró la página %d en el proceso con PID: %d\n", numero_pagina, pid);
+		log_info(memoria_logger, "PID: %d - Paginas en Memoria: %d\n", pid, cant_paginas_en_memoria);
+		abort();
     }
 
     // Obtengo el número de marco asignado a la página

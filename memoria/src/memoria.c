@@ -19,6 +19,8 @@ int main(void) {
 
 	pthread_mutex_init(&mutex_PROCESOS_EN_MEMORIA, NULL);
 	pthread_mutex_init(&mutex_espacio_usuario, NULL);
+	pthread_mutex_init(&mutex_paginas_proceso, NULL);
+	pthread_mutex_init(&mutex_MARCOS, NULL);
 
     tam_pagina = config_valores_memoria.tam_pagina;
 
