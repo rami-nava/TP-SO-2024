@@ -65,6 +65,8 @@ EJECUTAR_SCRIPT "/home/utnso/tp-2024-1c-SegmenFault/pruebas/script_MEMORIA.txt"
 SALVATIONS EDGE =============
 EJECUTAR_SCRIPT "/home/utnso/tp-2024-1c-SegmenFault/pruebas/script_SALVATIONSEDGE.txt"
 
+MULTIPROGRAMACION 100
+
 make memcheck ARGS="MONITOR /home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/MONITOR.config"
 
 ./entradasalida MONITOR "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/MONITOR.config"

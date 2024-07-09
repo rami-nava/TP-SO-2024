@@ -2,6 +2,7 @@
 
 void* espacio_usuario;
 t_list* marcos;
+pthread_mutex_t mutex_PROCESOS_EN_MEMORIA;
 
 //============================================ ESPACIO DE USUARIO ===========================================================
 void creacion_espacio_usuario(){
@@ -66,7 +67,9 @@ void finalizar_en_memoria(int pid)
 	quitar_marcos_a_proceso(proceso, cantidad_paginas_de_proceso);
 
 	//Elimino el proceso de la lista
+	pthread_mutex_lock(&mutex_PROCESOS_EN_MEMORIA);
 	list_remove_element(procesos_en_memoria, proceso);
+	pthread_mutex_unlock(&mutex_PROCESOS_EN_MEMORIA);
 
 	//Limpio su lista de instrucciones
 	list_destroy(proceso->instrucciones);
@@ -163,7 +166,9 @@ void asignar_proceso_a_marco(t_proceso_en_memoria* proceso, t_marco* marco){
 t_proceso_en_memoria* obtener_proceso_en_memoria(int pid) { 
     
 	for (int i = 0; i < list_size(procesos_en_memoria); i++) {
+		pthread_mutex_lock(&mutex_PROCESOS_EN_MEMORIA);
         t_proceso_en_memoria* proceso = (t_proceso_en_memoria*) list_get(procesos_en_memoria, i);
+		pthread_mutex_unlock(&mutex_PROCESOS_EN_MEMORIA);
         if (proceso->pid == pid) {
             return proceso; 
         }

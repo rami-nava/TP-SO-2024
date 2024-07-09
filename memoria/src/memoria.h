@@ -29,6 +29,7 @@ extern t_list* procesos_en_memoria; //Lista de t_proceso_en_memoria con las tabl
 extern t_list* marcos; //Lista de los t_marco y su info
 extern int cantidad_marcos;
 extern uint32_t tam_pagina;
+extern pthread_mutex_t mutex_PROCESOS_EN_MEMORIA;
 
 
 //ESTRUCTURAS

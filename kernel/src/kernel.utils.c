@@ -34,6 +34,7 @@ void inicializar_semaforos(){
     pthread_mutex_init(&mutex_NEW, NULL);
     pthread_mutex_init(&mutex_READY,NULL); 
     pthread_mutex_init(&mutex_BLOQUEADOS_recursos,NULL); 
+    pthread_mutex_init(&mutex_MULTIPROGRAMACION,NULL);
     pthread_mutex_init(&mutex_PROCESOS_DEL_SISTEMA,NULL);
     pthread_mutex_init(&mutex_AUX_VRR,NULL); 
     pthread_mutex_init(&mutex_corriendo, NULL);

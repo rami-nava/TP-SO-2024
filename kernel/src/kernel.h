@@ -58,6 +58,7 @@ extern pthread_cond_t cond_corriendo;
 extern pthread_t reloj_RR;
 extern pthread_mutex_t proceso_en_ejecucion_RR_mutex;
 extern pthread_mutex_t mutex_BLOQUEADOS_recursos;
+extern pthread_mutex_t mutex_MULTIPROGRAMACION;
 
 
 extern t_list *cola_NEW;

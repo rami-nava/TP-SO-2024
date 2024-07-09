@@ -2,6 +2,7 @@
 
 pthread_cond_t cond_corriendo;
 pthread_mutex_t mutex_corriendo;
+pthread_mutex_t mutex_MULTIPROGRAMACION;
 int corriendo = 1;
 
 
@@ -60,13 +61,24 @@ void consola_iniciar_planificacion() {
 
 void consola_modificar_multiprogramacion(int nuevo_valor) 
 {
-  int grado_anterior = config_valores_kernel.grado_multiprogramacion;
+  int valor_actual = config_valores_kernel.grado_multiprogramacion;
+
+	if(nuevo_valor < valor_actual){
+		for(int i = nuevo_valor; i < valor_actual; i++){
+			sem_wait(&grado_multiprogramacion);
+		}
+	}
+	else{
+		for(int i = nuevo_valor; i > valor_actual; i--){
+			sem_post(&grado_multiprogramacion);
+		}
+	}
+
+  pthread_mutex_lock(&mutex_MULTIPROGRAMACION);
   config_valores_kernel.grado_multiprogramacion = nuevo_valor;
+  pthread_mutex_unlock(&mutex_MULTIPROGRAMACION);
 
-  sem_destroy(&grado_multiprogramacion);
-
-  sem_init(&grado_multiprogramacion, 0, nuevo_valor);
-  printf("Grado Anterior: %d - Grado Actual: %d \n", grado_anterior, nuevo_valor);
+  printf("Grado de multiprogramacion cambiado a %d\n", nuevo_valor);
 }
 
 void consola_leer_bitmap(int desde, int hasta) 

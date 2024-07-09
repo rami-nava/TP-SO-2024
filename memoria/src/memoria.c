@@ -17,6 +17,8 @@ int main(void) {
 
     procesos_en_memoria = list_create();
 
+	pthread_mutex_init(&mutex_PROCESOS_EN_MEMORIA, NULL);
+
     tam_pagina = config_valores_memoria.tam_pagina;
 
 	cantidad_marcos = config_valores_memoria.tam_memoria / tam_pagina;
