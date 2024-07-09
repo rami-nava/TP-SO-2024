@@ -321,7 +321,7 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
 
         log_info(dialfs_logger, "PID: %d - Inicio Compactación \n", pid);
 
-        compactar(bloques_a_agregar, bloque_final_archivo);
+        /*compactar(bloques_a_agregar, bloque_final_archivo);
 
         //Si no hay bloques libres suficientes a la derecha compacto
         if(compactar_desde_comienzo) {
@@ -331,7 +331,15 @@ static void ampliar_archivo(uint32_t tamanio_nuevo, uint32_t tamanio_actual, uin
         }
 
         //La llamo denuevo, esta vez ya deberia tener bloques libres a la derecha para asignarle al archivo
-        compactar(bloques_a_agregar, bloque_final_archivo);
+        compactar(bloques_a_agregar, bloque_final_archivo);*/
+
+        bloque_final_archivo = compactar_desde_el_comienzo(bloque_final_archivo);
+
+        if(!bloques_contiguos(bloques_a_agregar, bloque_final_archivo)){
+            //Si los bloques libres contiguos no son suficientes volvemos a compactar
+            //con otro algoritmo
+            compactar(bloques_a_agregar, bloque_final_archivo);
+        }
 
         usleep(1000 * retraso_compactacion);
 

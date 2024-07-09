@@ -378,7 +378,9 @@ bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar, uint32_t bloque_final
             if (bloques_encontrados == cantidad_bloques_a_buscar) {
                 return true;
             }
-        } 
+        } else{
+            return false; //Quiere decir que no encontre la cantidad de bloques libres contiguos que necesitaba
+        }
     }
 
     return false;
