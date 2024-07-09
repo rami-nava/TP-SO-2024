@@ -61,3 +61,10 @@ EJECUTAR_SCRIPT "/home/utnso/tp-2024-1c-SegmenFault/pruebas/script_ESTRES.txt"
 
 MEMORIA============
 EJECUTAR_SCRIPT "/home/utnso/tp-2024-1c-SegmenFault/pruebas/script_MEMORIA.txt"
+
+SALVATIONS EDGE =============
+EJECUTAR_SCRIPT "/home/utnso/tp-2024-1c-SegmenFault/pruebas/script_SALVATIONSEDGE.txt"
+
+./entradasalida MONITOR "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/MONITOR.config"
+
+./entradasalida TECLADO "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/cfg/TECLADO.config"
