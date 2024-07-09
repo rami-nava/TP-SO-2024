@@ -60,6 +60,12 @@ static void enviar_creacion_estructuras_memoria(int pid, char* path_proceso){
     }
 }
 
+void enviar_finalizar_en_memoria(int pid){
+    t_paquete* paquete = crear_paquete(FINALIZAR_EN_MEMORIA);
+    agregar_entero_a_paquete(paquete,pid);
+    enviar_paquete(paquete, socket_memoria);
+}
+
 static int incrementar_pid() {
     sem_wait(&(mutex_pid));
     indice_pid ++;

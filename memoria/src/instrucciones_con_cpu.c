@@ -96,7 +96,10 @@ void resize(int pid, uint32_t tamanio){
 int out_of_memory(int pid, uint32_t tamanio){ //SOLO FUNCIONA PARA EXTENDER EL TAMAÑO POR AHORA
 	int cantidad_marcos_necesarios = cantidad_de_marcos_necesarios(tamanio);
 
-	if(cantidad_marcos >= cantidad_marcos_necesarios)
+	int cantidad = cantidad_de_marcos_libres_en_memoria();
+
+	log_info(memoria_logger, "cantidad marcos libres en memoria: %d\n\n", cantidad);
+	if(cantidad >= cantidad_marcos_necesarios)
 		return 0;
 	else {
 		log_info(memoria_logger, "OUT OF MEMORY. PID: %d - TAMAÑO: %d", pid, tamanio);

@@ -31,6 +31,8 @@ extern int cantidad_marcos;
 extern uint32_t tam_pagina;
 extern pthread_mutex_t mutex_PROCESOS_EN_MEMORIA;
 extern pthread_mutex_t mutex_espacio_usuario;
+extern pthread_mutex_t mutex_paginas_proceso;
+extern pthread_mutex_t mutex_MARCOS;
 
 
 //ESTRUCTURAS
@@ -111,7 +113,7 @@ int cantidad_de_marcos_necesarios(int tamanio);
 t_marco* buscar_marco_por_numero(int numero_de_marco);
 uint32_t buscar_marco(uint32_t numero_pagina, int pid);
 int numero_marco(uint32_t direccion_fisica);
-t_marco* ocupar_marco_con_contenido(uint32_t direccion_fisica, uint32_t bytes_a_escribir);
+int cantidad_de_marcos_libres_en_memoria();
 
 //ESCRITURA Y LECTURA
 void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t tamanio_escritura, void* contenido);

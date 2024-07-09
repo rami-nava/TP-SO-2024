@@ -201,6 +201,8 @@ void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo)
    
     sacar_proceso_de_cola_estado_donde_esta(pcb_asociado);
 
+    enviar_finalizar_en_memoria(pcb_asociado->pid);
+
     pcb_asociado->estado = SALIDA;
     loggear_cambio_de_estado(pcb_asociado->pid, anterior, pcb_asociado->estado);
 
