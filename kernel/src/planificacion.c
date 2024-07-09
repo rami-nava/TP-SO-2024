@@ -24,9 +24,9 @@ void planificador_largo_plazo(){
 
     while (1)
     {
-        sem_wait(&grado_multiprogramacion);
-
         sem_wait(&hay_procesos_nuevos);
+
+        sem_wait(&grado_multiprogramacion);
 
         detener_planificacion();
 

@@ -39,7 +39,10 @@ void crear_estructuras_memoria(int pid, FILE* archivo){
 
 	leer_instrucciones_desde_archivo(proceso, archivo);
 
+	pthread_mutex_lock(&mutex_PROCESOS_EN_MEMORIA);
 	list_add(procesos_en_memoria, proceso);
+	pthread_mutex_unlock(&mutex_PROCESOS_EN_MEMORIA);
+
 }
 
 void crear_marcos_memoria() {
@@ -165,8 +168,8 @@ void asignar_proceso_a_marco(t_proceso_en_memoria* proceso, t_marco* marco){
 //Busca en los procesos cuyas instrucciones ya fueron cargadas
 t_proceso_en_memoria* obtener_proceso_en_memoria(int pid) { 
     
+	pthread_mutex_lock(&mutex_PROCESOS_EN_MEMORIA);
 	for (int i = 0; i < list_size(procesos_en_memoria); i++) {
-		pthread_mutex_lock(&mutex_PROCESOS_EN_MEMORIA);
         t_proceso_en_memoria* proceso = (t_proceso_en_memoria*) list_get(procesos_en_memoria, i);
 		pthread_mutex_unlock(&mutex_PROCESOS_EN_MEMORIA);
         if (proceso->pid == pid) {

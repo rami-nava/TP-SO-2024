@@ -1,5 +1,5 @@
 #include "memoria.h"
-
+pthread_mutex_t mutex_espacio_usuario;
 //================================================== MANEJO ESCRITURAS EN PAGINAS/MARCOS ==================================================
 
 static bool contenido_cabe_en_marcos(t_proceso_en_memoria* proceso, int tamanio_contenido_bytes);
@@ -14,8 +14,10 @@ void escribir_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint
 	}
 
 	acceso_a_espacio_usuario(pid, "ESCRITURA EN MEMORIA", direccion_fisica, tamanio_escritura);
-		
+	
+	pthread_mutex_lock(&mutex_espacio_usuario);
 	memcpy(espacio_usuario + direccion_fisica, contenido, tamanio_escritura); 
+    pthread_mutex_unlock(&mutex_espacio_usuario);
 
 	free(contenido);
 }
@@ -37,7 +39,9 @@ void leer_contenido_espacio_usuario(int pid, uint32_t direccion_fisica, uint32_t
 	acceso_a_espacio_usuario(pid, "LECTURA EN MEMORIA", direccion_fisica, tamanio_lectura);
 
     // Leemos el marco, puede una parte si el offset es mas que 0
+	pthread_mutex_lock(&mutex_espacio_usuario);
     memcpy(contenido_leido, espacio_usuario + direccion_fisica, tamanio_lectura);
+	pthread_mutex_unlock(&mutex_espacio_usuario);
 
 	// Devolver el contenido leído -> según instrucción
 	if(operacion == LEER_CONTENIDO_EN_MEMORIA_DESDE_CPU){
