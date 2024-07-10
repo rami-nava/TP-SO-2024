@@ -215,6 +215,8 @@ void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo)
 
     enviar_finalizar_en_memoria(pcb_asociado->pid);
 
+    free(pcb_asociado);
+
     sem_post(&grado_multiprogramacion);
 }
 
