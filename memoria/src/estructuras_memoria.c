@@ -213,7 +213,11 @@ void asignar_proceso_a_marco(t_proceso_en_memoria* proceso, t_marco* marco){
 t_proceso_en_memoria* obtener_proceso_en_memoria(int pid) { 
     
 	pthread_mutex_lock(&mutex_PROCESOS_EN_MEMORIA);
-	for (int i = 0; i < list_size(procesos_en_memoria); i++) {
+	int cantidad_procesos = list_size(procesos_en_memoria);
+	pthread_mutex_unlock(&mutex_PROCESOS_EN_MEMORIA);
+
+	for (int i = 0; i < cantidad_procesos; i++) {
+		pthread_mutex_lock(&mutex_PROCESOS_EN_MEMORIA);
         t_proceso_en_memoria* proceso = (t_proceso_en_memoria*) list_get(procesos_en_memoria, i);
 		pthread_mutex_unlock(&mutex_PROCESOS_EN_MEMORIA);
         if (proceso->pid == pid) {
