@@ -71,20 +71,25 @@ void finalizar_en_memoria(int pid)
 	//Obtengo el proceso por el pid
 	t_proceso_en_memoria *proceso = obtener_proceso_en_memoria(pid);
 
-	//Libero las paginas
-	int cantidad_paginas_de_proceso = list_size(proceso->paginas_en_memoria);
-	quitar_marcos_a_proceso(proceso, cantidad_paginas_de_proceso);
+	if(proceso != NULL){
+		//Libero las paginas
+		if(proceso->paginas_en_memoria != NULL) {
+		int cantidad_paginas_de_proceso = list_size(proceso->paginas_en_memoria);
+		quitar_marcos_a_proceso(proceso, cantidad_paginas_de_proceso);
+		}
 
-	//Elimino el proceso de la lista
-	pthread_mutex_lock(&mutex_PROCESOS_EN_MEMORIA);
-	list_remove_element(procesos_en_memoria, proceso);
-	pthread_mutex_unlock(&mutex_PROCESOS_EN_MEMORIA);
+		//Elimino el proceso de la lista
+		pthread_mutex_lock(&mutex_PROCESOS_EN_MEMORIA);
+		list_remove_element(procesos_en_memoria, proceso);
+		pthread_mutex_unlock(&mutex_PROCESOS_EN_MEMORIA);
 
-	//Limpio su lista de instrucciones
-	list_destroy(proceso->instrucciones);
+		//Limpio su lista de instrucciones
+		list_destroy_and_destroy_elements(proceso->instrucciones, free);
+		list_destroy_and_destroy_elements(proceso->paginas_en_memoria,free);
 
-	//Libero su memoria
-	free(proceso);
+		//Libero su memoria
+		free(proceso);
+	}
 }
 
 //============================================ FUNCIONES DE ASIGNACION DE MARCOS/PAGINAS =============================================
@@ -208,7 +213,11 @@ void asignar_proceso_a_marco(t_proceso_en_memoria* proceso, t_marco* marco){
 t_proceso_en_memoria* obtener_proceso_en_memoria(int pid) { 
     
 	pthread_mutex_lock(&mutex_PROCESOS_EN_MEMORIA);
-	for (int i = 0; i < list_size(procesos_en_memoria); i++) {
+	int cantidad_procesos = list_size(procesos_en_memoria);
+	pthread_mutex_unlock(&mutex_PROCESOS_EN_MEMORIA);
+
+	for (int i = 0; i < cantidad_procesos; i++) {
+		pthread_mutex_lock(&mutex_PROCESOS_EN_MEMORIA);
         t_proceso_en_memoria* proceso = (t_proceso_en_memoria*) list_get(procesos_en_memoria, i);
 		pthread_mutex_unlock(&mutex_PROCESOS_EN_MEMORIA);
         if (proceso->pid == pid) {

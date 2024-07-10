@@ -81,6 +81,7 @@ static void recibir_peticion(t_pcb *proceso, t_contexto *contexto_ejecucion){
             exit_c(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
         case OUT_OF_MEMORY:
+            romper_el_reloj();
             exit_c(proceso, contexto_ejecucion->motivo_desalojo->parametros);
             break;
       default:

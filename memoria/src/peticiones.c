@@ -76,8 +76,9 @@ static void manejo_conexiones(void* conexion)
 			int pid = sacar_entero_de_paquete(&stream);			
 			finalizar_en_memoria(pid);
 
-			int ok_finalizacion = 1;
-			send(cliente, &ok_finalizacion, sizeof(int), 0);
+			uint32_t finalizacion_ok = 1; 
+			send(cliente, &finalizacion_ok, sizeof(uint32_t), 0);
+
 			log_info(memoria_logger,"Estructuras eliminadas en memoria exitosamente\n");
 		break;
 

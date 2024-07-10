@@ -201,8 +201,6 @@ void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo)
    
     sacar_proceso_de_cola_estado_donde_esta(pcb_asociado);
 
-    enviar_finalizar_en_memoria(pcb_asociado->pid);
-
     pcb_asociado->estado = SALIDA;
     loggear_cambio_de_estado(pcb_asociado->pid, anterior, pcb_asociado->estado);
 
@@ -211,6 +209,11 @@ void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo)
 
     //Liberar recursos
     liberar_recursos_asignados(pcb_asociado);
+
+    enviar_finalizar_en_memoria(pcb_asociado->pid);
+
+    int finalizacion_ok = 0;
+    recv(socket_memoria, &finalizacion_ok , sizeof(int), MSG_WAITALL);
 
     //Liberamos memoria
     liberar_PCB(pcb_asociado);
