@@ -210,12 +210,13 @@ void mandar_a_EXIT(t_pcb* pcb_asociado, char* motivo)
     //Liberar recursos
     liberar_recursos_asignados(pcb_asociado);
 
-    //Liberamos memoria
-    liberar_PCB(pcb_asociado);
-
     enviar_finalizar_en_memoria(pcb_asociado->pid);
 
-    free(pcb_asociado);
+    int finalizacion_ok = 0;
+    recv(socket_memoria, &finalizacion_ok , sizeof(int), MSG_WAITALL);
+
+    //Liberamos memoria
+    liberar_PCB(pcb_asociado);
 
     sem_post(&grado_multiprogramacion);
 }
