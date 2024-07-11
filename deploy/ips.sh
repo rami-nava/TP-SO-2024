@@ -87,20 +87,20 @@ sed -E -i "s/$sMem/IP_MEMORIA=$ipMemoria/" $entradasalida13
 sed -E -i "s/$sMem/IP_MEMORIA=$ipMemoria/" $entradasalida14
 
 # Search and replace KERNEL
-sed -E -i "s/$sMem/IP_KERNEL=$ipMemoria/" $entradasalida1
-sed -E -i "s/$sMem/IP_KERNEL=$ipMemoria/" $entradasalida2
-sed -E -i "s/$sMem/IP_KERNEL=$ipMemoria/" $entradasalida3
-sed -E -i "s/$sMem/IP_KERNEL=$ipMemoria/" $entradasalida4
-sed -E -i "s/$sMem/IP_KERNEL=$ipMemoria/" $entradasalida5
-sed -E -i "s/$sMem/IP_KERNEL=$ipMemoria/" $entradasalida6
-sed -E -i "s/$sMem/IP_KERNEL=$ipMemoria/" $entradasalida7
-sed -E -i "s/$sMem/IP_KERNEL=$ipMemoria/" $entradasalida8
-sed -E -i "s/$sMem/IP_KERNEL=$ipMemoria/" $entradasalida9
-sed -E -i "s/$sMem/IP_KERNEL=$ipMemoria/" $entradasalida10
-sed -E -i "s/$sMem/IP_KERNEL=$ipMemoria/" $entradasalida11
-sed -E -i "s/$sMem/IP_KERNEL=$ipMemoria/" $entradasalida12
-sed -E -i "s/$sMem/IP_KERNEL=$ipMemoria/" $entradasalida13
-sed -E -i "s/$sMem/IP_KERNEL=$ipMemoria/" $entradasalida14
+sed -E -i "s/$sMem/IP_KERNEL=$ipkernel/" $entradasalida1
+sed -E -i "s/$sMem/IP_KERNEL=$ipkernel/" $entradasalida2
+sed -E -i "s/$sMem/IP_KERNEL=$ipkernel/" $entradasalida3
+sed -E -i "s/$sMem/IP_KERNEL=$ipkernel/" $entradasalida4
+sed -E -i "s/$sMem/IP_KERNEL=$ipkernel/" $entradasalida5
+sed -E -i "s/$sMem/IP_KERNEL=$ipkernel/" $entradasalida6
+sed -E -i "s/$sMem/IP_KERNEL=$ipkernel/" $entradasalida7
+sed -E -i "s/$sMem/IP_KERNEL=$ipkernel/" $entradasalida8
+sed -E -i "s/$sMem/IP_KERNEL=$ipkernel/" $entradasalida9
+sed -E -i "s/$sMem/IP_KERNEL=$ipkernel/" $entradasalida10
+sed -E -i "s/$sMem/IP_KERNEL=$ipkernel/" $entradasalida11
+sed -E -i "s/$sMem/IP_KERNEL=$ipkernel/" $entradasalida12
+sed -E -i "s/$sMem/IP_KERNEL=$ipkernel/" $entradasalida13
+sed -E -i "s/$sMem/IP_KERNEL=$ipkernel/" $entradasalida14
 
 # cpu
 cpc0="../cpu/cfg/cpu.config"
