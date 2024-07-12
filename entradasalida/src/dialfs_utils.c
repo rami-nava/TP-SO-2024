@@ -36,7 +36,7 @@ FILE* levantar_archivo_bloque() {
 	
     char* path_archivo_bloques = string_from_format ("%s/bloques.dat", path_dial_fs);
 
-    archivo_de_bloques = fopen(path_archivo_bloques, "rb+");
+    archivo_de_bloques = fopen(path_archivo_bloques, "r+b");
 
     if (path_archivo_bloques == NULL) {
         log_error(dialfs_logger, "No se pudo abrir el archivo.");
@@ -210,11 +210,11 @@ void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_arch
     }
 
     // Si no hay suficientes bloques libres, hay que compactar con el otro algoritmo
-    if(cantidad_bloques_libres_encontrados < cantidad_bloques_a_compactar) {
+    /*if(cantidad_bloques_libres_encontrados < cantidad_bloques_a_compactar) {
         compactar_desde_comienzo = true;
         list_destroy(lista_indices_bloques_libres);
         return;
-    }
+    }*/
 
     // Ahora reviso cuantos de los bloques libres son contiguos
     for (int i = bloque_final_archivo + 1; i < tamanio_bitmap; i++) {
@@ -249,7 +249,7 @@ void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_arch
         for(int i = 0; i < bloques_ocupados; i++) {
             
         // Me posiciono en el ultimo bloque ocupado por un archivo 
-        fseek(archivo_de_bloques, tamanio_bloque * (bloque_libre - 1 - 1), SEEK_SET);
+        fseek(archivo_de_bloques, tamanio_bloque * (bloque_libre - 1 - i), SEEK_SET);
         fread(bloque_ocupado, sizeof(char), tamanio_bloque, archivo_de_bloques);
 
         // Me posiciono en el bloque libre
@@ -260,9 +260,8 @@ void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_arch
         if(pertenece_a_bloque_inicial(bloque_libre - 1- i)) {
             modificar_metadata_bloque_inicial(bloque_libre - i, bloque_libre - 1 - i);    
         }
-
-        //Deberia hacer un free?
         } 
+        free(bloque_ocupado);
         // Actualizo bitmap y archivo_de_bloques
         bloques_libres_contiguos++;
         limpiar_un_bloque(bloques_libres_contiguos + bloque_final_archivo);
@@ -309,6 +308,8 @@ int compactar_desde_el_comienzo(uint32_t bloque_final_archivo)
 
                 limpiar_un_bloque(i);
                 marcar_bloque_ocupado(i - cant_bloques_a_mover);
+
+                free(bloque_ocupado);
             }
         }
     }
@@ -324,21 +325,83 @@ static void limpiar_un_bloque(uint32_t indice_bloque)
     fseek(archivo_de_bloques, (tamanio_bloque * indice_bloque), SEEK_SET);
     fwrite(bloque_vacio, sizeof(char), tamanio_bloque, archivo_de_bloques);
 
+    free(bloque_vacio);
     bitarray_clean_bit(bitmap_bitarray, indice_bloque);
 }
 
 static bool pertenece_a_bloque_inicial(uint32_t indice_bloque)
 {
-    uint32_t cantidad_bloques_iniciales = list_size(bloques_iniciales);
-
-    for (int i = 0; i < cantidad_bloques_iniciales; i++) {
-        if ((uint32_t)(intptr_t)list_get(bloques_iniciales, i) == indice_bloque) {
-            return true;
+    int i = 1;
+    t_config *archivo_general = config_create(path_archivo_general);
+    while(i <= (config_keys_amount(archivo_general) / 2)){
+        char* bloque_inicial_string = string_from_format("%s:%d", "BLOQUE_INICIAL",i);
+        if(config_has_property(archivo_general, bloque_inicial_string)){
+            if(config_get_int_value(archivo_general,bloque_inicial_string) == indice_bloque){
+                free(bloque_inicial_string);
+                config_destroy(archivo_general);
+                return true;
+            }  
         }
+        i++;
+        free(bloque_inicial_string);
     }
 
+    config_destroy(archivo_general);
     return false;
 }    
+
+char* obtener_nombre_de_archivo(uint32_t bloque_inicial, uint32_t nuevo_bloque_inicial)
+{
+    int i = 1;
+    t_config *archivo_general = config_create(path_archivo_general);
+
+    while(true){
+        char* bloque_inicial_string = string_from_format("%s:%d", "BLOQUE_INICIAL",i);
+        if(config_has_property(archivo_general, bloque_inicial_string)){
+            if(config_get_int_value(archivo_general,bloque_inicial_string) == bloque_inicial){
+                char* nombre_archivo_string = string_from_format("%s:%d", "NOMBRE_ARCHIVO",i);
+                char* nombre_archivo = string_duplicate(config_get_string_value(archivo_general, nombre_archivo_string));
+                free(nombre_archivo_string);
+                char* puntero_auxiliar = string_from_format("%d", nuevo_bloque_inicial);
+                config_set_value(archivo_general, bloque_inicial_string, puntero_auxiliar);
+                free(puntero_auxiliar);
+                free(bloque_inicial_string);
+                config_save_in_file(archivo_general, path_archivo_general);
+                config_destroy(archivo_general);
+                return nombre_archivo;
+            }  
+        }
+        free(bloque_inicial_string);
+        i++;
+    }
+}
+
+void eliminar_archivo_metadata_general(char *nombre_archivo){
+    int i = 1;
+    t_config *archivo_general = config_create(path_archivo_general);
+
+    while(true){
+        char* nombre_archivo_string = string_from_format("%s:%d", "NOMBRE_ARCHIVO",i);
+        char* nombre_archivo2;
+        if(config_has_property(archivo_general, nombre_archivo_string)){
+            nombre_archivo2 = string_duplicate(config_get_string_value(archivo_general,nombre_archivo_string)); 
+            if(!strcmp(nombre_archivo2,nombre_archivo)){
+                free(nombre_archivo2);
+                config_set_value(archivo_general, nombre_archivo_string, "");
+                char* bloque_inicial_string = string_from_format("%s:%d", "BLOQUE_INICIAL",i);
+                config_set_value(archivo_general, bloque_inicial_string, "");
+                free(bloque_inicial_string);
+                free(nombre_archivo_string);
+                config_save_in_file(archivo_general, path_archivo_general);
+                config_destroy(archivo_general);
+                return;
+            }  
+        }
+        free(nombre_archivo2);
+        free(nombre_archivo_string);
+        i++;
+    }
+}
 
 // Busco el primer bloque libre para el bloque inicial 
 uint32_t buscar_bloque_inicial_libre()

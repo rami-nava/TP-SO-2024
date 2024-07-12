@@ -13,9 +13,8 @@ int tamanio_archivo_bloques;
 int tiempo_unidad_trabajo;
 int retraso_compactacion;
 t_log *dialfs_logger;
-t_list* bloques_iniciales;
-t_dictionary* nombre_con_bloque_inicial;
 bool compactar_desde_comienzo;
+char* path_archivo_general;
 static pthread_t hilo_dialfs;
 static t_list* peticiones;
 static sem_t hay_peticiones;
@@ -43,8 +42,6 @@ void main_dialfs(t_interfaz *interfaz_hilo)
 {
     char *nombre = interfaz_hilo->nombre_interfaz;
     t_config *config = interfaz_hilo->config_interfaz;
-    bloques_iniciales = list_create();
-    nombre_con_bloque_inicial = dictionary_create();
 
     char path[70] = "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/logs/";
 
@@ -78,6 +75,16 @@ void main_dialfs(t_interfaz *interfaz_hilo)
 
     sem_init(&hay_peticiones, 0, 0);
     pthread_mutex_init(&mutex_lista_peticiones, NULL);
+
+    //Creamos el archivo que guarda la metadata de todos los archivos
+    path_archivo_general = "/home/utnso/tp-2024-1c-SegmenFault/entradasalida/logs/archivo_general_metadata";
+    
+    // Creamos el archivo vacio
+    //a+ nos permite crear el archivo o abrirlo para escritura y lectura
+    FILE *archivo = fopen(path_archivo_general, "a+"); 
+    //nos posicionamos al inicio del archivo
+    fseek(archivo, 0, SEEK_SET);
+    fclose(archivo);
 
     recibir_peticion();
 }
@@ -218,13 +225,6 @@ static void crear_archivo(char *nombre_archivo)
 
     uint32_t buffer_bloque_inicial = buscar_bloque_inicial_libre();
     
-    list_add(bloques_iniciales, (void*)(intptr_t)buffer_bloque_inicial);
-
-    char bloque_inicial_string[20]; //Alcanza para almacenar un uint32_t
-    snprintf(bloque_inicial_string, sizeof(bloque_inicial_string), "%u", buffer_bloque_inicial);
-
-    dictionary_put(nombre_con_bloque_inicial, strdup(bloque_inicial_string), strdup(nombre_archivo));
-
     char *path_archivo = string_from_format("%s/%s", path_dial_fs, nombre_archivo);
 
     // Creamos el archivo vacio
@@ -241,7 +241,6 @@ static void crear_archivo(char *nombre_archivo)
 
         bloque_inicial = string_from_format("%d", buffer_bloque_inicial);
 	    config_set_value(archivo_nuevo, "BLOQUE_INICIAL", bloque_inicial);
-        free(bloque_inicial);
 
         tamanio_inicial = string_from_format("%d", tamanio_bloque);
         config_set_value(archivo_nuevo, "TAMANIO_ARCHIVO", tamanio_inicial);
@@ -253,7 +252,34 @@ static void crear_archivo(char *nombre_archivo)
 
         config_destroy(archivo_nuevo);
         free(path_archivo);
+
+        // Creamos la config del archivo nuevo
+        t_config *archivo_general = config_create(path_archivo_general);
+        char* nombre = NULL;
+
+        int i = 1; 
+        while(true){
+            nombre = string_from_format("%s:%d", "NOMBRE_ARCHIVO",i);
+            if(!config_has_property(archivo_general, nombre) || !strcmp(config_get_string_value(archivo_general, nombre),""))
+            {
+                break;
+            }
+            free(nombre);
+            i++;
+        }
+
+        config_set_value(archivo_general, nombre, nombre_archivo);
+        free(nombre);
         free(nombre_archivo);
+
+        char* bloque_inicial_string2 = string_from_format("%s:%d","BLOQUE_INICIAL", i);
+	    config_set_value(archivo_general, bloque_inicial_string2, bloque_inicial);
+        free(bloque_inicial_string2);
+        free(bloque_inicial);
+
+        config_save_in_file(archivo_general, path_archivo_general);
+
+        config_destroy(archivo_general);
     }
 }
 
@@ -263,7 +289,8 @@ static void eliminar_archivo(char *nombre_archivo)
     metadata_archivo* metadata = levantar_metadata(nombre_archivo);
     uint32_t bloque_inicial = metadata->bloque_inicial;
     uint32_t tamanio_archivo = metadata->tamanio_archivo;
-    
+
+    free(metadata->nombre_archivo);
     free(metadata);
 
     // Liberamos el bloque
@@ -274,10 +301,8 @@ static void eliminar_archivo(char *nombre_archivo)
     char *path_archivo = string_from_format("%s/%s", path_dial_fs, nombre_archivo);
     remove(path_archivo);
 
-    //eliminamos la entrada en el diccionario
-    char bloque_inicial_string[20]; //Alcanza para almacenar un uint32_t
-    snprintf(bloque_inicial_string, sizeof(bloque_inicial_string), "%u", bloque_inicial);
-    dictionary_remove_and_destroy(nombre_con_bloque_inicial, bloque_inicial_string, free);
+    //eliminamos la informacion del archivo general de metadata
+    eliminar_archivo_metadata_general(nombre_archivo);
 
     // Liberamos la memoria
     free(path_archivo);
@@ -290,6 +315,7 @@ static void truncar_archivo(char *nombre_archivo, uint32_t tamanio_nuevo, int pi
     metadata_archivo* metadata = levantar_metadata(nombre_archivo);
     uint32_t bloque_inicial = metadata->bloque_inicial;
     uint32_t tamanio_actual = metadata->tamanio_archivo;
+    free(metadata->nombre_archivo);
     free(metadata);
 
     if (tamanio_nuevo > tamanio_actual)
@@ -413,6 +439,9 @@ static void escribir_en_memoria(void* contenido, t_list* direcciones_fisicas, ui
             abort();
         }        
     }
+
+    free(contenido);
+
     list_iterator_destroy(iterator);
     
     list_destroy_and_destroy_elements(direcciones_fisicas, free);
@@ -512,6 +541,7 @@ static void reposicionamiento_del_puntero_de_archivo(uint32_t puntero_archivo, c
     // Obtenemos de la metadata los valores inciales
     metadata_archivo* metadata = levantar_metadata(nombre_archivo);
     uint32_t bloque_inicial = metadata->bloque_inicial;
+    free(metadata->nombre_archivo);
     free(metadata);
     free(nombre_archivo);
 

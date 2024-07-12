@@ -26,8 +26,6 @@
 
 extern t_list* interfaces;
 
-extern t_list* bloques_iniciales;
-extern t_dictionary* nombre_con_bloque_inicial;
 extern t_log* dialfs_logger;
 extern char* path_dial_fs;
 extern FILE* archivo_de_bloques;
@@ -36,13 +34,14 @@ extern int cantidad_bloques;
 extern int tamanio_archivo_bloques;
 extern int retraso_compactacion;
 extern bool compactar_desde_comienzo;
+extern char* path_archivo_general;
 
 //STRUCTS//
 typedef struct 
 {
     char* nombre_archivo; 
     int tamanio_archivo; 
-    int bloque_inicial;
+    uint32_t bloque_inicial;
 } metadata_archivo;
 
 typedef struct 
@@ -113,7 +112,8 @@ uint32_t buscar_bloque_inicial_libre();
 void compactar(uint32_t cantidad_bloques_a_compactar, uint32_t bloque_final_archivo);
 int compactar_desde_el_comienzo(uint32_t bloque_final_archivo);
 bool bloques_contiguos(uint32_t cantidad_bloques_a_buscar, uint32_t bloque_final_archivo);
-
+char* obtener_nombre_de_archivo(uint32_t bloque_inicial, uint32_t nuevo_bloque_inicial);
+void eliminar_archivo_metadata_general(char *nombre_archivo);
 //.................................. MEMORIA .......................................................................
 
 
