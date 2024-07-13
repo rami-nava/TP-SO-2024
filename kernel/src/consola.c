@@ -3,6 +3,7 @@
 void inicializar_consola_interactiva() {
   char* leer_linea;
   while(1) {
+    printf("ESPERA CONSOLA \n\n\n");
     leer_linea = readline(">");  // Lee una línea de la consola
     if (leer_linea) {
       add_history(leer_linea); // Asi podemos usar flechas
