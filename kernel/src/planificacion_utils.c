@@ -54,7 +54,9 @@ t_pcb* buscar_pcb_en_lista (t_list* lista, int pid, pthread_mutex_t mutex_lista)
 
 void detener_planificacion() {
     pthread_mutex_lock(&mutex_corriendo);
-    corriendo = 0;
+    while(corriendo == 0){
+        pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
+    }
     pthread_mutex_unlock(&mutex_corriendo);
 }
 

@@ -30,11 +30,7 @@ void planificador_largo_plazo(){
 
         sem_wait(&grado_multiprogramacion);
 
-       detener_planificacion();
-
-       if(!corriendo){
-            sem_wait(&planificar);
-       }
+        detener_planificacion();
 
         t_pcb *pcb = siguiente_proceso_a_ready();
         
@@ -55,7 +51,6 @@ void planificador_corto_plazo(t_pcb *(*proximo_a_ejecutar)()){
             sem_wait(&hay_procesos_ready);
 
             detener_planificacion();
-
             //Obtener el proceso a ejecutar
             proceso_en_ejecucion = proximo_a_ejecutar();
 

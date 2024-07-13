@@ -1,6 +1,7 @@
 #include "kernel.h"
 
-pthread_mutex_t mutex_corriendo;
+pthread_cond_t mutex_corriendo;
+pthread_mutex_t cond_corriendo;
 pthread_mutex_t mutex_MULTIPROGRAMACION;
 int corriendo = 1;
 
@@ -45,6 +46,7 @@ void consola_detener_planificacion() {
 void consola_iniciar_planificacion() {  
       printf("INICIO DE PLANIFICACIÓN \n");
       pthread_mutex_lock(&mutex_corriendo); 
+      pthread_cond_broadcast(&cond_corriendo);
       corriendo = 1;  // Bandera sigue
       pthread_mutex_unlock(&mutex_corriendo);
       sem_post(&planificar);
