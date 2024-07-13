@@ -7,6 +7,7 @@ sem_t hay_procesos_ready;
 sem_t hay_procesos_nuevos;
 sem_t grado_multiprogramacion;
 sem_t planificar;
+sem_t proceso_reloj;
 
 pthread_mutex_t mutex_NEW;
 pthread_mutex_t mutex_READY; 
