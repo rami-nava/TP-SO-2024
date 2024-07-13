@@ -45,7 +45,6 @@ void atender_dispatch()
 				recibir_contexto_cpu(paquete,stream);
                 pthread_mutex_lock(&seguir_ejecutando_mutex);
                 while(no_es_bloqueante(instruccion_actual) && seguir_ejecutando) {
-                    printf("CPU UTILS\n\n");
                     pthread_mutex_unlock(&seguir_ejecutando_mutex); 
                     ciclo_de_instruccion();
                     pthread_mutex_lock(&seguir_ejecutando_mutex); 
