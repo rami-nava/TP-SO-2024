@@ -1,7 +1,7 @@
 #include "kernel.h"
 
-pthread_cond_t mutex_corriendo;
-pthread_mutex_t cond_corriendo;
+pthread_mutex_t mutex_corriendo;
+pthread_cond_t cond_corriendo;
 pthread_mutex_t mutex_MULTIPROGRAMACION;
 int corriendo = 1;
 
