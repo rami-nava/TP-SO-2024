@@ -38,7 +38,6 @@ void inicializar_semaforos(){
     pthread_mutex_init(&mutex_PROCESOS_DEL_SISTEMA,NULL);
     pthread_mutex_init(&mutex_AUX_VRR,NULL); 
     pthread_mutex_init(&mutex_corriendo, NULL);
-    pthread_cond_init(&cond_corriendo, NULL);
     pthread_mutex_init(&proceso_en_ejecucion_RR_mutex, NULL);
     pthread_mutex_init(&mutex_INTERFAZ_GENERICA, NULL);
     pthread_mutex_init(&mutex_INTERFAZ_STDIN, NULL);
@@ -52,6 +51,7 @@ void inicializar_semaforos(){
     sem_init(&ciclo_actual_quantum_sem, 0, 0);
     sem_init(&rompiendo_reloj, 0, 1);
     sem_init(&exit_sem, 0, 0);
+    sem_init(&planificar, 0, 0);
 }
 
 //================================================== COLAS =====================================================================

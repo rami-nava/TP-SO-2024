@@ -6,6 +6,7 @@ bool cambio_de_proceso = true;
 sem_t hay_procesos_ready;
 sem_t hay_procesos_nuevos;
 sem_t grado_multiprogramacion;
+sem_t planificar;
 
 pthread_mutex_t mutex_NEW;
 pthread_mutex_t mutex_READY; 
@@ -28,7 +29,11 @@ void planificador_largo_plazo(){
 
         sem_wait(&grado_multiprogramacion);
 
-        detener_planificacion();
+       detener_planificacion();
+
+       if(!corriendo){
+            sem_wait(&planificar);
+       }
 
         t_pcb *pcb = siguiente_proceso_a_ready();
         

@@ -47,6 +47,7 @@ extern sem_t grado_multiprogramacion;
 extern sem_t ciclo_actual_quantum_sem;
 extern sem_t exit_sem;
 extern sem_t rompiendo_reloj;
+extern sem_t planificar;
 
 
 extern pthread_mutex_t mutex_NEW;
@@ -54,7 +55,6 @@ extern pthread_mutex_t mutex_READY;
 extern pthread_mutex_t mutex_PROCESOS_DEL_SISTEMA;
 extern pthread_mutex_t mutex_AUX_VRR;
 extern pthread_mutex_t mutex_corriendo;
-extern pthread_cond_t cond_corriendo;
 extern pthread_t reloj_RR;
 extern pthread_mutex_t proceso_en_ejecucion_RR_mutex;
 extern pthread_mutex_t mutex_BLOQUEADOS_recursos;

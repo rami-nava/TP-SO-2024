@@ -1,6 +1,5 @@
 #include "kernel.h"
 
-pthread_cond_t cond_corriendo;
 pthread_mutex_t mutex_corriendo;
 pthread_mutex_t mutex_MULTIPROGRAMACION;
 int corriendo = 1;
@@ -38,25 +37,17 @@ void consola_iniciar_proceso(char *path)
 
 void consola_detener_planificacion() {
     printf("PAUSA DE PLANIFICACIÓN \n");
-
-    if(corriendo){
     pthread_mutex_lock(&mutex_corriendo);
     corriendo = 0;  //Bandera en Pausa
     pthread_mutex_unlock(&mutex_corriendo);
-    }
-    else printf("Ya esta detenida flaco");
 }
 
-void consola_iniciar_planificacion() {    
-  if(!corriendo) {
-       printf("INICIO DE PLANIFICACIÓN \n");
-        pthread_mutex_lock(&mutex_corriendo);
-        pthread_cond_broadcast(&cond_corriendo);  
-        corriendo = 1;  // Bandera sigue
-        pthread_mutex_unlock(&mutex_corriendo);
-  } else {
-    printf("No estaba pausada la planificacion -_- \n");
-  }
+void consola_iniciar_planificacion() {  
+      printf("INICIO DE PLANIFICACIÓN \n");
+      pthread_mutex_lock(&mutex_corriendo); 
+      corriendo = 1;  // Bandera sigue
+      pthread_mutex_unlock(&mutex_corriendo);
+      sem_post(&planificar);
 }
 
 void consola_modificar_multiprogramacion(int nuevo_valor) 
