@@ -69,6 +69,7 @@ void planificador_corto_plazo(t_pcb *(*proximo_a_ejecutar)()){
                     pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
                     proceso_en_ejecucion_RR = true;
                     pthread_mutex_unlock(&proceso_en_ejecucion_RR_mutex);
+                    sem_post(&proceso_reloj);
                 }
             } else {
                 //printf("nada para ejecutar");

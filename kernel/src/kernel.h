@@ -48,6 +48,7 @@ extern sem_t ciclo_actual_quantum_sem;
 extern sem_t exit_sem;
 extern sem_t rompiendo_reloj;
 extern sem_t planificar;
+extern sem_t proceso_reloj;
 
 
 extern pthread_mutex_t mutex_NEW;

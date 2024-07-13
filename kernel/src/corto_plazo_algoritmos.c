@@ -73,7 +73,7 @@ void* comenzar_reloj_RR(){
 
     while(1)
     {
-        printf("ESPERAAAAA\n\n");
+        sem_wait(&proceso_reloj);
         quantum_total = config_valores_kernel.quantum;
         pthread_mutex_lock(&proceso_en_ejecucion_RR_mutex);
         if(proceso_en_ejecucion_RR)

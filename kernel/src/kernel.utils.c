@@ -52,6 +52,7 @@ void inicializar_semaforos(){
     sem_init(&rompiendo_reloj, 0, 1);
     sem_init(&exit_sem, 0, 0);
     sem_init(&planificar, 0, 0);
+    sem_init(&proceso_reloj, 0, 0);
 }
 
 //================================================== COLAS =====================================================================
